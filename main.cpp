@@ -34,9 +34,9 @@ int main(int argc, char *argv[])
     //mbcc1.init("169.254.0.2",502,100,100,50);
     //mbc_controller mbcc2;
     //mbcc2.init("169.254.0.2",503,0,0,10);
-    tcp_comm tcpcomm_read(2000);
-    tcp_comm tcpcomm_write(2001);
-    QObject::connect(&tcpcomm_read,&tcp_comm::writeBackReceivedData,&tcpcomm_write,&tcp_comm::writeDataViaTCP);
+    tcp_comm tcpcomm1(2000,2001);
+    QObject::connect(&tcpcomm1,&tcp_comm::writeBackReceivedData,&tcpcomm1,&tcp_comm::writeDataViaTCP);
+
     //qDebug()<<"mbcc1.thread:"<<mbcc1.thread();
     //engine.rootContext()->setContextProperty("mbcc1",&mbcc1);
     //engine.rootContext()->setContextProperty("mbcc2",&mbcc2);

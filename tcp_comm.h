@@ -8,23 +8,29 @@
 class tcp_comm : public QObject
 {
     Q_OBJECT
+    Q_PROPERTY(int PageNO READ getCurrentPageNO WRITE setCurrentPageNO NOTIFY pageNOChanged)
 public:
-    explicit tcp_comm(int port,QObject *parent = nullptr);
+    explicit tcp_comm(int portReceive, int portSend,QObject *parent = nullptr);
     ~tcp_comm();
     int writeDataViaTCP(QByteArray dataToWrite);
+    int getCurrentPageNO();
+    void setCurrentPageNO(int newPageNO);
 signals:
     void writeBackReceivedData(QByteArray receivedData);
+    void pageNOChanged(int newPageNO);
 public slots:
-    void onNewConnection();
+    //void onNewConnection();
     void onReadyRead();
-    void onStateCahnged(QAbstractSocket::SocketState state);
+    void onStateChanged(QAbstractSocket::SocketState state);
 public:
     QTcpServer *tcpServer = nullptr;
     //QVector<QString> fortunes;
     //QNetworkSession *networkSession = nullptr;
-    QTcpSocket *clientConnection=nullptr;
+    QTcpSocket *clientConnection_receive=nullptr;
+    QTcpSocket *clientConnection_send=nullptr;
     int port=0;
     QByteArray data;
+    int pageNO;
 };
 
 #endif // TCP_COMM_H
