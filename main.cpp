@@ -10,6 +10,7 @@
 #include "dbh_controller.h"
 #include <QObject>
 #include "worker_modbus.h"
+#include "tcp_comm.h"
 
 
 
@@ -29,14 +30,16 @@ int main(int argc, char *argv[])
     dbh_controller dbhc2;
     QString filename="HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3";
     dbhc2.init("QSQLITE","HistoryDataDB",filename);
-    mbc_controller mbcc1;
-    mbcc1.init("169.254.0.2",502,100,100,50);
-    mbc_controller mbcc2;
-    mbcc2.init("169.254.0.2",503,0,0,10);
-
-    qDebug()<<"mbcc1.thread:"<<mbcc1.thread();
-    engine.rootContext()->setContextProperty("mbcc1",&mbcc1);
-    engine.rootContext()->setContextProperty("mbcc2",&mbcc2);
+    //mbc_controller mbcc1;
+    //mbcc1.init("169.254.0.2",502,100,100,50);
+    //mbc_controller mbcc2;
+    //mbcc2.init("169.254.0.2",503,0,0,10);
+    tcp_comm tcpcomm_read(2000);
+    tcp_comm tcpcomm_write(2001);
+    QObject::connect(&tcpcomm_read,&tcp_comm::writeBackReceivedData,&tcpcomm_write,&tcp_comm::writeDataViaTCP);
+    //qDebug()<<"mbcc1.thread:"<<mbcc1.thread();
+    //engine.rootContext()->setContextProperty("mbcc1",&mbcc1);
+    //engine.rootContext()->setContextProperty("mbcc2",&mbcc2);
     engine.rootContext()->setContextProperty("qmlLanguage", &qmlLanguage);
     engine.rootContext()->setContextProperty("dbhc1", &dbhc1);
     engine.rootContext()->setContextProperty("dbhc2", &dbhc2);
@@ -44,8 +47,8 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty())
         return -1;
 
-    QObject::connect(&mbcc1,&mbc_controller::needWriteDatabase,&dbhc1,&dbh_controller::addTaskToEventQueue_writeDB);
-    QObject::connect(&mbcc2,&mbc_controller::needWriteDatabase,&dbhc1,&dbh_controller::addTaskToEventQueue_writeDB);
+    //QObject::connect(&mbcc1,&mbc_controller::needWriteDatabase,&dbhc1,&dbh_controller::addTaskToEventQueue_writeDB);
+    //QObject::connect(&mbcc2,&mbc_controller::needWriteDatabase,&dbhc1,&dbh_controller::addTaskToEventQueue_writeDB);
 
     return app.exec();
 

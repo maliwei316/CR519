@@ -1,6 +1,7 @@
 QT += quick
 QT += serialbus
 QT += sql
+QT += network
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -20,7 +21,8 @@ SOURCES += \
     main.cpp \
     mbc_controller.cpp \
     qmllanguage.cpp \
-    worker_modbus.cpp
+    worker_modbus.cpp \
+    tcp_comm.cpp
 
 RESOURCES += qml.qrc
 
@@ -50,4 +52,5 @@ HEADERS += \
     mbc_controller.h \
     myevent.h \
     qmllanguage.h \
-    worker_modbus.h
+    worker_modbus.h \
+    tcp_comm.h

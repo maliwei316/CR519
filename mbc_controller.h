@@ -8,6 +8,8 @@ class mbc_controller : public QObject
     Q_OBJECT
 
     //Q_PROPERTY(QColor color READ color WRITE setColor NOTIFY colorChanged)
+    //Q_PROPERTY(int curentPageNO READ getCurrentPageNO WRITE setCurrentPageNO NOTIFY pageNOChanged)
+
 public:
     explicit mbc_controller(QObject *parent = nullptr);
     ~mbc_controller();
@@ -18,9 +20,13 @@ public:
     //Q_INVOKABLE void readRealtimeDataFromDatabase(quint16 requesterObjID,QString tableName,quint16 address);
     void connectPLC();
     void init(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count);
+    //int getCurrentPageNO();
+    //void setCurrentPageNO();
+
 signals:
-void needInit(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count);
-void needWriteDatabase(QString sqlquery);
+    //void pageNOChanged(int newPageNO);
+    void needInit(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count);
+    void needWriteDatabase(QString sqlquery);
 public slots:
     void onModbusStateChanged(QModbusDevice::State state);
     void onModbusErrorOccurred(QModbusDevice::Error error);
