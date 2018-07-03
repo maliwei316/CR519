@@ -15,6 +15,22 @@ public:
 public:
     QString sqlquery;
 };
+class myEvent_batchWriteDB:public QEvent
+{
+
+public:
+    myEvent_batchWriteDB(QEvent::Type myEventType, QString prepareStr,QVariantList addressList,QVariantList valueList):QEvent(myEventType)
+    {
+      this->prepareStr=prepareStr;
+      this->addressList=addressList;
+        this->valueList=valueList;
+    }
+    //MyEvent(Type MyEventType):QEvent(MyEventType){}
+public:
+    QString prepareStr;
+    QVariantList addressList;
+    QVariantList valueList;
+};
 
 class myEvent_readDB:public QEvent
 {
