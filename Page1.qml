@@ -2,9 +2,9 @@ import QtQuick 2.7
 import QtQuick.Controls 2.0
 import QtQuick.Layouts 1.3
 import QtQuick.Controls.Styles 1.4
-//import wordBits
-Item {
 
+Item {
+       property int thisPageNO: 2
        ColumnLayout
        {
         anchors.fill: parent;
@@ -82,7 +82,7 @@ Item {
        {
             id: timer1
             interval: 1000; repeat: true
-            running: false
+            running: thisPageNO===tcpcomm1.PageNO?true:false
             triggeredOnStart: false
 
             onTriggered:
