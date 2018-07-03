@@ -5,7 +5,8 @@ import QtQuick.Controls.Styles 1.4
 
 Item {
     id: item1
-
+    anchors.fill:parent
+    property int thisPageNO: 1
     ColumnLayout {
         id: columnLayout
         x: 0
@@ -961,7 +962,7 @@ Item {
     {
          id: timer2
          interval: 1000; repeat: true
-         running: false
+         running: thisPageNO===tcpcomm1.PageNO?true:false
          triggeredOnStart: false
 
          onTriggered:
