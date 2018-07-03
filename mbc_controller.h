@@ -3,6 +3,8 @@
 #include "worker_modbus.h"
 #include <QObject>
 #include <QThread>
+#include <QVariant>
+#include <QList>
 class mbc_controller : public QObject
 {
     Q_OBJECT
@@ -26,6 +28,7 @@ signals:
 
     void needInit(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count);
     void needWriteDatabase(QString sqlquery);
+    void needbatchWriteDatabase(QString prepareStr,QVariantList addressList,QVariantList valueList);
 public slots:
     void onModbusStateChanged(QModbusDevice::State state);
     void onModbusErrorOccurred(QModbusDevice::Error error);

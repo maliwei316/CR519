@@ -5,7 +5,8 @@
 #include <QtSql>
 #include <QThread>
 #include <QEvent>
-
+#include <QVariant>
+#include <QList>
 
 class DB_Handler : public QObject
 {
@@ -16,8 +17,9 @@ public:
     ~DB_Handler();
     bool execsql(QString sqlQuery);
     int writeDatabase(QString sqlQuery);
+    int batchWriteDatabase(QString prepareStr, QVariantList addressList, QVariantList valueList);
     int writeDatabaseEventHandler(QEvent *e);
-
+    int batchWriteDatabaseEventHandler(QEvent *e);
     int readDatabase(QString sqlquery);
     int readDatabaseEventHandler(QEvent *e);
     //void readRealtimeDataFromDatabase(quint16 requesterObjID,QString tableName,quint16 address);
@@ -26,6 +28,7 @@ signals:
 public slots:
     void onInit(QString dbDriverName, QString dbConnectionName,QString databaseName);
     void onAddTaskToEventQueue_writeDB(QString sqlquery);
+    void onAddTaskToEventQueue_batchWriteDB(QString prepareStr,QVariantList addressList,QVariantList valueList);
     void onAddtaskToEentQuene_readDB(quint16 requesterObjID,QString tableName,quint16 address);
 
 public:

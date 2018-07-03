@@ -4,6 +4,8 @@
 #include <QObject>
 #include "db_handler.h"
 #include <QThread>
+#include <QVariant>
+#include <QList>
 class dbh_controller : public QObject
 {
     Q_OBJECT
@@ -19,6 +21,7 @@ signals:
     void needInit(QString dbDriverName, QString dbConnectionName,QString databaseName);
     void dataReadyDBH2Controller2GUI(quint16 reqesterID,quint16 address, quint16 value);
     void addTaskToEventQueue_writeDB(QString sqlquery);
+    void addTaskToEventQueue_batchWriteDB(QString prepareStr,QVariantList addressList,QVariantList valueList);
     void addTaskToEventQueue_readDB(quint16 requesterObjID,QString tableName,quint16 address);
 
 public slots:

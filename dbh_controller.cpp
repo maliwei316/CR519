@@ -31,8 +31,10 @@ dbh_controller::dbh_controller(QObject *parent) : QObject(parent)
     //connect(this, &Controller::operate, worker, &Worker::doWork);
     //connect(worker, &Worker::resultReady, this, &Controller::handleResults);
     connect(worker,&DB_Handler::dataReadyDB2GUI,this,&dbh_controller::dataReadyDBH2Controller2GUI);
+
     connect(this,&dbh_controller::addTaskToEventQueue_readDB,worker,&DB_Handler::onAddtaskToEentQuene_readDB);
     connect(this,&dbh_controller::addTaskToEventQueue_writeDB,worker,&DB_Handler::onAddTaskToEventQueue_writeDB);
+    connect(this,&dbh_controller::addTaskToEventQueue_batchWriteDB,worker,&DB_Handler::onAddTaskToEventQueue_batchWriteDB);
     connect(this,&dbh_controller::needInit,worker,&DB_Handler::onInit);
     workerThread.start();
 }

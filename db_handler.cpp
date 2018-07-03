@@ -87,6 +87,9 @@ void DB_Handler::customEvent(QEvent *e)
     case 5002:
         readDatabaseEventHandler(e);
         break;
+    case 5003:
+        batchWriteDatabaseEventHandler(e);
+        break;
     default:
         break;
     }
@@ -97,6 +100,14 @@ int DB_Handler::writeDatabaseEventHandler(QEvent *e)
     qDebug()<<QTime::currentTime()<<"writeDatabaseEventHandler executed"<<"Thread:"<<QThread::currentThread();
     myEvent_writeDB *customEvent = static_cast<myEvent_writeDB *>(e);
     int recordsCount=writeDatabase(customEvent->sqlquery);
+    return recordsCount;
+
+}
+int DB_Handler::batchWriteDatabaseEventHandler(QEvent *e)
+{
+    qDebug()<<QTime::currentTime()<<"BatchWriteDatabaseEventHandler executed";
+    myEvent_batchWriteDB *customEvent = static_cast<myEvent_batchWriteDB *>(e);
+    int recordsCount=batchWriteDatabase(customEvent->prepareStr,customEvent->addressList,customEvent->valueList);
     return recordsCount;
 
 }
@@ -117,6 +128,30 @@ int DB_Handler::writeDatabase(QString sqlQuery)
    //qDebug()<<QObject::tr("record counts in table  %1:").arg((tableName))<<N;
    return  1;
 }
+
+int DB_Handler::batchWriteDatabase(QString prepareStr, QVariantList addressList, QVariantList valueList)
+{
+   qDebug()<<QTime::currentTime()<<"Batch writeDatabase executed";
+   q1.prepare(prepareStr);
+   q1.addBindValue(addressList);
+   q1.addBindValue(valueList);
+   //q1.addbindValue(":address",static_cast<QVariantList>addressList);
+   //q1.addbindValue(":value",static_cast<QVariantList>valueList);
+   if(!this->q1.execBatch())
+   {
+        qDebug()<<"failed to exec batchWriteData statement";
+        return 0;
+   }
+   q1.finish();
+    //get total record counts in database table;
+   //QSqlQuery q1("",database1);
+   //q1.exec(QObject::tr("SELECT COUNT(*) AS N FROM %1").arg((tableName)));
+   //q1.next();
+   //int N=q1.value(0).toInt();
+   //qDebug()<<QObject::tr("record counts in table  %1:").arg((tableName))<<N;
+   return  1;
+}
+
 int DB_Handler::readDatabaseEventHandler(QEvent *e)
 {
    qDebug()<<QTime::currentTime()<<"readDatabaseEventHandler executed";
@@ -156,6 +191,12 @@ void DB_Handler::onAddTaskToEventQueue_writeDB(QString sqlquery)
 {
     qDebug()<<QTime::currentTime()<<"onAddTaskToEventQueue_writeDB executed"<<"Thread:"<<QThread::currentThread();
     QCoreApplication::postEvent(this,new myEvent_writeDB((QEvent::Type)5001,sqlquery));
+}
+void DB_Handler::onAddTaskToEventQueue_batchWriteDB(QString prepareStr,QVariantList addressList,QVariantList valueList)
+{
+    qDebug()<<QTime::currentTime()<<"onAddTaskToEventQueue_batchWriteDB executed";
+    //QCoreApplication::postEvent(this,new myEvent_batchWriteDB((QEvent::Type)5003,prepareStr,addressList,valueList));
+    this->batchWriteDatabase(prepareStr,addressList,valueList);
 }
 void DB_Handler::onAddtaskToEentQuene_readDB(quint16 requesterObjID,QString tableName,quint16 address)
 {

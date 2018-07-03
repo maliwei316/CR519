@@ -6,6 +6,8 @@
 #include <QObject>
 #include <QEvent>
 #include <QTimer>
+#include <QVariant>
+#include <QList>
 
 class worker_modbus : public QObject
 {
@@ -28,11 +30,13 @@ signals:
     //void modbusConnected();
     //void inIdleStatus();
     void writeDatabaseRequired(QString sqlquery);
+    void batchWriteDataBaseRequired(QString prepareStr,QVariantList addressList,QVariantList valueList);
     void modbusStateChanged(QModbusDevice::State state);
     void modbusErrorOccured(QModbusDevice::Error error);
 public slots:
     void onInit(QString IPAddr,int port,int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count);
     void readReady1();
+    void readReady();
     void onStateChanged(QModbusDevice::State state);
     void onErrorOccurred(QModbusDevice::Error error);
     //void onTimeout();

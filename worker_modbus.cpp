@@ -7,6 +7,7 @@
 #include <QtSql>
 #include <QEvent>
 #include "myevent.h"
+#include <QVariant>
 worker_modbus::worker_modbus(QObject *parent): QObject(parent)
 {}
 
@@ -193,7 +194,7 @@ void worker_modbus::readPLCCommand(quint16 functionCode,quint16 startAddress, qu
         //qDebug()<<"reply.thread"<<reply->thread();
         //qDebug()<<"line208 OK";
         if(!reply->isFinished())
-           connect(reply, &QModbusReply::finished, this, &worker_modbus::readReady1);
+           connect(reply, &QModbusReply::finished, this, &worker_modbus::readReady);
         else
            delete reply;
     }
@@ -260,6 +261,73 @@ void worker_modbus:: readReady1()
            //QEventLoop eventloop;
            //QTimer::singleShot(50, &eventloop, SLOT(quit()));
            //eventloop.exec();
+        }
+        else if (reply->error() == QModbusDevice::ProtocolError)
+        {
+                      qDebug()<<tr("Read response error: %1 (Mobus exception: 0x%2)").
+                      arg(reply->errorString()).
+                      arg(reply->rawResult().exceptionCode(), -1, 16);
+        }
+        else {
+            qDebug()<<tr("Read response error: %1 (code: 0x%2)").
+                                        arg(reply->errorString()).
+                                        arg(reply->error(), -1, 16);
+        }
+
+        reply->deleteLater();
+
+
+}
+void worker_modbus:: readReady()
+{
+    auto reply = qobject_cast<QModbusReply *>(sender());//QModbusReply这个类存储了来自client的数据,sender()返回发送信号的对象的指针
+        if (!reply)
+            return;
+    //数据从QModbusReply这个类的result方法中获取,也就是本程序中的reply->result()
+
+        if (reply->error() == QModbusDevice::NoError)
+        {
+
+            //QString sqlquery;
+            QString tableName;
+            const QModbusDataUnit unit = reply->result();
+            switch (unit.registerType()) {
+            case QModbusDataUnit::Coils:
+                tableName="PLC_DO";
+                break;
+            case QModbusDataUnit::DiscreteInputs:
+                tableName="PLC_DI";
+                break;
+            case QModbusDataUnit::HoldingRegisters:
+                if(this->port==502)
+                    tableName="PLC_M";
+                else if(this->port==503)
+                    tableName="PLC_DB";
+                break;
+            default:
+                tableName="";
+                break;
+            }
+            qint16 startAddress=unit.startAddress();
+            qint16 length=unit.valueCount();
+            qDebug()<<QTime::currentTime()<<"PLC reply data count:"<<length<<"table name:"<<tableName;
+           QString prepareStr;
+           QVariantList addressList,valueList;
+           prepareStr=QObject::tr("insert or replace into %1(address,value) values(?,?)")
+                .arg(tableName);
+            for (int i = 0; i < length; i++)
+           {
+             addressList<<startAddress+i;
+             valueList<<unit.value(i);
+           }
+            if(!addressList.isEmpty())
+            emit this->batchWriteDataBaseRequired(prepareStr,addressList,valueList);
+            qDebug()<<QTime::currentTime()<<"sent out batch write DB signal,then sleep";
+            QThread::msleep(50);
+            QEventLoop eventloop;
+            QTimer::singleShot(50, &eventloop, SLOT(quit()));
+            eventloop.exec();
+            qDebug()<<QTime::currentTime()<<"waked";
         }
         else if (reply->error() == QModbusDevice::ProtocolError)
         {

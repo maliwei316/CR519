@@ -1,6 +1,7 @@
 #include "mbc_controller.h"
 #include "worker_modbus.h"
 #include <QDebug>
+#include <QVariant>
 mbc_controller::mbc_controller(QObject *parent) : QObject(parent)
 {
     worker_modbus *worker = new worker_modbus;
@@ -10,6 +11,7 @@ mbc_controller::mbc_controller(QObject *parent) : QObject(parent)
     //connect(worker, &Worker::resultReady, this, &Controller::handleResults);
     //connect(worker,&worker_modbus::modbusConnected,this,&mbc_controller::onModbusConnected);
     connect(worker,&worker_modbus::writeDatabaseRequired,this,&mbc_controller::needWriteDatabase);
+    connect(worker,&worker_modbus::batchWriteDataBaseRequired,this,&mbc_controller::needbatchWriteDatabase);
     connect(worker,&worker_modbus::modbusStateChanged,this,&mbc_controller::onModbusStateChanged);
     connect(worker,&worker_modbus::modbusErrorOccured,this,&mbc_controller::onModbusErrorOccurred);
     connect(this,&mbc_controller::needInit,worker,&worker_modbus::onInit);
