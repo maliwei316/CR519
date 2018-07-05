@@ -5,6 +5,7 @@ import QtQuick.Controls.Styles 1.4
 import QtQuick.Controls 1.4
 Item
 {
+    readonly property int thisPageNO: 120
     id:ptConfig
     anchors.fill:parent
 

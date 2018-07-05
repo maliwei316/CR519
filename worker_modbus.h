@@ -49,7 +49,7 @@ public:
     bool DI_enable;
     bool DO_enable;
     bool HoldRegister_enable;
-    bool busyFlag;
+    bool timerEnableFlag;
     quint16 DI_Var_count;
     quint16 DO_Var_count;
     quint16 HoldRegister_Var_count;

@@ -22,6 +22,7 @@ void worker_modbus::onInit(QString IPAddr, int port, int DI_Var_count, int DO_Va
     this->HoldRegister_Var_count=0;
     this->IPAddr=IPAddr;
     this->port=port;
+    this->timerEnableFlag=false;
     this->timer=new QTimer;
     this->setVarCounts(DI_Var_count,DO_Var_count,HoldRegister_Var_count);
     this->connectPLC();
@@ -62,8 +63,8 @@ bool worker_modbus::connectPLC()
     if(connectedStatus)
     {
         qDebug()<<QTime::currentTime()<<"connectting to PLC at "<<this->IPAddr<<":"<<this->port;
-        qDebug()<<"this.thread"<<this->thread();
-        qDebug()<<"timer.thread(before moving)"<<timer->thread();
+        //qDebug()<<"this.thread"<<this->thread();
+        //qDebug()<<"timer.thread(before moving)"<<timer->thread();
         //timer.moveToThread(this->thread());
         //qDebug()<<"timer.thread(after moving)"<<timer->thread();
         qDebug()<<"this->maModbusTcpClient.thread"<<this->maModbusTcpClient->thread();
@@ -92,7 +93,8 @@ void worker_modbus::onStateChanged(QModbusDevice::State state)
       QTimer::singleShot(500, &eventloop, SLOT(quit()));
       eventloop.exec();
       QThread::sleep(10);
-      timer->start(1000);
+      if(this->timerEnableFlag)
+        timer->start(1000);
       //emit modbusConnected();
 
   }
@@ -319,6 +321,11 @@ void worker_modbus:: readReady()
            {
              addressList<<startAddress+i;
              valueList<<unit.value(i);
+             /*const QString entry = tr("address: %1,Value: %2").arg(startAddress+i)
+                                                      .arg(QString::number(unit.value(i),
+                                                           unit.registerType() <= QModbusDataUnit::Coils ? 10 : 16));
+
+             qDebug()<<"tableName:"<<tableName<<",reply from PLC "<<entry;*/
            }
             if(!addressList.isEmpty())
             emit this->batchWriteDataBaseRequired(prepareStr,addressList,valueList);

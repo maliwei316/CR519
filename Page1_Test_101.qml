@@ -4,7 +4,7 @@ import QtQuick.Layouts 1.3
 import QtQuick.Controls.Styles 1.4
 
 Item {
-       property int thisPageNO: 2
+       readonly property int thisPageNO: 101
        ColumnLayout
        {
         anchors.fill: parent;
@@ -111,23 +111,23 @@ Item {
            switch(reqesterID)
            {
            case led1.objID:
-               if(address===led1.address)
+               if(address===led1.wordAddress)
                    led1.value=value;
                break;
            case led2.objID:
-               if(address===led2.address)
+               if(address===led2.wordAddress)
                    led2.value=value;
                break;
            case led3.objID:
-               if(address===led3.address)
+               if(address===led3.wordAddress)
                    led3.value=value;
                break;
            case led4.objID:
-               if(address===led4.address)
+               if(address===led4.wordAddress)
                    led4.value=value;
                break;
            case led5.objID:
-               if(address===led5.address)
+               if(address===led5.wordAddress)
                {
 
                    led5.value=dbhc1.getBitsFromWord(value,led5.bitPosInWord);

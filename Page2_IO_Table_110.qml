@@ -5,8 +5,9 @@ import QtQuick.Controls.Styles 1.4
 
 Item {
     id: item1
-    anchors.fill:parent
-    property int thisPageNO: 1
+    x:0
+    y:0
+    readonly property int thisPageNO: 100
     ColumnLayout {
         id: columnLayout
         x: 0
@@ -40,7 +41,7 @@ Item {
 
             Text {
                 id: text7
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Light Curtain OK")
                 font.pixelSize: 14
             }
 
@@ -73,7 +74,7 @@ Item {
 
             Text {
                 id: text10
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("SS1")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -102,7 +103,7 @@ Item {
 
             Text {
                 id: text12
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("SS2")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -131,7 +132,7 @@ Item {
 
             Text {
                 id: text14
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Spare")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -160,7 +161,7 @@ Item {
 
             Text {
                 id: text16
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Servo Home Sensor")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -189,7 +190,7 @@ Item {
 
             Text {
                 id: text18
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Safety Door #1")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -218,7 +219,7 @@ Item {
 
             Text {
                 id: text20
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Safety Door #2")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -247,7 +248,7 @@ Item {
 
             Text {
                 id: text22
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("L Fixture Clamp Btn ")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -276,7 +277,7 @@ Item {
 
             Text {
                 id: text24
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("R Fixture Clamp Btn ")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -305,7 +306,7 @@ Item {
 
             Text {
                 id: text26
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Film Feeder Jog Btn")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -334,7 +335,7 @@ Item {
 
             Text {
                 id: text28
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Spare")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -392,7 +393,7 @@ Item {
 
             Text {
                 id: text32
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("ESTOP&&Doors OK")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -421,7 +422,7 @@ Item {
 
             Text {
                 id: text34
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Comparessed Air OK")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -450,7 +451,7 @@ Item {
 
             Text {
                 id: text64
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Not Available")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -479,7 +480,7 @@ Item {
 
             Text {
                 id: text66
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Not Available")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -516,7 +517,7 @@ Item {
 
             Text {
                 id: text36
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("PUL-Step Motor")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -545,7 +546,7 @@ Item {
 
             Text {
                 id: text38
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("DIR-Step Motor")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -574,7 +575,7 @@ Item {
 
             Text {
                 id: text40
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("SPARE")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -603,7 +604,7 @@ Item {
 
             Text {
                 id: text42
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("SPARE")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -632,7 +633,7 @@ Item {
 
             Text {
                 id: text44
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Light Curtain Bypass")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -661,7 +662,7 @@ Item {
 
             Text {
                 id: text46
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Relay-Clamp#1 CoilA")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -690,7 +691,7 @@ Item {
 
             Text {
                 id: text48
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Relay-Clamp#1 CoilB")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -719,7 +720,7 @@ Item {
 
             Text {
                 id: text50
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Relay-Clamp#2 CoilA")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -748,7 +749,7 @@ Item {
 
             Text {
                 id: text52
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Relay-Clamp#2 CoilB")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -777,7 +778,7 @@ Item {
 
             Text {
                 id: text54
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Spare")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -806,7 +807,7 @@ Item {
 
             Text {
                 id: text56
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Not Available")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -835,7 +836,7 @@ Item {
 
             Text {
                 id: text58
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Not Available")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -864,7 +865,7 @@ Item {
 
             Text {
                 id: text60
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Not Available")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -893,7 +894,7 @@ Item {
 
             Text {
                 id: text62
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Not Available")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -922,7 +923,7 @@ Item {
 
             Text {
                 id: text68
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Not Available")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -951,7 +952,7 @@ Item {
 
             Text {
                 id: text70
-                text: qsTr("ESTOP Pressed")
+                text: qsTr("Not Available")
                 font.pixelSize: 14
             }
             spacing: 10
@@ -969,12 +970,53 @@ Item {
          {
                //readRealtimeDataFromDatabase(quint16 requesterObjID,QString tableName,quint16 address)
              //dbhc1.getValuefromDataBase(indicator21.objID,indicator21.tableName,indicator21.address);
-             dbhc1.getValuefromDataBase(indicator21.objID,indicator21.tableName,indicator21.wordAddress)
-             dbhc1.getValuefromDataBase(indicator22.objID,indicator22.tableName,indicator22.wordAddress);
-             dbhc1.getValuefromDataBase(indicator23.objID,indicator23.tableName,indicator23.wordAddress);
-             dbhc1.getValuefromDataBase(indicator24.objID,indicator24.tableName,indicator24.wordAddress);
-             dbhc1.getValuefromDataBase(indicator25.objID,indicator25.tableName,indicator25.wordAddress);
+             dbhc1.getValuefromDataBase(indicator210.objID,indicator210.tableName,indicator210.wordAddress)
+             dbhc1.getValuefromDataBase(indicator211.objID,indicator211.tableName,indicator211.wordAddress);
+             dbhc1.getValuefromDataBase(indicator212.objID,indicator212.tableName,indicator212.wordAddress);
+             dbhc1.getValuefromDataBase(indicator213.objID,indicator213.tableName,indicator213.wordAddress);
+             dbhc1.getValuefromDataBase(indicator214.objID,indicator214.tableName,indicator214.wordAddress);
 
+             dbhc1.getValuefromDataBase(indicator215.objID,indicator215.tableName,indicator215.wordAddress)
+             dbhc1.getValuefromDataBase(indicator216.objID,indicator216.tableName,indicator216.wordAddress);
+             dbhc1.getValuefromDataBase(indicator217.objID,indicator217.tableName,indicator217.wordAddress);
+             dbhc1.getValuefromDataBase(indicator218.objID,indicator218.tableName,indicator218.wordAddress);
+             dbhc1.getValuefromDataBase(indicator219.objID,indicator219.tableName,indicator219.wordAddress);
+
+             dbhc1.getValuefromDataBase(indicator220.objID,indicator220.tableName,indicator220.wordAddress)
+             dbhc1.getValuefromDataBase(indicator221.objID,indicator221.tableName,indicator221.wordAddress);
+             dbhc1.getValuefromDataBase(indicator222.objID,indicator222.tableName,indicator222.wordAddress);
+             dbhc1.getValuefromDataBase(indicator223.objID,indicator223.tableName,indicator223.wordAddress);
+             dbhc1.getValuefromDataBase(indicator224.objID,indicator224.tableName,indicator224.wordAddress);
+
+             dbhc1.getValuefromDataBase(indicator225.objID,indicator225.tableName,indicator225.wordAddress)
+             dbhc1.getValuefromDataBase(indicator226.objID,indicator226.tableName,indicator226.wordAddress);
+             dbhc1.getValuefromDataBase(indicator227.objID,indicator227.tableName,indicator227.wordAddress);
+             dbhc1.getValuefromDataBase(indicator228.objID,indicator228.tableName,indicator228.wordAddress);
+             dbhc1.getValuefromDataBase(indicator229.objID,indicator229.tableName,indicator229.wordAddress);
+
+             dbhc1.getValuefromDataBase(indicator230.objID,indicator230.tableName,indicator230.wordAddress)
+             dbhc1.getValuefromDataBase(indicator231.objID,indicator231.tableName,indicator231.wordAddress);
+             dbhc1.getValuefromDataBase(indicator232.objID,indicator232.tableName,indicator232.wordAddress);
+             dbhc1.getValuefromDataBase(indicator233.objID,indicator233.tableName,indicator233.wordAddress);
+             dbhc1.getValuefromDataBase(indicator234.objID,indicator234.tableName,indicator234.wordAddress);
+
+             dbhc1.getValuefromDataBase(indicator235.objID,indicator235.tableName,indicator235.wordAddress)
+             dbhc1.getValuefromDataBase(indicator236.objID,indicator236.tableName,indicator236.wordAddress);
+             dbhc1.getValuefromDataBase(indicator237.objID,indicator237.tableName,indicator237.wordAddress);
+             dbhc1.getValuefromDataBase(indicator238.objID,indicator238.tableName,indicator238.wordAddress);
+             dbhc1.getValuefromDataBase(indicator239.objID,indicator239.tableName,indicator239.wordAddress);
+
+             dbhc1.getValuefromDataBase(indicator240.objID,indicator240.tableName,indicator240.wordAddress)
+             dbhc1.getValuefromDataBase(indicator241.objID,indicator241.tableName,indicator241.wordAddress);
+             //dbhc1.getValuefromDataBase(indicator232.objID,indicator232.tableName,indicator232.wordAddress);
+             //dbhc1.getValuefromDataBase(indicator233.objID,indicator233.tableName,indicator233.wordAddress);
+             //dbhc1.getValuefromDataBase(indicator234.objID,indicator234.tableName,indicator234.wordAddress);
+
+             //dbhc1.getValuefromDataBase(indicator235.objID,indicator235.tableName,indicator235.wordAddress)
+             //dbhc1.getValuefromDataBase(indicator236.objID,indicator236.tableName,indicator236.wordAddress);
+             //dbhc1.getValuefromDataBase(indicator237.objID,indicator237.tableName,indicator237.wordAddress);
+             //dbhc1.getValuefromDataBase(indicator238.objID,indicator238.tableName,indicator238.wordAddress);
+             //dbhc1.getValuefromDataBase(indicator239.objID,indicator239.tableName,indicator239.wordAddress);
           }
 
       }
@@ -990,32 +1032,151 @@ Item {
 
         switch(reqesterID)
         {
-        case indicator21.objID:
-            if(address===indicator21.address)
-                indicator21.value=value;
-            break;
-        case indicator22.objID:
-            if(address===indicator22.address)
-                indicator22.value=value;
-            break;
-        case indicator23.objID:
-            if(address===indicator23.address)
-                indicator23.value=value;
-            break;
-        case indicator24.objID:
-            if(address===indicator24.address)
-                indicator24.value=value;
-            break;
-        case indicator25.objID:
-            if(address===indicator25.address)
-            {
+            case indicator210.objID:
+                if(address===indicator210.wordAddress)
+                    indicator210.value=value;
+                break;
+            case indicator211.objID:
+                if(address===indicator211.wordAddress)
+                    indicator211.value=value;
+                break;
+            case indicator212.objID:
+                if(address===indicator212.wordAddress)
+                    indicator212.value=value;
+                break;
+            case indicator213.objID:
+                if(address===indicator213.wordAddress)
+                    indicator213.value=value;
+                break;
+            case indicator214.objID:
+                if(address===indicator214.wordAddress)
+                    indicator214.value=value;
+                break;
+            case indicator215.objID:
+                if(address===indicator215.wordAddress)
+                    indicator215.value=value;
+                break;
+            case indicator216.objID:
+                if(address===indicator216.wordAddress)
+                    indicator216.value=value;
+                break;
+            case indicator217.objID:
+                if(address===indicator217.wordAddress)
+                    indicator217.value=value;
+                break;
+            case indicator218.objID:
+                if(address===indicator218.wordAddress)
+                    indicator218.value=value;
+                break;
+            case indicator219.objID:
+                if(address===indicator219.wordAddress)
+                    indicator219.value=value;
+                break;
+            //
+           //220~229
+            case indicator220.objID:
+                if(address===indicator220.wordAddress)
+                    indicator220.value=value;
+                break;
+            case indicator221.objID:
+                if(address===indicator221.wordAddress)
+                    indicator221.value=value;
+                break;
+            case indicator222.objID:
+                if(address===indicator222.wordAddress)
+                    indicator222.value=value;
+                break;
+            case indicator223.objID:
+                if(address===indicator223.wordAddress)
+                    indicator223.value=value;
+                break;
+            case indicator224.objID:
+                if(address===indicator224.wordAddress)
+                    indicator224.value=value;
+                break;
+            case indicator225.objID:
+                if(address===indicator225.wordAddress)
+                    indicator225.value=value;
+                break;
+            case indicator226.objID:
+                if(address===indicator226.wordAddress)
+                    indicator226.value=value;
+                break;
+            case indicator227.objID:
+                if(address===indicator227.wordwordAddress)
+                    indicator227.value=value;
+                break;
+            case indicator228.objID:
+                if(address===indicator228.wordAddress)
+                    indicator228.value=value;
+                    console.log("indicator228 address:"+indicator228.wordAddress+"value:"+indicator228.value+"")
 
-                indicator25.value=dbhc1.getBitsFromWord(value,indicator25.bitPosInWord);
-            }
+                break;
+            case indicator229.objID:
+                if(address===indicator229.wordAddress)
+                    indicator229.value=value;
+                break;
+            //230~239
+            case indicator230.objID:
+                if(address===indicator230.wordAddress)
+                    indicator230.value=value;
+                break;
+            case indicator231.objID:
+                if(address===indicator231.wordAddress)
+                    indicator231.value=value;
+                break;
+            case indicator232.objID:
+                if(address===indicator232.wordAddress)
+                    indicator232.value=value;
+                break;
+            case indicator233.objID:
+                if(address===indicator233.wordAddress)
+                    indicator233.value=value;
+                break;
+            case indicator234.objID:
+                if(address===indicator234.wordAddress)
+                    indicator234.value=value;
+                break;
+            case indicator235.objID:
+                if(address===indicator235.wordAddress)
+                    indicator235.value=value;
+                break;
+            case indicator236.objID:
+                if(address===indicator236.wordAddress)
+                    indicator236.value=value;
+                break;
+            case indicator237.objID:
+                if(address===indicator237.wordAddress)
+                    indicator237.value=value;
+                break;
+            case indicator238.objID:
+                if(address===indicator238.wordAddress)
+                    indicator238.value=value;
+                break;
+            case indicator239.objID:
+                if(address===indicator239.wordAddress)
+                    indicator239.value=value;
+                break;
+               //240~241
+            case indicator240.objID:
+                if(address===indicator240.wordAddress)
+                    indicator240.value=value;
+                break;
+            case indicator241.objID:
+                if(address===indicator241.wordAddress)
+                    indicator241.value=value;
+                break;
 
-            break;
-        default:
-            break;
+    //        case indicator25.objID:
+    //            if(address===indicator25.wordAddress)
+    //            {
+
+    //                indicator25.value=dbhc1.getBitsFromWord(value,indicator25.bitPosInWord);
+    //            }
+
+               // break;
+            default:
+                break;
         }
      }
 

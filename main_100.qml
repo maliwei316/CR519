@@ -6,10 +6,10 @@ import QtQuick.Layouts 1.3
 ApplicationWindow {
     id:window
     visible: true
-    width: 1024
-    height: 768
+    width: 800
+    height: 600
     title: qsTr("CR519")
-    property int thisPageNO: 1
+    readonly property int thisPageNO: 100
     SwipeView {
         id: swipeView
         anchors.top:parent.top
@@ -17,7 +17,7 @@ ApplicationWindow {
         currentIndex: tabBar.currentIndex
         width: parent.width
         height: parent.height/2
-        Page1 {
+        Page1_Test_101 {
 
             ColorAnimation {
                 from: "white"
@@ -27,9 +27,9 @@ ApplicationWindow {
 
         }
 
-//        Page2 {
+        Page2_IO_Table_110 {
 
-//      }
+      }
         Page {
             Label {
                 text: qsTr("Third page")
