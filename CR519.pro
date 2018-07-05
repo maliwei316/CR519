@@ -42,7 +42,7 @@ DISTFILES += \
     zh_CN.qm \
     en_US.ts \
     zh_CN.ts \
-    backup.qml \
+
     Indicator2.qml
 
 HEADERS += \
