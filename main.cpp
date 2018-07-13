@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
     qRegisterMetaType<QModbusDevice::State>();
     qRegisterMetaType<QModbusDevice::Error>();
-    //qRegisterMetaType<wordBits>("wordBits");
+
 
     QQmlApplicationEngine engine;
     QmlLanguage qmlLanguage(app, engine);

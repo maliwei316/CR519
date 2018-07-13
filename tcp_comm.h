@@ -12,9 +12,11 @@ class tcp_comm : public QObject
 public:
     explicit tcp_comm(int portReceive, int portSend,QObject *parent = nullptr);
     ~tcp_comm();
-    int writeDataViaTCP(QByteArray dataToWrite);
+     int writeDataViaTCP(QByteArray dataToWrite);
+     Q_INVOKABLE void writePLCTestViaTCP();
     int getCurrentPageNO();
     void setCurrentPageNO(int newPageNO);
+    void parseReceivedData(const QByteArray& dataToParse);
 signals:
     void writeBackReceivedData(QByteArray receivedData);
     void pageNOChanged(int newPageNO);
@@ -31,6 +33,7 @@ public:
     int port=0;
     QByteArray data;
     int pageNO;
+    bool isHavingToken;
 };
 
 #endif // TCP_COMM_H

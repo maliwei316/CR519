@@ -22,7 +22,7 @@ void worker_modbus::onInit(QString IPAddr, int port, int DI_Var_count, int DO_Va
     this->HoldRegister_Var_count=0;
     this->IPAddr=IPAddr;
     this->port=port;
-    this->timerEnableFlag=false;
+    this->timerEnableFlag=true;
     this->timer=new QTimer;
     this->setVarCounts(DI_Var_count,DO_Var_count,HoldRegister_Var_count);
     this->connectPLC();
@@ -117,34 +117,28 @@ void worker_modbus::readPLCtoRealtimeDB()
       qDebug()<<QTime::currentTime()<<"readPLCtoRealtimeDB executed,thread"<<QThread::currentThread();
        if(this->DO_enable)
        {
-           qDebug()<<QTime::currentTime()<<"DO reading started";
+           //qDebug()<<QTime::currentTime()<<"DO reading started";
            this->readPLCCommand(1,0,DO_Var_count);
-           qDebug()<<QTime::currentTime()<<"DO reading done";
+           //qDebug()<<QTime::currentTime()<<"DO reading done";
            QEventLoop eventloop;
            QTimer::singleShot(100, &eventloop, SLOT(quit()));
            eventloop.exec();
        }
-
-
-
        if(this->DI_enable)
        {
-           qDebug()<<QTime::currentTime()<<"DI reading started";
+           //qDebug()<<QTime::currentTime()<<"DI reading started";
            this->readPLCCommand(2,0,DI_Var_count);
-           qDebug()<<QTime::currentTime()<<"DI reading done";
+           //qDebug()<<QTime::currentTime()<<"DI reading done";
            QEventLoop eventloop;
 
            QTimer::singleShot(100, &eventloop, SLOT(quit()));
            eventloop.exec();
        }
-
-
-
        if(this->HoldRegister_enable)
        {
-           qDebug()<<QTime::currentTime()<<"M or DB reading started";
+           //qDebug()<<QTime::currentTime()<<"M or DB reading started";
            this->readPLCCommand(3,0,HoldRegister_Var_count);
-           qDebug()<<QTime::currentTime()<<"M or DB reading done";
+           //qDebug()<<QTime::currentTime()<<"M or DB reading done";
            QEventLoop eventloop;
 
            QTimer::singleShot(100, &eventloop, SLOT(quit()));
@@ -191,10 +185,7 @@ void worker_modbus::readPLCCommand(quint16 functionCode,quint16 startAddress, qu
     if(auto* reply=this->maModbusTcpClient->sendReadRequest(readUnit,1))
     {
 
-        //qDebug()<<"this.thread,workerMBClient.thread:"<<this->thread();
-        //qDebug()<<"maModbusTCPClient.thread"<<this->maModbusTcpClient->thread();
-        //qDebug()<<"reply.thread"<<reply->thread();
-        //qDebug()<<"line208 OK";
+
         if(!reply->isFinished())
            connect(reply, &QModbusReply::finished, this, &worker_modbus::readReady);
         else
@@ -329,12 +320,12 @@ void worker_modbus:: readReady()
            }
             if(!addressList.isEmpty())
             emit this->batchWriteDataBaseRequired(prepareStr,addressList,valueList);
-            qDebug()<<QTime::currentTime()<<"sent out batch write DB signal,then sleep";
+            //qDebug()<<QTime::currentTime()<<"sent out batch write DB signal,then sleep";
             QThread::msleep(50);
             QEventLoop eventloop;
             QTimer::singleShot(50, &eventloop, SLOT(quit()));
             eventloop.exec();
-            qDebug()<<QTime::currentTime()<<"waked";
+            //qDebug()<<QTime::currentTime()<<"waked";
         }
         else if (reply->error() == QModbusDevice::ProtocolError)
         {

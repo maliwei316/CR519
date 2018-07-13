@@ -36,7 +36,33 @@ ApplicationWindow {
                 anchors.centerIn: parent
             }
         }
+        function mapBetweenPageNOAndIndex(page)
+        {
+            var returnIndex;
+            switch(page)
+            {
+            case 101:
+                returnIndex=0;
+                break;
+            case 110:
+                returnIndex=1;
+                break;
+            case 120:
+                returnIndex=2;
+                break;
 
+             default:
+                 returnIndex=0;
+                 break;
+            }
+            swipeView.currentIndex=returnIndex;
+
+        }
+        Connections
+        {
+          target: tcpcomm1;
+          onPageNOChanged:swipeView.mapBetweenPageNOAndIndex(tcpcomm1.PageNO);
+        }
     }
     RowLayout
     {
@@ -101,7 +127,7 @@ ApplicationWindow {
                 mbcc1.resetCoils();
             }
         }
-       Button{
+        Button{
             id:btn8;
             anchors.margins: 20
             //anchors.left: btn8.right;
@@ -120,6 +146,19 @@ ApplicationWindow {
                 mbcc2.checkConnectionState();
 
             }
+       }
+
+        Button {
+            id: btn9
+            width: btn5.width
+            anchors.margins: 20
+            Text {
+                id: checkConnectionBtn1
+                text: "send test"
+                anchors.centerIn: parent
+            }
+            anchors.verticalCenter: btn7.verticalCenter
+            onClicked: tcpcomm1.writePLCTestViaTCP();
         }
 
     }
@@ -254,15 +293,19 @@ ApplicationWindow {
         currentIndex: swipeView.currentIndex
         TabButton {
             text: qsTr("First")
+            onClicked:tcpcomm1.PageNO=100;
         }
         TabButton {
             text: qsTr("Second")
+            onClicked:tcpcomm1.PageNO=101;
         }
         TabButton {
             text: qsTr("Third")
+            onClicked:tcpcomm1.PageNO=110;
         }
         TabButton {
             text: qsTr("Fourth")
+            onClicked:tcpcomm1.PageNO=120;
         }
     }
 //    InputPanel {
