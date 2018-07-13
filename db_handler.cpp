@@ -97,7 +97,7 @@ void DB_Handler::customEvent(QEvent *e)
 }
 int DB_Handler::writeDatabaseEventHandler(QEvent *e)
 {
-    qDebug()<<QTime::currentTime()<<"writeDatabaseEventHandler executed"<<"Thread:"<<QThread::currentThread();
+    //qDebug()<<QTime::currentTime()<<"writeDatabaseEventHandler executed"<<"Thread:"<<QThread::currentThread();
     myEvent_writeDB *customEvent = static_cast<myEvent_writeDB *>(e);
     int recordsCount=writeDatabase(customEvent->sqlquery);
     return recordsCount;
@@ -105,7 +105,7 @@ int DB_Handler::writeDatabaseEventHandler(QEvent *e)
 }
 int DB_Handler::batchWriteDatabaseEventHandler(QEvent *e)
 {
-    qDebug()<<QTime::currentTime()<<"BatchWriteDatabaseEventHandler executed";
+    //qDebug()<<QTime::currentTime()<<"BatchWriteDatabaseEventHandler executed";
     myEvent_batchWriteDB *customEvent = static_cast<myEvent_batchWriteDB *>(e);
     int recordsCount=batchWriteDatabase(customEvent->prepareStr,customEvent->addressList,customEvent->valueList);
     return recordsCount;
@@ -154,7 +154,7 @@ int DB_Handler::batchWriteDatabase(QString prepareStr, QVariantList addressList,
 
 int DB_Handler::readDatabaseEventHandler(QEvent *e)
 {
-   qDebug()<<QTime::currentTime()<<"readDatabaseEventHandler executed";
+   //qDebug()<<QTime::currentTime()<<"readDatabaseEventHandler executed";
    myEvent_readDB *customEvent=static_cast<myEvent_readDB*>(e);
    QString sqlquery=QObject::tr("select address,value from %1 where address=%2" ).arg(customEvent->tableName)
            .arg(customEvent->address);
@@ -168,7 +168,7 @@ int DB_Handler::readDatabaseEventHandler(QEvent *e)
 
 int DB_Handler::readDatabase(QString sqlquery)
 {
-    qDebug()<<QTime::currentTime()<<"read Database executed";
+    //qDebug()<<QTime::currentTime()<<"read Database executed";
     if(!q1.exec(sqlquery))
     {
         qDebug()<<q1.lastError();
@@ -177,7 +177,7 @@ int DB_Handler::readDatabase(QString sqlquery)
     else
     {
         q1.next();
-        qDebug()<<QString("data from database1  Address:%1  Value:%2").arg(q1.value(0).toInt()).arg(q1.value(1).toInt());
+        //qDebug()<<QString("data from database1  Address:%1  Value:%2").arg(q1.value(0).toInt()).arg(q1.value(1).toInt());
         return q1.value(1).toInt();
     }
 }
