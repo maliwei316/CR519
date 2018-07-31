@@ -3,7 +3,10 @@ QT += serialbus
 QT += sql
 QT += network
 CONFIG += c++11
+QT += core gui
 
+
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -22,7 +25,9 @@ SOURCES += \
     mbc_controller.cpp \
     qmllanguage.cpp \
     worker_modbus.cpp \
-    tcp_comm.cpp
+    tcp_comm.cpp \
+    mainwindow.cpp \
+    tooling.cpp
 
 RESOURCES += qml.qrc
 
@@ -53,4 +58,9 @@ HEADERS += \
     myevent.h \
     qmllanguage.h \
     worker_modbus.h \
-    tcp_comm.h
+    tcp_comm.h \
+    mainwindow.h \
+    tooling.h
+
+FORMS += \
+    mainwindow.ui

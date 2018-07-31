@@ -143,3 +143,4 @@ bool dbh_controller::getBitsFromWord(quint16 wordVar,quint8 bitPos)
     }
     return returnValue;
 }
+

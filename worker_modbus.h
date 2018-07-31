@@ -18,12 +18,13 @@ public:
     bool connectPLC();
     //bool disconnectPLC();
     void setVarCounts(int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count);
-    Q_INVOKABLE void checkConnection(QString info);
+    void checkConnection(QString info);
     //void streamBytesToFile(const QByteArray& data,QString filename="log.dat");
-    Q_INVOKABLE void readPLCCommand(quint16 functionCode,quint16 startAddress, quint16 length);
-    Q_INVOKABLE void setPLCCoilsTest();
-    Q_INVOKABLE void resetPLCCoilsTest();
-    Q_INVOKABLE void readPLCtoRealtimeDB();
+    void readPLCCommand(quint16 functionCode,quint16 startAddress, quint16 length);
+    void setPLCCoilsTest();
+    void resetPLCCoilsTest();
+    void readPLCtoRealtimeDB();
+    bool waitReadPLCAtAddress(quint16 functionCode,quint16 Address, quint16 &result);
 
 signals:
     //void resultReady(const QString tableName,const quint16 startAddress,const quint16 length);
@@ -35,10 +36,11 @@ signals:
     void modbusErrorOccured(QModbusDevice::Error error);
 public slots:
     void onInit(QString IPAddr,int port,int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count);
-    void readReady1();
+
     void readReady();
     void onStateChanged(QModbusDevice::State state);
     void onErrorOccurred(QModbusDevice::Error error);
+    void writePLCCommand(quint16 functionCode, quint16 Address, const quint16 data,bool bitOperation,quint8 bitPos);
     //void onTimeout();
 public:
 

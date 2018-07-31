@@ -1,0 +1,17 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main_100.qml</file>
+        <file>Page1_Test_101.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>Indicator2.qml</file>
+        <file>Page2_IO_Table_110.qml</file>
+        <file>Page3_PointConfig_120.qml</file>
+        <file>Page5_InitConfig_130.qml</file>
+        <file>backup.qml</file>
+        <file>P102_IO_Table.qml</file>
+        <file>P102_IO_TableForm.ui.qml</file>
+        <file>P130_InitConfig.qml</file>
+        <file>P130_InitConfigForm.ui.qml</file>
+        <file>MaTextInput.qml</file>
+    </qresource>
+</RCC>

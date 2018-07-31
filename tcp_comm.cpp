@@ -29,6 +29,7 @@ tcp_comm::tcp_comm(int portReceive, int portSend,QObject *parent) : QObject(pare
               //clientConnection->disconnectFromHost();
               connect(clientConnection_receive,&QAbstractSocket::readyRead,this,&tcp_comm::onReadyRead);
 
+
           }
           else
           {
@@ -56,6 +57,7 @@ tcp_comm::tcp_comm(int portReceive, int portSend,QObject *parent) : QObject(pare
                 connect(clientConnection_send,&QTcpSocket::stateChanged,this,&tcp_comm::onStateChanged);
                 connect(clientConnection_send, &QAbstractSocket::disconnected,clientConnection_send, &QObject::deleteLater);
                 //connect(clientConnection_receive,&QAbstractSocket::readyRead,this,&tcp_comm::onReadyRead);
+                //connect(this, &tcp_comm::tokenStatusChanged,this, &tcp_comm::onTokenStatusChanged);
 
             }
             else
@@ -77,20 +79,13 @@ void tcp_comm::onReadyRead()
         eventloop.exec();
         data=this->clientConnection_receive->readAll();
 
-        qDebug()<<"data.size()"<<data.size();
+        qDebug()<<"data from PLC, data.size()"<<data.size();
        for(int i=0;i<data.count();i++)
        qDebug()<<tr("data from PLC, at[%1]:%2,data[%3]:%4,peer port:%5").arg(i).arg(QString::number(data.at(i),16)).arg(i).arg(data[i]).arg(this->clientConnection_receive->peerPort());
        //QByteArray receivedBytearray(data);
        QByteArrayList receivedByteArrayList;
 
-       if(data[2]==0x01)
-       {
-           this->isHavingToken=true;
-       }
-       else
-       {
-          this->isHavingToken=false;
-       }
+
        if(data.size()>4)
        {
            int subDataLength;
@@ -107,7 +102,7 @@ void tcp_comm::onReadyRead()
            }
 
        }
-       emit writeBackReceivedData(data);
+
     }
 
 }
@@ -140,6 +135,40 @@ void tcp_comm::parseReceivedData(const QByteArray& dataToParse)
     switch (command)
     {
 
+    case 2://get generator real time data from PLC , then update the display value
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 3://get generator real time data from PLC , then update the display value
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 5://get machine Qty config info from PLC , then update the display value
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 6:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 7:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 8:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 9:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 10:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 11:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 12:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 13:
+        emit sendDataToWindow(dataToParse);
+        break;
+
     case 100://change HMI page NO
         int receivedPageNO;
         receivedPageNO=dataLoad.at(0)*256+dataLoad.at(1);
@@ -156,29 +185,50 @@ void tcp_comm::parseReceivedData(const QByteArray& dataToParse)
 
 }
 
-void tcp_comm::writePLCTestViaTCP()
+void tcp_comm::receiveDataFromWindow(QByteArray dataFromWindow)
 {
-   QByteArray ba;
-   //ba<<0x00<<0x04<<0x02<<0x33;
-   ba.clear();
-   ba.append(char(0x01));
-   ba.append(char(0x02));
-   ba.append(char(0x03));
-   ba.append(char(0x04));
-   this->writeDataViaTCP(ba);
+    this->prepareDataToPLC(dataFromWindow);
 }
+
+void tcp_comm::prepareDataToPLC(QByteArray newData)
+{
+
+    //dataToSend.clear();
+    if(dataToSend.isEmpty())
+    {
+        for(int i=0;i<4;i++)
+        dataToSend[i]=quint8(0x00);
+    }
+
+    qDebug()<<"data before appendding new data:"<<this->dataToSend;
+    qDebug()<<"data to be appended"<<newData;
+    this->dataToSend.append(newData);
+    qDebug()<<"data after appendding new data:"<<this->dataToSend;
+    quint16 length=this->dataToSend.size();
+    this->dataToSend[0]=length/256;
+    this->dataToSend[1]=length%256;
+     qDebug()<<"length of sent bytes"<<length;
+     //this->writeDataViaTCP(dataToSend);
+      if(this->writeDataViaTCP(dataToSend))
+         dataToSend.clear();
+
+}
+
 int tcp_comm::writeDataViaTCP(QByteArray dataToWrite)
 {
     //qDebug()<<"writeDataViaTCP executed,data to write:"<<dataToWrite;
     int wroteCount=0;
 
     //dataToWrite[dataToWrite.count()-1]=(dataToWrite.at(dataToWrite.count()-1))?0x00:0xff;
-   dataToWrite[2]=(dataToWrite[2]+1)%2;
+   dataToWrite[2]=0x00;
    //dataToWrite[1]=4;
    qDebug()<<"writeDataViaTCP executed,data to write:"<<dataToWrite;
     wroteCount=this->clientConnection_send->write(dataToWrite);
+    this->clientConnection_send->waitForBytesWritten();
+    //dataToWrite.clear();
     qDebug()<<"writeDataViaTCP executed,wrote count:"<<wroteCount<<"peer port:"<<this->clientConnection_send->peerPort();
-
+//    if(wroteCount)
+//    this->isHavingToken=false;
     return wroteCount;
 }
 int tcp_comm::getCurrentPageNO()

@@ -22,7 +22,7 @@ void worker_modbus::onInit(QString IPAddr, int port, int DI_Var_count, int DO_Va
     this->HoldRegister_Var_count=0;
     this->IPAddr=IPAddr;
     this->port=port;
-    this->timerEnableFlag=true;
+    this->timerEnableFlag=false;
     this->timer=new QTimer;
     this->setVarCounts(DI_Var_count,DO_Var_count,HoldRegister_Var_count);
     this->connectPLC();
@@ -202,72 +202,95 @@ void worker_modbus::readPLCCommand(quint16 functionCode,quint16 startAddress, qu
 //    QTimer::singleShot(20, &eventloop, SLOT(quit()));
 //    eventloop.exec();
 }
-void worker_modbus:: readReady1()
+bool worker_modbus::waitReadPLCAtAddress(quint16 functionCode,quint16 Address, quint16 &result)
 {
-    auto reply = qobject_cast<QModbusReply *>(sender());//QModbusReply这个类存储了来自client的数据,sender()返回发送信号的对象的指针
-        if (!reply)
-            return;
-    //数据从QModbusReply这个类的result方法中获取,也就是本程序中的reply->result()
+    if(!this->connectedFlag)
+        return false;
 
-        if (reply->error() == QModbusDevice::NoError)
+    QModbusDataUnit::RegisterType  dataUnitType;
+    if(functionCode=QModbusPdu::WriteSingleCoil)
+    {
+        dataUnitType=QModbusDataUnit::Coils;
+    }
+    else if(functionCode=QModbusPdu::WriteSingleRegister)
+    {
+        dataUnitType=QModbusDataUnit::HoldingRegisters;
+    }
+
+    else
+        return false;
+    QModbusDataUnit readUnit(dataUnitType,Address,1);
+    //qDebug()<<"line204 OK";
+    if(auto* reply=this->maModbusTcpClient->sendReadRequest(readUnit,1))
+    {
+
+
+        if(!reply->isFinished())
         {
+            bool returnValue;
+            int i=0;
+            do{
+                QEventLoop eventloop;
+                QTimer::singleShot(10, &eventloop, SLOT(quit()));
+                eventloop.exec();
+                i++;
+                if(i>30)
+                {
+                   qDebug()<<"wait PLC reply timeout";
 
-            QString sqlquery;
-            QString tableName;
-            const QModbusDataUnit unit = reply->result();
-            switch (unit.registerType()) {
-            case QModbusDataUnit::Coils:
-                tableName="PLC_DO";
-                break;
-            case QModbusDataUnit::DiscreteInputs:
-                tableName="PLC_DI";
-                break;
-            case QModbusDataUnit::HoldingRegisters:
-                if(this->port==502)
-                    tableName="PLC_M";
-                else if(this->port==503)
-                    tableName="PLC_DB";
-                break;
-            default:
-                tableName="";
-                break;
-            }
-            qint16 startAddress=unit.startAddress();
-            qint16 length=unit.valueCount();
-            qDebug()<<QTime::currentTime()<<"PLC reply data count:"<<length<<"table name:"<<tableName;
-           for (int i = 0; i < length; i++)
-           {
-//                const QString entry = tr("address: %1,Value: %2").arg(startAddress+i)
-//                                         .arg(QString::number(unit.value(i),
-//                                              unit.registerType() <= QModbusDataUnit::Coils ? 10 : 16));
-                //qDebug()<<"tableName:"<<tableName<<",reply from PLC "<<entry;
-                sqlquery=QObject::tr("insert or replace into %1(address,value) values(%2,%3)")
-                    .arg(tableName).arg(startAddress+i).arg(unit.value(i));
-            //post write query to DB handler,operate realTime DB
-            //myEvent_writeDB* e=new myEvent_writeDB((QEvent::Type)5001,sqlquery);
-            //QCoreApplication::postEvent(this,e);
-            qDebug()<<QTime::currentTime()<<tableName<<"-"<<i<<":sending out request of adding write DB into queue";
-            emit writeDatabaseRequired(sqlquery);
+                   returnValue= false;
+                   break;
+                }
+            }while(!reply->isFinished());
 
-           }
-           //QThread::msleep(50);
-           //QEventLoop eventloop;
-           //QTimer::singleShot(50, &eventloop, SLOT(quit()));
-           //eventloop.exec();
-        }
-        else if (reply->error() == QModbusDevice::ProtocolError)
-        {
+
+            if(i<=30)
+            {
+                if (reply->error() == QModbusDevice::NoError)
+                {
+                    const QModbusDataUnit unit = reply->result();
+                    result=unit.value(0);
+                    returnValue=true;
+                 }
+                else if (reply->error() == QModbusDevice::ProtocolError)
+                {
                       qDebug()<<tr("Read response error: %1 (Mobus exception: 0x%2)").
                       arg(reply->errorString()).
                       arg(reply->rawResult().exceptionCode(), -1, 16);
-        }
-        else {
-            qDebug()<<tr("Read response error: %1 (code: 0x%2)").
-                                        arg(reply->errorString()).
-                                        arg(reply->error(), -1, 16);
+                      returnValue=false;
+                }
+                else {
+                    qDebug()<<tr("Read response error: %1 (code: 0x%2)").
+                                                arg(reply->errorString()).
+                                                arg(reply->error(), -1, 16);
+                    returnValue=false;
+                }
+
+            }
+            else
+            {
+
+               returnValue=false;
+            }
+            return returnValue;
+            reply->deleteLater();
         }
 
+        else
+           {
+                 delete reply;
+                return false;
+            }
+
+
+    }
+    else
+    {
+        qDebug()<<"reply is empty or error occured152";
         reply->deleteLater();
+        return false;
+
+    }
 
 
 }
@@ -343,7 +366,76 @@ void worker_modbus:: readReady()
 
 
 }
+void worker_modbus::writePLCCommand(quint16 functionCode, quint16 Address, const quint16 data, bool bitOperation, quint8 bitPos)
+{
+    if(!this->connectedFlag)
+        return;
 
+    QModbusDataUnit::RegisterType  dataUnitType;
+    if(functionCode=QModbusPdu::WriteSingleCoil)
+    {
+        dataUnitType=QModbusDataUnit::Coils;
+    }
+    else if(functionCode=QModbusPdu::WriteSingleRegister)
+    {
+        dataUnitType=QModbusDataUnit::HoldingRegisters;
+    }
+    else
+        return;
+
+    qDebug()<<"dataUnitType:"<<dataUnitType;
+    quint16 toWriteValue;
+    if(bitOperation&&dataUnitType==QModbusDataUnit::HoldingRegisters)
+    {
+        quint16 *currentValue;
+
+//        if(this->waitReadPLCAtAddress(functionCode,Address,currentValue))
+//        {
+//            if(data)
+//            {
+//               toWriteValue=(*currentValue)|1U<<bitPos;//set bit
+//            }
+//            else
+//            {
+//               toWriteValue=(*currentValue)|~(1U<<bitPos);//reset bit
+//            }
+//        }
+//        else
+//        {
+//            return;
+//        }
+    }
+    else
+        toWriteValue=data;
+
+    QModbusDataUnit writeUnit(dataUnitType,Address,(quint16)1);
+    QVector<quint16> tempVector(1);
+    tempVector[0]=toWriteValue;
+    writeUnit.setValues(tempVector);
+    if (auto *reply = this->maModbusTcpClient->sendWriteRequest(writeUnit, 1)) {// 1是server address   sendWriteRequest是向服务器写数据
+            if (!reply->isFinished())
+            {   //reply Returns true when the reply has finished or was aborted.
+                connect(reply, &QModbusReply::finished, this, [this, reply]() {
+                    if (reply->error() == QModbusDevice::ProtocolError) {
+                        qDebug()<<tr("Write response error: %1 (Mobus exception: 0x%2)")
+                            .arg(reply->errorString()).arg(reply->rawResult().exceptionCode(), -1, 16);
+                    } else if (reply->error() != QModbusDevice::NoError) {
+                        qDebug()<<tr("Write response error: %1 (code: 0x%2)").
+                            arg(reply->errorString()).arg(reply->error(), -1, 16);
+                    }
+                    reply->deleteLater();
+                });
+            }
+            else {
+               qDebug()<<"broadcast replies return immediately";
+                reply->deleteLater();
+
+            }
+        }
+    else {
+            qDebug()<<"Write error:"<<this->maModbusTcpClient->errorString();
+        }
+}
 void worker_modbus::checkConnection(QString info)
 {
     qDebug()<<QTime::currentTime()<<"  check state:"<<info;
