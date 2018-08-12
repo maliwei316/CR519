@@ -3,26 +3,23 @@
 
 #include <QObject>
 #include <QTcpServer>
-
+#include<QQueue>
 //#include <QNetworkSession>
-
+#include <QTimer>
 class tcp_comm : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(int PageNO READ getCurrentPageNO WRITE setCurrentPageNO NOTIFY pageNOChanged)
+
 
 public:
     explicit tcp_comm(int portReceive, int portSend,QObject *parent = nullptr);
     ~tcp_comm();
-     int writeDataViaTCP(QByteArray dataToWrite);
-    int getCurrentPageNO();
-    void setCurrentPageNO(int newPageNO);
-    void parseReceivedData(const QByteArray& dataToParse);
+    int writeDataViaTCP(QByteArray dataToWrite);
+    void parseDataFromPLC(const QByteArray& dataToParse);
 signals:
-    //void writeBackReceivedData(QByteArray receivedData);
-    void pageNOChanged(int newPageNO);
-    //void tokenStatusChanged(bool tokenAtPC);
+
     void sendDataToWindow(QByteArray dataToWindow);
+    void tcpCommConnectionStateChanged(QAbstractSocket::SocketState state,quint8 ConnectionID);
 
 public slots:
 
@@ -32,6 +29,7 @@ public slots:
     void prepareDataToPLC(QByteArray newData);
     void receiveDataFromWindow(QByteArray dataFromWindow);
 
+    void reportConnectionStatus();
 public:
     QTcpServer *tcpServer = nullptr;
     //QVector<QString> fortunes;
@@ -39,10 +37,11 @@ public:
     QTcpSocket *clientConnection_receive=nullptr;
     QTcpSocket *clientConnection_send=nullptr;
     int port=0;
-    QByteArray data;
+    QByteArray receivedDataFromPLC;
+    //QQueue<QByteArray> dataToSend;
     QByteArray dataToSend;
-    int pageNO;
-    bool isHavingToken;
+
+
 
 };
 

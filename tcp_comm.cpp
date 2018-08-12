@@ -9,14 +9,19 @@
 
 tcp_comm::tcp_comm(int portReceive, int portSend,QObject *parent) : QObject(parent)
 {
-      this->tcpServer=new QTcpServer(this);
-     if(tcpServer->isListening())
+
+     this->tcpServer=new QTcpServer(this);
+     this->clientConnection_receive=new QTcpSocket(this);
+     this->clientConnection_send=new QTcpSocket(this);
+     //receive socket
+      if(tcpServer->isListening())
          tcpServer->close();
-      if (!tcpServer->listen(QHostAddress::AnyIPv4,portReceive)) {
+      if (!tcpServer->listen(QHostAddress::AnyIPv4,portReceive))
+      {
           qDebug()<<tr("Unable to start the server: %1.")
                     .arg(tcpServer->errorString());
 
-    }
+      }
       else
       {
           if(tcpServer->waitForNewConnection(10000))
@@ -28,100 +33,133 @@ tcp_comm::tcp_comm(int portReceive, int portSend,QObject *parent) : QObject(pare
               //clientConnection->write(block);
               //clientConnection->disconnectFromHost();
               connect(clientConnection_receive,&QAbstractSocket::readyRead,this,&tcp_comm::onReadyRead);
-
-
+              //emit state to Window
+              //emit tcpCommConnectionStateChanged(this->clientConnection_receive->state(),2);
           }
           else
           {
              qDebug()<<"wait for connection from PLC timeout, will have no ability to received specified data from PLC";
           }
-          //qDebug()<<"listening?"<<tcpServer->isListening();
-          //connect(tcpServer, &QTcpServer::newConnection, this, &tcp_comm::onNewConnection);
 
 
-      }
-    if(this->clientConnection_receive)
-    {
-        tcpServer->close();
-        if (!tcpServer->listen(QHostAddress::AnyIPv4,portSend)) {
-            qDebug()<<tr("Unable to start the server: %1.")
-                      .arg(tcpServer->errorString());
 
       }
-        else
-        {
-            if(tcpServer->waitForNewConnection(10000))
-            {
-                this->clientConnection_send = tcpServer->nextPendingConnection();
-                qDebug()<<"new connection detected,will send data via this port,peer port"<<this->clientConnection_send->peerPort();
-                connect(clientConnection_send,&QTcpSocket::stateChanged,this,&tcp_comm::onStateChanged);
-                connect(clientConnection_send, &QAbstractSocket::disconnected,clientConnection_send, &QObject::deleteLater);
-                //connect(clientConnection_receive,&QAbstractSocket::readyRead,this,&tcp_comm::onReadyRead);
-                //connect(this, &tcp_comm::tokenStatusChanged,this, &tcp_comm::onTokenStatusChanged);
+      //send socket
+      if(tcpServer->isListening())
+          tcpServer->close();
+      if (!tcpServer->listen(QHostAddress::AnyIPv4,portSend))
+      {
+          qDebug()<<tr("Unable to start the server: %1.")
+                    .arg(tcpServer->errorString());
 
-            }
-            else
-            {
-               qDebug()<<"wait for connection from PLC timeout, will have no ability to send specified data to PLC";
-            }
-        }
+      }
+      else
+      {
+          if(tcpServer->waitForNewConnection(10000))
+          {
+              this->clientConnection_send = tcpServer->nextPendingConnection();
+              qDebug()<<"new connection detected,will send data via this port,peer port"<<this->clientConnection_send->peerPort();
+              connect(clientConnection_send,&QTcpSocket::stateChanged,this,&tcp_comm::onStateChanged);
+              connect(clientConnection_send, &QAbstractSocket::disconnected,clientConnection_send, &QObject::deleteLater);
+
+          }
+          else
+          {
+             qDebug()<<"wait for connection from PLC timeout, will have no ability to send specified data to PLC";
+          }
+      }
+      //report current connection status to mainWindow
+      this->reportConnectionStatus();
+
 }
-
-
+void tcp_comm::reportConnectionStatus()
+{
+    qDebug()<<"tcp comm state_send, current state:"<<this->clientConnection_send->state();
+    qDebug()<<"tcp comm state_send, current state:"<<this->clientConnection_receive->state();
+    emit tcpCommConnectionStateChanged(this->clientConnection_send->state(),1);
+    emit tcpCommConnectionStateChanged(this->clientConnection_receive->state(),2);
 }
 void tcp_comm::onReadyRead()
 {
     if(this->clientConnection_receive->bytesAvailable()>=4)
     {
-        QEventLoop eventloop;
+        if(receivedDataFromPLC.isEmpty())
+            receivedDataFromPLC=this->clientConnection_receive->readAll();
+        else
+        {
+            receivedDataFromPLC.append(this->clientConnection_receive->readAll());
+        }
+        quint16 validDataLenth=((quint8)receivedDataFromPLC[0])*256+((quint8)receivedDataFromPLC[1]);
 
-        QTimer::singleShot(20, &eventloop, SLOT(quit()));
-        eventloop.exec();
-        data=this->clientConnection_receive->readAll();
+        if(validDataLenth<0||validDataLenth>255*255)
+        {
+            qWarning()<<"valivd lenth is out of range,lenth:"<<validDataLenth;
+            qDebug()<<"data from PLC, receivedData.size()"<<receivedDataFromPLC.size();
+            for(int i=0;i<receivedDataFromPLC.count();i++)
+            qDebug()<<tr("data from PLC, at[%1]:%2,data[%3]:%4,peer port:%5").arg(i).arg(QString::number(receivedDataFromPLC.at(i),16)).arg(i).arg(receivedDataFromPLC[i]).arg(this->clientConnection_receive->peerPort());
 
-        qDebug()<<"data from PLC, data.size()"<<data.size();
-       for(int i=0;i<data.count();i++)
-       qDebug()<<tr("data from PLC, at[%1]:%2,data[%3]:%4,peer port:%5").arg(i).arg(QString::number(data.at(i),16)).arg(i).arg(data[i]).arg(this->clientConnection_receive->peerPort());
-       //QByteArray receivedBytearray(data);
+            receivedDataFromPLC.clear();
+            return;
+        }
+        if(receivedDataFromPLC.size()<validDataLenth)
+        {
+            qDebug()<<tr("data from PLC, expect length:%1,current length:%2,will wait more data").arg(validDataLenth).arg(receivedDataFromPLC.size());
+
+            return;
+        }
+
+
        QByteArrayList receivedByteArrayList;
 
-
-       if(data.size()>4)
+       if(receivedDataFromPLC.size()>4)
        {
            int subDataLength;
            int i=4;
-           while(i<data.size())
+           while(i<validDataLenth)
            {
-             subDataLength=data[i]*256+data[i+1];
-             receivedByteArrayList.append(data.mid(i,subDataLength));
+             subDataLength=(quint8)receivedDataFromPLC[i]*256+(quint8)receivedDataFromPLC[i+1];
+             qDebug()<<tr("rceived data.size:%1,valid dataLength:%2,index:%3,subdataLength:%4").arg(receivedDataFromPLC.size()).arg(validDataLenth).arg(i).arg((quint8)receivedDataFromPLC[i]*256+(quint8)receivedDataFromPLC[i+1]);
+             if(subDataLength<6)
+             {
+                 qWarning()<<"subdata lenth less than 6, someting is wrong";
+                 return;
+             }
+             receivedByteArrayList.append(receivedDataFromPLC.mid(i,subDataLength));
              i+=subDataLength;
            }
-           for(int i=0;i<receivedByteArrayList.size();i++)
+           for(int j=0;j<receivedByteArrayList.size();j++)
            {
-             this->parseReceivedData(receivedByteArrayList.at(i));
+               qDebug()<<"parsing received data,sub data ID:"<<j;
+               this->parseDataFromPLC(receivedByteArrayList.at(j));
            }
-
+           receivedDataFromPLC.clear();
        }
 
     }
 
 }
-void tcp_comm::parseReceivedData(const QByteArray& dataToParse)
+void tcp_comm::parseDataFromPLC(const QByteArray& dataToParse)
 {
     int dataToPase_size=dataToParse.size();
     if(dataToPase_size<6)
     {
-       qDebug()<<"subData size <6";
+       qDebug()<<"subData size <6,size:"<<dataToPase_size;
         return;
     }
-    if(dataToPase_size!=dataToParse.at(0)*256+dataToParse.at(1))
+    if(dataToPase_size!=(quint8)dataToParse.at(0)*256+dataToParse.at(1))
     {
-       qDebug()<<"subData size not equal with length in byte array";
+
+
+       qDebug()<<tr("subData size not equal with length in byte array,subDatasize:%1,size of data to parse:%2")
+                 .arg((quint8)dataToParse.at(0)*256+dataToParse.at(1)).arg(dataToPase_size);
+       qDebug()<<tr("commandNO of first subData:%1,size of first subdata:%2")
+                 .arg((quint8)dataToParse.at(8)*256+dataToParse.at(9)).arg((quint8)dataToParse.at(6)*256+dataToParse.at(7));
+
         return;
     }
 
-    quint16 command=dataToParse.at(2)*256+dataToParse.at(3);
-    qDebug()<<"command NO:"<<command;
+    quint16 command=(quint8)dataToParse.at(2)*256+dataToParse.at(3);
+    qDebug()<<"data to parse in tcpcommobg,command NO:"<<command;
     QByteArray dataLoad;
     if(dataToPase_size>6)
     {
@@ -134,6 +172,8 @@ void tcp_comm::parseReceivedData(const QByteArray& dataToParse)
 
     switch (command)
     {
+    case 1://get generator real time data from PLC , then update the display value
+        emit sendDataToWindow(dataToParse);
 
     case 2://get generator real time data from PLC , then update the display value
         emit sendDataToWindow(dataToParse);
@@ -169,14 +209,7 @@ void tcp_comm::parseReceivedData(const QByteArray& dataToParse)
         emit sendDataToWindow(dataToParse);
         break;
 
-    case 100://change HMI page NO
-        int receivedPageNO;
-        receivedPageNO=dataLoad.at(0)*256+dataLoad.at(1);
-        qDebug()<<"received pageNO:"<<receivedPageNO;
-        qDebug()<<"this.PageNO(before change):"<<this->pageNO;
-        this->setCurrentPageNO(receivedPageNO);
-        qDebug()<<"this.pageNO(after change):"<<this->pageNO;
-        break;
+
 
     default:
         qDebug()<<"Command not match , no assigned hanlder";
@@ -200,10 +233,11 @@ void tcp_comm::prepareDataToPLC(QByteArray newData)
         dataToSend[i]=quint8(0x00);
     }
 
-    qDebug()<<"data before appendding new data:"<<this->dataToSend;
-    qDebug()<<"data to be appended"<<newData;
+    //qDebug()<<"data before appendding new data:"<<this->dataToSend;
+    //qDebug()<<"data to be appended"<<newData;
     this->dataToSend.append(newData);
-    qDebug()<<"data after appendding new data:"<<this->dataToSend;
+    //this->dataToSend.enqueue(newData);
+    //qDebug()<<"data after appendding new data:"<<this->dataToSend;
     quint16 length=this->dataToSend.size();
     this->dataToSend[0]=length/256;
     this->dataToSend[1]=length%256;
@@ -231,24 +265,13 @@ int tcp_comm::writeDataViaTCP(QByteArray dataToWrite)
 //    this->isHavingToken=false;
     return wroteCount;
 }
-int tcp_comm::getCurrentPageNO()
-{
-  return this->pageNO;
-}
-void tcp_comm::setCurrentPageNO(int newPageNO)
-{
-   if(this->pageNO!=newPageNO)
-   {
-       this->pageNO=newPageNO;
-       emit this->pageNOChanged(this->pageNO);
-       qDebug()<<"pageNO changed, new page NO"<<this->pageNO;
-
-   }
-}
 
 void tcp_comm::onStateChanged(QAbstractSocket::SocketState state)
 {
    qDebug()<<"QTcpSocket state changed, current state:"<<state;
+
+   this->reportConnectionStatus();
+
 }
 tcp_comm::~tcp_comm()
 {
@@ -257,20 +280,4 @@ tcp_comm::~tcp_comm()
 }
 
 #pragma pack()
-//void tcp_comm::onNewConnection()
-//{
 
-//    //QByteArray block;
-//    //QDataStream out(&block, QIODevice::WriteOnly);
-//    //out.setVersion(QDataStream::Qt_5_10);
-
-//   // out << fortunes[QRandomGenerator::global()->bounded(fortunes.size())];
-
-//    this->clientConnection = tcpServer->nextPendingConnection();
-//    qDebug()<<"new connection detected,peer port"<<this->clientConnection->peerPort();
-//    connect(clientConnection,&QTcpSocket::stateChanged,this,&tcp_comm::onStateCahnged);
-//    connect(clientConnection, &QAbstractSocket::disconnected,clientConnection, &QObject::deleteLater);
-//    //clientConnection->write(block);
-//    //clientConnection->disconnectFromHost();
-//    connect(clientConnection,&QAbstractSocket::readyRead,this,&tcp_comm::onReadyRead);
-//}

@@ -2,6 +2,9 @@
 #define BITSOPERATION_H
 //#include <stdio.h>
 #include <QList>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonDocument>
 #pragma pack(2)
  //这里就是要把数字x的第n位（bit（n-1）位）置为1
  //1U就表示的是无符号的1，宏定义可以传参的
@@ -86,7 +89,7 @@ typedef union
         quint32 DWordVar;
     } dWordBytes;
 typedef quint16 Word;
-typedef quint32  DInt;
+//typedef quint32  DInt;
 typedef quint8  Byte;
 //QList<bytebits> bybitsList1;
 //QList<wordBits>wordbitsList1;
@@ -188,114 +191,111 @@ typedef struct _weldPoint
     iQSettings ultrasonicPara;
     Word thrusterPressure_down;
     Word thrusterPressure_up;
-    Byte reservedByte1;
+    Byte enable;
     Byte reservedByte2;
 
 }weldPoint;
+typedef struct _thruster
+{
+        Byte enable;
+        Byte thrusterNO;
+        Byte GenNO;
+        Byte ChannelNO;
+        Word reserved;
+
+}thruster;
+typedef struct _pneumaticValve
+{
+        Byte enable;
+        Byte valveType;
+        Byte valveNO;
+        Byte startStep;
+        Byte stopStep;
+        Byte actionConfirm;
+
+}pneumaticValve;
+typedef struct _station
+{
+        Byte stationNO;
+        Byte speedType;
+        qint32 pos_upperLimit;
+        qint32 pos_lowerLimit;
+        qint32 pos_setPoint;
+}station;
+typedef struct _toolingInfo_in_PLC
+{
+        Byte toolingNO;
+        weldPoint weldPoint_List[17];
+        thruster thruster_List[17];
+        pneumaticValve pneumaticValvelist[7];
+        station station_List[17];
+        quint8 stepStationConnection[17];
+        qint32 servoSpeed_high;
+        qint32 servoSpeed_medium;
+        qint32 servoSpeed_low;
+        bool servoHomingDir;
+        bool generator_enable[5];
+
+}toolingInfo_in_PLC;
+
 
 typedef struct genRealtimeData
 {
-
-        Byte amplitude;
-        //Byte placeHolder1;
+        Byte GenNO;
+        Byte PointNO;
+        quint32 frequency;
         Word power;
-        DInt frequency;
-
+        Byte ChannelNO;
+        Byte amplitude;
 }genRealTimeData;
 
 
 typedef struct servoRealtimeData
 {
-
-    //Word placeHooder1;
-    //
-    Byte targetPos;
-    //Byte placeHoder2;
-    //Byte placeHoder3;
-    //Byte placeHoder4;
-    DInt speed;
-    //Word placeHooder3;
-    //
-    DInt position;
-
-    //Byte placeHolder5;
-
+    Byte CurrentStationNO;
+    Byte targetStationNO;
+    qint32 targetPos;
+    qint32 realTimeSpeed;
+    qint32 realTimePos;
 }servoRealTimeData;
 
-typedef struct tcpCommStruct
+typedef struct _plcItem
 {
-        Byte initiator;
-        Byte commandNO;
-        Byte HMIPageNO;
-        Byte toolID;
-        Byte selectedPointNO;
-        Byte selectedGenNO;
-        genRealTimeData realTimeData_Gen1;
-        genRealTimeData realTimeData_Gen2;
-        genRealTimeData realTimeData_Gen3;
-        genRealTimeData realTimeData_Gen4;
-        servoRealTimeData realTimeData_Servo1;
+    quint32 itemID;
+    quint8 itemGroup_area;
+    quint8 DB_NO;
+    quint16 wordAddress;
+    quint8  bitpos;
+    qint16  currentValue;
+    qint16  previousValue;
+    QString desc;
+    quint8 reserve_type;
+    bytebits reserveByteBits;
+    wordBits reserveWordBits;
+    dWordBytes reserveDwordBytes;
+}plcItem;
+//typedef struct tcpCommStruct
+//{
+//        Byte initiator;
+//        Byte commandNO;
+//        Byte HMIPageNO;
+//        Byte toolID;
+//        Byte selectedPointNO;
+//        Byte selectedGenNO;
+//        genRealTimeData realTimeData_Gen1;
+//        genRealTimeData realTimeData_Gen2;
+//        genRealTimeData realTimeData_Gen3;
+//        genRealTimeData realTimeData_Gen4;
+//        servoRealTimeData realTimeData_Servo1;
 
-        Byte byteArray[10];
-        wordBits wordBits1;
-        iQSettings iQSettings1;
+//        Byte byteArray[10];
+//        wordBits wordBits1;
+//        iQSettings iQSettings1;
 
-}tcpCommVars;
-//tcpCommVars* tcpvar1;
-//tcpvar1=(tcpCommVars*)data.data();
-//       qDebug()<<tr("tcpvar1 size :%1").arg(sizeof(*tcpvar1));
+//}tcpCommVars;
 
-//       qDebug()<<tr("size of initiator in tcpvars:%1").arg(sizeof(tcpvar1->initiator));
-//       qDebug()<<tr("size of commandNO in tcpvars:%1").arg(sizeof(tcpvar1->commandNO));
-//       qDebug()<<tr("size of HMIPageNO in tcpvars:%1").arg(sizeof(tcpvar1->HMIPageNO));
-//       qDebug()<<tr("size of toolID in tcpvars:%1").arg(sizeof(tcpvar1->toolID));
-//       qDebug()<<tr("size of selectedPointNO in tcpvars:%1").arg(sizeof(tcpvar1->selectedPointNO));
-//       qDebug()<<tr("size of selectedGenNO in tcpvars:%1").arg(sizeof(tcpvar1->selectedGenNO));
-//      qDebug()<<tr("size of realTimeData_Gen1 in tcpvars:%1").arg(sizeof(tcpvar1->realTimeData_Gen1));
-//       qDebug()<<tr("size of realTimeData_Gen2 in tcpvars:%1").arg(sizeof(tcpvar1->realTimeData_Gen2));
-//       qDebug()<<tr("size of realTimeData_Gen3 in tcpvars:%1").arg(sizeof(tcpvar1->realTimeData_Gen3));
-//       qDebug()<<tr("size of realTimeData_Gen4 in tcpvars:%1").arg(sizeof(tcpvar1->realTimeData_Gen4));
-//       qDebug()<<tr("size of realTimeData_servo in tcpvars:%1").arg(sizeof(tcpvar1->realTimeData_Servo1));
-//       qDebug()<<tr("size of iQSettings in tcpvars:%1").arg(sizeof(tcpvar1->iQSettings1));
-//       qDebug()<<tr("size of wordBits1 in tcpvars:%1").arg(sizeof(tcpvar1->wordBits1));
-//       //qDebug()<<tr("size of byearray in tcpvars:%1").arg(sizeof(tcpvar1.));
-//         qDebug()<<tr("size of byearray in tcpvars:%1").arg(sizeof(tcpvar1->byteArray));
-//       //memcpy(&tcpvar1,data.data(),sizeof(data.data()));
-//       qDebug()<<tr("tcpvar1 size :%1").arg(sizeof(*tcpvar1));
-//       qDebug()<<"HMI PageNO:"<<tcpvar1->HMIPageNO;
-//       qDebug()<<"Command NO:"<<tcpvar1->commandNO;
-//       qDebug()<<"selected GenNO"<<tcpvar1->selectedGenNO;
-//       qDebug()<<"selected Point NO:"<<tcpvar1->selectedPointNO;
-//       qDebug()<<"Tool ID:"<<tcpvar1->toolID;
-//       qDebug()<<"initiator:"<<tcpvar1->initiator;
-//       qDebug()<<"gen1 amp:"<<tcpvar1->realTimeData_Gen1.amplitude;
-//       qDebug()<<"gen1 power:"<<tcpvar1->realTimeData_Gen1.power;
-//       qDebug()<<"gen1 power(converted):"<<BigLittleSwap16(tcpvar1->realTimeData_Gen1.power);
-//       qDebug()<<"gen1 frq:"<<tcpvar1->realTimeData_Gen1.frequency;
-//       qDebug()<<"gen1 frq(converted):"<<BigLittleSwap32(tcpvar1->realTimeData_Gen1.frequency);
-//       qDebug()<<"gen2 amp:"<<tcpvar1->realTimeData_Gen2.amplitude;
-//       qDebug()<<"gen2 power:"<<tcpvar1->realTimeData_Gen2.power;
-//       qDebug()<<"gen2 power(converted):"<<BigLittleSwap16(tcpvar1->realTimeData_Gen2.power);
-//       qDebug()<<"gen2 frq:"<<tcpvar1->realTimeData_Gen2.frequency;
-//       qDebug()<<"gen1 frq(converted):"<<BigLittleSwap32(tcpvar1->realTimeData_Gen2.frequency);
-//       qDebug()<<"gen3 amp:"<<tcpvar1->realTimeData_Gen3.amplitude;
-//       qDebug()<<"gen3 power:"<<tcpvar1->realTimeData_Gen3.power;
-//       qDebug()<<"gen3 power(converted):"<<BigLittleSwap16(tcpvar1->realTimeData_Gen3.power);
-//       qDebug()<<"gen3 frq:"<<tcpvar1->realTimeData_Gen3.frequency;
-//       qDebug()<<"gen3 frq(converted):"<<BigLittleSwap32(tcpvar1->realTimeData_Gen3.frequency);
-//       qDebug()<<"gen4 amp:"<<tcpvar1->realTimeData_Gen4.amplitude;
-//       qDebug()<<"gen4 power:"<<tcpvar1->realTimeData_Gen4.power;
-//       qDebug()<<"gen4 power(converted):"<<BigLittleSwap16(tcpvar1->realTimeData_Gen4.power);
-//       qDebug()<<"gen4 frq:"<<tcpvar1->realTimeData_Gen4.frequency;
-//       qDebug()<<"gen4 frq(converted):"<<BigLittleSwap32(tcpvar1->realTimeData_Gen4.frequency);
-//       qDebug()<<"servo speed:"<<tcpvar1->realTimeData_Servo1.speed;
-//       qDebug()<<"servo speed(converted):"<<BigLittleSwap32(tcpvar1->realTimeData_Servo1.speed);
-//       qDebug()<<"servo current pos:"<<tcpvar1->realTimeData_Servo1.position;
-//       qDebug()<<"servo current pos(converted):"<<BigLittleSwap32(tcpvar1->realTimeData_Servo1.position);
-//       qDebug()<<"servo target pos:"<<tcpvar1->realTimeData_Servo1.targetPos;
-//       qDebug()<<"iQ Settings Amp:"<<tcpvar1->iQSettings1.Amplitude20to100;
-//       qDebug()<<"free run frequency:"<<tcpvar1->iQSettings1.Free_Run_Frequency;
-//       qDebug()<<"free run frequency(converted):"<<BigLittleSwap32(tcpvar1->iQSettings1.Free_Run_Frequency);
+
+
 //void worker_modbus:: readReady1()
 //{
 //    auto reply = qobject_cast<QModbusReply *>(sender());//QModbusReply这个类存储了来自client的数据,sender()返回发送信号的对象的指针
@@ -374,7 +374,7 @@ typedef struct tcpCommStruct
 //qDebug()<<tr("size of wp1->GenNO in WP1:%1").arg(sizeof(wp1->GenNO));
 //qDebug()<<tr("size of wp1->thrusterPressure_down in WP1:%1").arg(sizeof(wp1->thrusterPressure_down));
 //qDebug()<<tr("size of wp1->thrusterPressure_up in WP1:%1").arg(sizeof(wp1->thrusterPressure_up));
-////qDebug()<<"wp1 to char*, data"<<data;//display will be null
+//qDebug()<<"wp1 to char*, data"<<data;//display will be null
 
 //qDebug()<<"wp1 to QbyteArray , byte array's size:"<<ar1.size();
 #pragma pack()

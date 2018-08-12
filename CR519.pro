@@ -27,7 +27,7 @@ SOURCES += \
     worker_modbus.cpp \
     tcp_comm.cpp \
     mainwindow.cpp \
-    tooling.cpp
+    clstooling.cpp
 
 RESOURCES += qml.qrc
 
@@ -60,7 +60,7 @@ HEADERS += \
     worker_modbus.h \
     tcp_comm.h \
     mainwindow.h \
-    tooling.h
+    clstooling.h
 
 FORMS += \
     mainwindow.ui
