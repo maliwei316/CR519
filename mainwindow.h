@@ -273,6 +273,9 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    void customEvent(QEvent *e); //该函数是父类QObject的虚函数
+    void updatePlcItemDisplayEventHandler(QEvent *e);
+    void updatePLCItem(plcItem item);
 public:
     weldPoint* wp1;
     quint8 toolID_PLC;

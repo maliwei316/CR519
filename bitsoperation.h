@@ -261,19 +261,48 @@ typedef struct servoRealtimeData
 
 typedef struct _plcItem
 {
-    quint32 itemID;
-    quint8 itemGroup_area;
-    quint8 DB_NO;
+
+    quint8 itemGroup_area=0;//DI=0x81, DO=0x82, M=0x83, DB=0x84
+    quint8 DB_NO=0;
+    //bool addressType;//DI,DO=true,Holding Register=false
     quint16 wordAddress;
-    quint8  bitpos;
-    qint16  currentValue;
-    qint16  previousValue;
-    QString desc;
-    quint8 reserve_type;
-    bytebits reserveByteBits;
-    wordBits reserveWordBits;
-    dWordBytes reserveDwordBytes;
+
+    wordBits  currentValue;
+    wordBits  previousValue;
+    QString desc="";
+
+    bool addressType()
+    {
+        return (itemGroup_area==0x81||itemGroup_area==0x83)?true:false;
+    }
+    quint16 byteAddress()
+    {
+        if(this->addressType())
+            return (this->wordAddress-wordAddress%8)/8;
+        else
+            return this->wordAddress*2;
+    }
+
+    quint8 bitPosInByte()
+    {
+        if(this->addressType())
+            return wordAddress%8;
+
+        else
+            return 0;
+    }
+    quint32 itemID()
+    {
+        return (this->bitPosInByte()+this->byteAddress()*8+DB_NO*8192+itemGroup_area*500*8192);
+    }
+    bool updateValue(qint16 value)
+    {
+        this->previousValue=this->currentValue;
+        this->currentValue.wordVar=value;
+        return (this->previousValue.wordVar==this->currentValue.wordVar)?false:true;
+    }
 }plcItem;
+Q_DECLARE_METATYPE(plcItem)
 //typedef struct tcpCommStruct
 //{
 //        Byte initiator;
@@ -365,17 +394,6 @@ typedef struct _plcItem
 
 
 //}
-//qDebug()<<"wp1.size:"<<sizeof(*wp1)<<sizeof(*data);
-//qDebug()<<tr("size of iQSettings in WP1:%1").arg(sizeof(wp1->ultrasonicPara));
 
-//qDebug()<<tr("size of wp1->pointNO in WP1:%1").arg(sizeof(wp1->pointNO));
-//qDebug()<<tr("size of wp1->stepNO in WP1:%1").arg(sizeof(wp1->stepNO));
-//qDebug()<<tr("size of wp1->ThrusterNO in WP1:%1").arg(sizeof(wp1->ThrusterNO));
-//qDebug()<<tr("size of wp1->GenNO in WP1:%1").arg(sizeof(wp1->GenNO));
-//qDebug()<<tr("size of wp1->thrusterPressure_down in WP1:%1").arg(sizeof(wp1->thrusterPressure_down));
-//qDebug()<<tr("size of wp1->thrusterPressure_up in WP1:%1").arg(sizeof(wp1->thrusterPressure_up));
-//qDebug()<<"wp1 to char*, data"<<data;//display will be null
-
-//qDebug()<<"wp1 to QbyteArray , byte array's size:"<<ar1.size();
 #pragma pack()
 #endif // BITSOPERATION_H

@@ -3,6 +3,7 @@
 #include <QEvent>
 //#include <QtCore>
 #include <QObject>
+#include <bitsoperation.h>
 class myEvent_writeDB:public QEvent
 {
 
@@ -46,6 +47,17 @@ public:
     QString tableName;
     quint16 requestObjID;
     quint16 address;
+};
+class myEvent_updateDisplay:public QEvent
+{
+
+public:
+    myEvent_updateDisplay(QEvent::Type myEventType, plcItem item):QEvent(myEventType)
+    {
+      myItem=item;
+    }
+public:
+    plcItem myItem;
 };
 //class Worker : public QObject
 //{

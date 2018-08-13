@@ -8,6 +8,7 @@
 #include <QEvent>
 #include "myevent.h"
 #include <QVariant>
+#include <bitsoperation.h>
 worker_modbus::worker_modbus(QObject *parent): QObject(parent)
 {}
 
@@ -208,11 +209,11 @@ bool worker_modbus::waitReadPLCAtAddress(quint16 functionCode,quint16 Address, q
         return false;
 
     QModbusDataUnit::RegisterType  dataUnitType;
-    if(functionCode=QModbusPdu::WriteSingleCoil)
+    if(functionCode==QModbusPdu::WriteSingleCoil)
     {
         dataUnitType=QModbusDataUnit::Coils;
     }
-    else if(functionCode=QModbusPdu::WriteSingleRegister)
+    else if(functionCode==QModbusPdu::WriteSingleRegister)
     {
         dataUnitType=QModbusDataUnit::HoldingRegisters;
     }
@@ -365,6 +366,108 @@ void worker_modbus:: readReady()
         reply->deleteLater();
 
 
+}
+void worker_modbus:: readReady2()
+{
+    auto reply = qobject_cast<QModbusReply *>(sender());//QModbusReply这个类存储了来自client的数据,sender()返回发送信号的对象的指针
+        if (!reply)
+            return;
+    //数据从QModbusReply这个类的result方法中获取,也就是本程序中的reply->result()
+
+        if (reply->error() == QModbusDevice::NoError)
+        {
+
+            enum plcAera {DI=0x81, DO=0x82, M=0x83, DB=0x84};
+            //QString sqlquery;
+            QString tableName;
+            quint8 area;
+            const QModbusDataUnit unit = reply->result();
+            switch (unit.registerType()) {
+            case QModbusDataUnit::Coils:
+                tableName="PLC_DO";
+                area=plcAera::DO;
+                break;
+            case QModbusDataUnit::DiscreteInputs:
+                tableName="PLC_DI";
+                area=plcAera::DI;
+                break;
+            case QModbusDataUnit::HoldingRegisters:
+                if(this->port==502)
+                {
+                    tableName="PLC_M";
+                    area=plcAera::M;
+                }
+
+                else if(this->port==503)
+                {
+                    tableName="PLC_DB";
+                    area=plcAera::DB;
+                }
+
+                break;
+            default:
+                tableName="";
+                area=0;
+                break;
+            }
+            qint16 startAddress=unit.startAddress();
+            qint16 length=unit.valueCount();
+            qDebug()<<QTime::currentTime()<<"PLC reply data count:"<<length<<"table name:"<<tableName;
+           QString prepareStr;
+           QVariantList addressList,valueList;
+
+            for (int i = 0; i < length; i++)
+           {
+             addressList<<startAddress+i;
+             valueList<<unit.value(i);
+             /*const QString entry = tr("address: %1,Value: %2").arg(startAddress+i)
+                                                      .arg(QString::number(unit.value(i),
+                                                           unit.registerType() <= QModbusDataUnit::Coils ? 10 : 16));
+
+             qDebug()<<"tableName:"<<tableName<<",reply from PLC "<<entry;*/
+           }
+            //call function to parse received data from PLC
+            if(!addressList.isEmpty())
+            this->parseDataFromPLC(area,addressList,valueList);
+
+        }
+        else if (reply->error() == QModbusDevice::ProtocolError)
+        {
+                      qDebug()<<tr("Read response error: %1 (Mobus exception: 0x%2)").
+                      arg(reply->errorString()).
+                      arg(reply->rawResult().exceptionCode(), -1, 16);
+        }
+        else {
+            qDebug()<<tr("Read response error: %1 (code: 0x%2)").
+                                        arg(reply->errorString()).
+                                        arg(reply->error(), -1, 16);
+        }
+
+        reply->deleteLater();
+
+
+}
+void worker_modbus::parseDataFromPLC(quint8 area,QVariantList addressList,QVariantList valueList)
+{
+    QVariantList changedItems;
+    //QList<plcItem> changedItems;
+    plcItem item1;
+    QVariant v;
+    for(int i=0;i<addressList.size();i++)
+    {
+        item1.itemGroup_area=area;
+        item1.wordAddress=addressList.at(i).toInt();
+        if(item1.updateValue(valueList.at(i).toInt()))
+        {
+            v.setValue(item1);
+            changedItems.append(item1);
+        }
+
+    }
+  if(!changedItems.isEmpty())
+  {
+      emit this->plcItemsChanged(changedItems);
+  }
 }
 void worker_modbus::writePLCCommand(quint16 functionCode, quint16 Address, const quint16 data, bool bitOperation, quint8 bitPos)
 {

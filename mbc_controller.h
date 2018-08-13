@@ -19,8 +19,7 @@ public:
     Q_INVOKABLE void setCoils();
     Q_INVOKABLE void resetCoils();
     Q_INVOKABLE void checkConnectionState();
-    //Q_INVOKABLE void writePLC(quint16 functionCode, quint16 Address, const quint16 data,bool bitOperation=false,quint8 bitPos=0);
-    //Q_INVOKABLE void readRealtimeDataFromDatabase(quint16 requesterObjID,QString tableName,quint16 address);
+
     void connectPLC();
     void init(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count);
 

@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QVariant>
 #include <QList>
+#include "bitsoperation.h"
 
 class worker_modbus : public QObject
 {
@@ -26,6 +27,8 @@ public:
     void readPLCtoRealtimeDB();
     bool waitReadPLCAtAddress(quint16 functionCode,quint16 Address, quint16 &result);
 
+    void parseDataFromPLC(quint8 area,QVariantList addressList,QVariantList valueList);
+
 signals:
     //void resultReady(const QString tableName,const quint16 startAddress,const quint16 length);
     //void modbusConnected();
@@ -34,9 +37,10 @@ signals:
     void batchWriteDataBaseRequired(QString prepareStr,QVariantList addressList,QVariantList valueList);
     void modbusStateChanged(QModbusDevice::State state);
     void modbusErrorOccured(QModbusDevice::Error error);
+    void plcItemsChanged(QVariantList changedItems);
 public slots:
     void onInit(QString IPAddr,int port,int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count);
-
+    void readReady2();
     void readReady();
     void onStateChanged(QModbusDevice::State state);
     void onErrorOccurred(QModbusDevice::Error error);
@@ -56,8 +60,7 @@ public:
     quint16 DO_Var_count;
     quint16 HoldRegister_Var_count;
     QTimer *timer;
-
-
+    QList<plcItem> plcItemList;
 };
 
 

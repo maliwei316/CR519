@@ -6,7 +6,7 @@
 #include <QFileDialog>
 #include <clstooling.h>
 #include <QDebug>
-
+#include "myevent.h"
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -34,6 +34,30 @@ MainWindow::~MainWindow()
     //tooling_current->deleteLater();
 
 }
+void MainWindow::customEvent(QEvent *e)
+{
+    switch (e->type())
+    {
+    case 5011://update plc items on window
+        updatePlcItemDisplayEventHandler(e);
+        break;
+
+    default:
+        break;
+    }
+
+}
+void MainWindow::updatePlcItemDisplayEventHandler(QEvent *e)
+{
+    //qDebug()<<QTime::currentTime()<<"writeDatabaseEventHandler executed"<<"Thread:"<<QThread::currentThread();
+    myEvent_updateDisplay *customEvent = static_cast<myEvent_updateDisplay *>(e);
+    this->updatePLCItem(customEvent->myItem);
+
+}
+void MainWindow::updatePLCItem(plcItem item)
+{
+    qDebug()<<QTime::currentTime()<<"updating item,itemID"<<item.itemID()<<""<<(qint16)item.currentValue.wordVar;
+}
 void MainWindow::OnTimer_mainWindow_Timeout()
 {
     qDebug()<<tr("checking tcp comm connection status,current status:%1").
@@ -49,8 +73,9 @@ void MainWindow::OnTimer_mainWindow_Timeout()
     {
 
       this->checking_tcpConnectionStatus=true;
-      emit this->checkTcpConnectionStatus();
+
     }
+    emit this->checkTcpConnectionStatus();
 }
 void MainWindow::OnTcpCommConnectionStateChanged(QAbstractSocket::SocketState state,quint8 ConnectionID)
 {
@@ -105,6 +130,7 @@ void MainWindow::OnTcpCommConnectionStateChanged(QAbstractSocket::SocketState st
         emit this->sendDataToTCPCommObj(dataToTcpCommObj);
         //set label text to online
         this->ui->OnOffLine_Label->setText("ONLINE");
+        this->setPLCValueVisible(true);
     }
 
 }
