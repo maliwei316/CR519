@@ -27,7 +27,8 @@ SOURCES += \
     worker_modbus.cpp \
     tcp_comm.cpp \
     mainwindow.cpp \
-    clstooling.cpp
+    clstooling.cpp \
+
 
 RESOURCES += qml.qrc
 
@@ -47,6 +48,35 @@ DISTFILES += \
     zh_CN.qm \
     en_US.ts \
     zh_CN.ts \
+    img/breakpoint.png \
+    img/green-16x16.png \
+    img/green.png \
+    img/greenStone.png \
+    img/ledoff.png \
+    img/ledon.png \
+    img/menuitem-indicator-hovered.png \
+    img/playnormal.png \
+    img/record.png \
+    img/red.png \
+    img/roundbutton-background-checked.png \
+    img/roundbutton-background-pressed.png \
+    img/run_small.png \
+    img/screencap-switch-off.png \
+    img/screencap-switch-on.png \
+    img/square-green.png \
+    img/square-red.png \
+    img/square-yellow.png \
+    img/statusindicator-active.png \
+    img/statusindicator-green.png \
+    img/statusindicator-inactive.png \
+    img/switch-off.png \
+    img/switch-on.png \
+    img/togglebutton-checked.png \
+    img/togglebutton-unchecked.png \
+    img/wb-review-tip.png \
+    img/wheel.png \
+    img/yellow.png \
+    img/yellowStone.png
 
     Indicator2.qml
 
@@ -60,7 +90,8 @@ HEADERS += \
     worker_modbus.h \
     tcp_comm.h \
     mainwindow.h \
-    clstooling.h
+    clstooling.h \
+
 
 FORMS += \
     mainwindow.ui

@@ -7,6 +7,7 @@
 #include "bitsoperation.h"
 #include "clstooling.h"
 #include <QTimer>
+#include <QLabel>
 namespace Ui {
 class MainWindow;
 }
@@ -23,20 +24,25 @@ public:
     void updateWeldPoitDisplay_Current(const weldPoint& wp2);
     void updateDisplay_All_EdittingValue();
     void updateDisplay_ALL_CurrentValue();
-
+    void handleAlarm(plcItem item);
     ~MainWindow();
 signals:
 
     void sendDataToTCPCommObj(QByteArray dataToTCPCommObj);
     void checkTcpConnectionStatus();
+    void checkModbusConnectionStatus();
+    void updateAlarmText(QString &alarmText);
+    void moveAlarmToHistory(alarmItem item_alarm);
 public slots:
   void receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj);
   void OnUploadWholeSettingsTimeout();
+  void onMoveAlarmToHistory(alarmItem alarm);
 
   void OnDownloadWholeSettingsTimeout();
   void OnTcpCommConnectionStateChanged(QAbstractSocket::SocketState state,quint8 ConnectionID);
   void OnTimer_mainWindow_Timeout();
-
+  void OnPLCItemsChanged_Modbus(QVariantList changedItems);
+  void onUpdateAlarmText(QString text);
 private slots:
 
 
@@ -271,11 +277,20 @@ private slots:
 
     void on_btn_PLC2Editting_WeldPoint_clicked();
 
+    void on_pushButton_Calc_ItemID_clicked();
+
+    void on_pushButton_registText_clicked();
+
+    void on_spinBox_textID_reg_editingFinished();
+
+    void on_pushButton_registText_remove_clicked();
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
     void updatePlcItemDisplayEventHandler(QEvent *e);
     void updatePLCItem(plcItem item);
+    void switchItemOnOff(QLabel *targetLabel, bool onOff);
 public:
     weldPoint* wp1;
     quint8 toolID_PLC;
@@ -285,10 +300,16 @@ public:
     clsTooling* tooling_current;
     bool tcpConnectionStatus_send;
     bool tcpConnectionStatus_receive;
-    bool modbusConnectionStatus;
+    bool modbusConnectionStatus_502;
+    bool modbusConnectionStatus_503;
+    bool modbusConnectionStatus_504;
     bool uploadingWholeSettingFromPLCInProcess;
     QTimer timer_mainWindow;
     bool checking_tcpConnectionStatus;
+    bool checking_modbusConnectionStatus;
+    QMap<quint32,alarmItem> currentAlarms;
+    QMap<quint32,QString> systemRegisteredTextList;
+
 
 };
 

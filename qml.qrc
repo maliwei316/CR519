@@ -12,5 +12,54 @@
         <file>P130_InitConfig.qml</file>
         <file>P130_InitConfigForm.ui.qml</file>
         <file>MaTextInput.qml</file>
+        <file>img/breakpoint.png</file>
+        <file>img/green-16x16.png</file>
+        <file>img/green.png</file>
+        <file>img/greenStone.png</file>
+        <file>img/ledoff.png</file>
+        <file>img/ledon.png</file>
+        <file>img/menuitem-indicator-hovered.png</file>
+        <file>img/playnormal.png</file>
+        <file>img/record.png</file>
+        <file>img/red.png</file>
+        <file>img/roundbutton-background-checked.png</file>
+        <file>img/roundbutton-background-pressed.png</file>
+        <file>img/run_small.png</file>
+        <file>img/screencap-switch-off.png</file>
+        <file>img/screencap-switch-on.png</file>
+        <file>img/square-green.png</file>
+        <file>img/square-red.png</file>
+        <file>img/square-yellow.png</file>
+        <file>img/statusindicator-active.png</file>
+        <file>img/statusindicator-green.png</file>
+        <file>img/statusindicator-inactive.png</file>
+        <file>img/switch-off.png</file>
+        <file>img/switch-on.png</file>
+        <file>img/togglebutton-checked.png</file>
+        <file>img/togglebutton-unchecked.png</file>
+        <file>img/wb-review-tip.png</file>
+        <file>img/wheel.png</file>
+        <file>img/yellow.png</file>
+        <file>img/yellowStone.png</file>
+        <file>bitsoperation.h</file>
+        <file>clstooling.cpp</file>
+        <file>clstooling.h</file>
+        <file>db_handler.cpp</file>
+        <file>db_handler.h</file>
+        <file>dbh_controller.cpp</file>
+        <file>dbh_controller.h</file>
+        <file>main.cpp</file>
+        <file>mainwindow.cpp</file>
+        <file>mainwindow.h</file>
+        <file>mbc_controller.cpp</file>
+        <file>mbc_controller.h</file>
+        <file>myevent.h</file>
+        <file>qmllanguage.cpp</file>
+        <file>qmllanguage.h</file>
+        <file>tcp_comm.cpp</file>
+        <file>tcp_comm.h</file>
+        <file>worker_modbus.cpp</file>
+        <file>worker_modbus.h</file>
     </qresource>
+    <qresource prefix="/img" lang="en"/>
 </RCC>

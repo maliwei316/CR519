@@ -19,12 +19,12 @@ public:
     bool connectPLC();
     //bool disconnectPLC();
     void setVarCounts(int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count);
-    void checkConnection(QString info);
+
     //void streamBytesToFile(const QByteArray& data,QString filename="log.dat");
     void readPLCCommand(quint16 functionCode,quint16 startAddress, quint16 length);
     void setPLCCoilsTest();
     void resetPLCCoilsTest();
-    void readPLCtoRealtimeDB();
+    void readPLCByInterval();
     bool waitReadPLCAtAddress(quint16 functionCode,quint16 Address, quint16 &result);
 
     void parseDataFromPLC(quint8 area,QVariantList addressList,QVariantList valueList);
@@ -45,7 +45,7 @@ public slots:
     void onStateChanged(QModbusDevice::State state);
     void onErrorOccurred(QModbusDevice::Error error);
     void writePLCCommand(quint16 functionCode, quint16 Address, const quint16 data,bool bitOperation,quint8 bitPos);
-    //void onTimeout();
+    void onCheckConnectionStatus();
 public:
 
     QModbusTcpClient *maModbusTcpClient;
@@ -60,7 +60,8 @@ public:
     quint16 DO_Var_count;
     quint16 HoldRegister_Var_count;
     QTimer *timer;
-    QList<plcItem> plcItemList;
+    QMap<quint32,plcItem> plcItemMap;
+    bool checkingConnectionStatus;
 };
 
 

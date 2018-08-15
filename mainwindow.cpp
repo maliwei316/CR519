@@ -20,9 +20,28 @@ MainWindow::MainWindow(QWidget *parent) :
     this->toolID_PLC=0;
     this->setPLCValueVisible(false);
     this->uploadingWholeSettingFromPLCInProcess=false;
-    this->timer_mainWindow.setInterval(10000);
+    this->timer_mainWindow.setInterval(100000);
     connect(&this->timer_mainWindow,&QTimer::timeout,this,&MainWindow::OnTimer_mainWindow_Timeout);
     this->timer_mainWindow.start();
+
+    connect(this,&MainWindow::updateAlarmText,this,&MainWindow::onUpdateAlarmText);
+    connect(this,&MainWindow::moveAlarmToHistory,this,&MainWindow::onMoveAlarmToHistory);
+
+    if(QFile::exists("sysRegText.txt"))
+    {
+        QFile loadFile("sysRegText.txt");
+        QString textLoaded;
+        if(loadFile.open(QIODevice::ReadOnly))
+        {
+            QDataStream in1(&loadFile);
+
+            if(loadFile.size()>0)
+            {
+               in1>>textLoaded>>this->systemRegisteredTextList;
+            }
+        loadFile.close();
+        }
+    }
 
 }
 
@@ -32,6 +51,19 @@ MainWindow::~MainWindow()
     delete wp1;
     //tempTooling_editting->deleteLater();
     //tooling_current->deleteLater();
+
+}
+void MainWindow::OnPLCItemsChanged_Modbus(QVariantList changedItems)
+{
+    plcItem item;
+    for(int i=0;i<changedItems.size();i++)
+    {
+
+        item=changedItems.at(i).value<plcItem>();
+        qDebug()<<tr("receivedItems from Modbus,area:%1, itemID:%2,index:%3")
+                  .arg(item.itemGroup_area).arg(item.itemID()).arg(i);
+        QCoreApplication::postEvent(this,new myEvent_updateDisplay((QEvent::Type)5011,item));
+    }
 
 }
 void MainWindow::customEvent(QEvent *e)
@@ -49,19 +81,536 @@ void MainWindow::customEvent(QEvent *e)
 }
 void MainWindow::updatePlcItemDisplayEventHandler(QEvent *e)
 {
-    //qDebug()<<QTime::currentTime()<<"writeDatabaseEventHandler executed"<<"Thread:"<<QThread::currentThread();
     myEvent_updateDisplay *customEvent = static_cast<myEvent_updateDisplay *>(e);
     this->updatePLCItem(customEvent->myItem);
 
 }
 void MainWindow::updatePLCItem(plcItem item)
 {
-    qDebug()<<QTime::currentTime()<<"updating item,itemID"<<item.itemID()<<""<<(qint16)item.currentValue.wordVar;
+    enum plcAera {DI=0x81, DO=0x82, M=0x83, DB=0x84};
+    QString tableName;
+    switch (item.itemGroup_area) {
+    case 0x81:
+        tableName="PLC_DI";
+        this->modbusConnectionStatus_502=true;
+
+        break;
+    case 0x82:
+        tableName="PLC_DO";
+        this->modbusConnectionStatus_502=true;
+
+        break;
+    case 0x83:
+        tableName="PLC_M";
+        this->modbusConnectionStatus_502=true;
+
+        break;
+    case 0x84:
+        tableName="PLC_DB";
+        this->modbusConnectionStatus_503=true;
+
+        break;
+    default:
+        break;
+    }
+//    qDebug()<<QTime::currentTime()<<tr("updating item,itemID:%1,value:%2,area:%3,"
+//              "wordAdress:%4,byteAddr:%5,bitPosInbyte:%6")
+//              .arg(item.itemID())
+//              .arg((qint16)item.currentValue.wordVar)
+//              .arg(tableName)
+//              .arg(item.wordAddress)
+//              .arg(item.byteAddress())
+//              .arg(item.bitPosInByte());
+    quint32 itemID=item.itemID();
+
+    switch (itemID) {
+
+    //IB0~IB3
+    //IB0
+    case 528384000://I0.0
+    {
+        this->switchItemOnOff(this->ui->LED_I00,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384001://I0.1
+    {
+        this->switchItemOnOff(this->ui->LED_I01,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384002://I0.2
+    {
+        this->switchItemOnOff(this->ui->LED_I02,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384003://I0.3
+    {
+        this->switchItemOnOff(this->ui->LED_I03,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384004://I0.4
+    {
+        this->switchItemOnOff(this->ui->LED_I04,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384005://I0.5
+    {
+        this->switchItemOnOff(this->ui->LED_I05,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384006://I0.6
+    {
+        this->switchItemOnOff(this->ui->LED_I06,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384007://I0.7
+    {
+        this->switchItemOnOff(this->ui->LED_I07,item.currentValue.wordVar?true:false);
+        break;
+    }
+    //IB1
+    case 528384008://I1.0
+    {
+        this->switchItemOnOff(this->ui->LED_I10,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384009://I1.1
+    {
+        this->switchItemOnOff(this->ui->LED_I11,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384010://I1.2
+    {
+        this->switchItemOnOff(this->ui->LED_I12,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384011://I1.3
+    {
+        this->switchItemOnOff(this->ui->LED_I13,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384012://I1.4
+    {
+        this->switchItemOnOff(this->ui->LED_I14,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384013://I1.5
+    {
+        this->switchItemOnOff(this->ui->LED_I15,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384014://I1.6
+    {
+        this->switchItemOnOff(this->ui->LED_I16,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384015://I1.7
+    {
+        this->switchItemOnOff(this->ui->LED_I17,item.currentValue.wordVar?true:false);
+        break;
+    }
+    //IB2
+    case 528384016://I2.0
+    {
+        this->switchItemOnOff(this->ui->LED_I20,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384017://I2.1
+    {
+        this->switchItemOnOff(this->ui->LED_I21,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384018://I2.2
+    {
+        this->switchItemOnOff(this->ui->LED_I22,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384019://I2.3
+    {
+        this->switchItemOnOff(this->ui->LED_I23,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384020://I2.4
+    {
+        this->switchItemOnOff(this->ui->LED_I24,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384021://I2.5
+    {
+        this->switchItemOnOff(this->ui->LED_I25,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384022://I2.6
+    {
+        this->switchItemOnOff(this->ui->LED_I26,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384023://I2.7
+    {
+        this->switchItemOnOff(this->ui->LED_I27,item.currentValue.wordVar?true:false);
+        break;
+    }
+    //IB3
+    case 528384024://I3.0
+    {
+        this->switchItemOnOff(this->ui->LED_I30,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384025://I3.1
+    {
+        this->switchItemOnOff(this->ui->LED_I31,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384026://I3.2
+    {
+        this->switchItemOnOff(this->ui->LED_I32,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384027://I3.3
+    {
+        this->switchItemOnOff(this->ui->LED_I33,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384028://I3.4
+    {
+        this->switchItemOnOff(this->ui->LED_I34,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384029://I3.5
+    {
+        this->switchItemOnOff(this->ui->LED_I35,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384030://I3.6
+    {
+        this->switchItemOnOff(this->ui->LED_I36,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384031://I3.7
+    {
+        this->switchItemOnOff(this->ui->LED_I37,item.currentValue.wordVar?true:false);
+        break;
+    }
+
+    //QB0~QB3
+    case 532480000://Q0.0
+    {
+        this->switchItemOnOff(this->ui->LED_Q00,item.currentValue.wordVar?true:false);
+        break;
+    }
+
+    case 532480001://Q0.1
+    {
+        this->switchItemOnOff(this->ui->LED_Q01,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480002://Q0.2
+    {
+        this->switchItemOnOff(this->ui->LED_Q02,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480003://Q0.3
+    {
+        this->switchItemOnOff(this->ui->LED_Q03,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480004://Q0.4
+    {
+        this->switchItemOnOff(this->ui->LED_Q04,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480005://Q0.5
+    {
+        this->switchItemOnOff(this->ui->LED_Q05,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480006://Q0.6
+    {
+        this->switchItemOnOff(this->ui->LED_Q06,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480007://Q0.7
+    {
+        this->switchItemOnOff(this->ui->LED_Q07,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480008://Q1.0
+    {
+        this->switchItemOnOff(this->ui->LED_Q10,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480009://Q1.1
+    {
+        this->switchItemOnOff(this->ui->LED_Q11,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480010://Q1.2
+    {
+        this->switchItemOnOff(this->ui->LED_Q12,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480011://Q1.3
+    {
+        this->switchItemOnOff(this->ui->LED_Q13,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480012://Q1.4
+    {
+        this->switchItemOnOff(this->ui->LED_Q14,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480013://Q1.5
+    {
+        this->switchItemOnOff(this->ui->LED_Q15,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480014://Q1.6
+    {
+        this->switchItemOnOff(this->ui->LED_Q16,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480015://Q1.7
+    {
+        this->switchItemOnOff(this->ui->LED_Q17,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480016://Q2.0
+    {
+        this->switchItemOnOff(this->ui->LED_Q20,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480017://Q2.1
+    {
+        this->switchItemOnOff(this->ui->LED_Q21,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480018://Q2.2
+    {
+        this->switchItemOnOff(this->ui->LED_Q22,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480019://Q2.3
+    {
+        this->switchItemOnOff(this->ui->LED_Q23,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480020://Q2.4
+    {
+        this->switchItemOnOff(this->ui->LED_Q24,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480021://Q2.5
+    {
+        this->switchItemOnOff(this->ui->LED_Q25,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480022://Q2.6
+    {
+        this->switchItemOnOff(this->ui->LED_Q26,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480023://Q2.7
+    {
+        this->switchItemOnOff(this->ui->LED_Q27,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480024://Q3.0
+    {
+        this->switchItemOnOff(this->ui->LED_Q30,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480025://Q3.1
+    {
+        this->switchItemOnOff(this->ui->LED_Q31,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480026://Q3.2
+    {
+        this->switchItemOnOff(this->ui->LED_Q32,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480027://Q3.3
+    {
+        this->switchItemOnOff(this->ui->LED_Q33,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480028://Q3.4
+    {
+        this->switchItemOnOff(this->ui->LED_Q34,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480029://Q3.5
+    {
+        this->switchItemOnOff(this->ui->LED_Q35,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480030://Q3.6
+    {
+        this->switchItemOnOff(this->ui->LED_Q36,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 532480031://Q3.7
+    {
+        this->switchItemOnOff(this->ui->LED_Q37,item.currentValue.wordVar?true:false);
+        break;
+    }
+    //MW0
+    case 536576000://MW0
+    {
+
+        this->switchItemOnOff(this->ui->LED_M00,item.currentValue.bitsVar.b0?true:false);
+        this->switchItemOnOff(this->ui->LED_M01,item.currentValue.bitsVar.b1?true:false);
+        this->switchItemOnOff(this->ui->LED_M02,item.currentValue.bitsVar.b2?true:false);
+        this->switchItemOnOff(this->ui->LED_M03,item.currentValue.bitsVar.b3?true:false);
+        this->switchItemOnOff(this->ui->LED_M04,item.currentValue.bitsVar.b4?true:false);
+        this->switchItemOnOff(this->ui->LED_M05,item.currentValue.bitsVar.b5?true:false);
+        this->switchItemOnOff(this->ui->LED_M06,item.currentValue.bitsVar.b6?true:false);
+        this->switchItemOnOff(this->ui->LED_M07,item.currentValue.bitsVar.b7?true:false);
+        this->switchItemOnOff(this->ui->LED_M10,item.currentValue.bitsVar.b8?true:false);
+        this->switchItemOnOff(this->ui->LED_M11,item.currentValue.bitsVar.b9?true:false);
+        this->switchItemOnOff(this->ui->LED_M12,item.currentValue.bitsVar.b10?true:false);
+        this->switchItemOnOff(this->ui->LED_M13,item.currentValue.bitsVar.b11?true:false);
+        this->switchItemOnOff(this->ui->LED_M14,item.currentValue.bitsVar.b12?true:false);
+        this->switchItemOnOff(this->ui->LED_M15,item.currentValue.bitsVar.b13?true:false);
+        this->switchItemOnOff(this->ui->LED_M16,item.currentValue.bitsVar.b14?true:false);
+        this->switchItemOnOff(this->ui->LED_M17,item.currentValue.bitsVar.b15?true:false);
+        break;
+    }
+    //MW2
+    case 536576016://MW2
+    {
+
+        this->switchItemOnOff(this->ui->LED_M20,item.currentValue.bitsVar.b0?true:false);
+        this->switchItemOnOff(this->ui->LED_M21,item.currentValue.bitsVar.b1?true:false);
+        this->switchItemOnOff(this->ui->LED_M22,item.currentValue.bitsVar.b2?true:false);
+        this->switchItemOnOff(this->ui->LED_M23,item.currentValue.bitsVar.b3?true:false);
+        this->switchItemOnOff(this->ui->LED_M24,item.currentValue.bitsVar.b4?true:false);
+        this->switchItemOnOff(this->ui->LED_M25,item.currentValue.bitsVar.b5?true:false);
+        this->switchItemOnOff(this->ui->LED_M26,item.currentValue.bitsVar.b6?true:false);
+        this->switchItemOnOff(this->ui->LED_M27,item.currentValue.bitsVar.b7?true:false);
+        this->switchItemOnOff(this->ui->LED_M30,item.currentValue.bitsVar.b8?true:false);
+        this->switchItemOnOff(this->ui->LED_M31,item.currentValue.bitsVar.b9?true:false);
+        this->switchItemOnOff(this->ui->LED_M32,item.currentValue.bitsVar.b10?true:false);
+        this->switchItemOnOff(this->ui->LED_M33,item.currentValue.bitsVar.b11?true:false);
+        this->switchItemOnOff(this->ui->LED_M34,item.currentValue.bitsVar.b12?true:false);
+        this->switchItemOnOff(this->ui->LED_M35,item.currentValue.bitsVar.b13?true:false);
+        this->switchItemOnOff(this->ui->LED_M36,item.currentValue.bitsVar.b14?true:false);
+        this->switchItemOnOff(this->ui->LED_M37,item.currentValue.bitsVar.b15?true:false);
+        break;
+    }
+    //DW0,alarm word,
+    case 540672000:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    default:
+        break;
+    }
+
+}
+void MainWindow::switchItemOnOff(QLabel* targetLabel,bool onOff)
+{
+
+    if(onOff)
+    {
+        targetLabel->setPixmap(QPixmap(":/img/ledon.png"));
+    }
+    else
+    {
+        targetLabel->setPixmap(QPixmap(":/img/ledoff.png"));
+    }
+
+}
+void MainWindow::handleAlarm(plcItem item)
+{
+    qDebug()<<tr("handling alarm,itemID:%1").arg(item.itemID());
+    quint32 alarmID_plcItem;
+    for(int i=0;i<16;i++)
+    {
+        alarmID_plcItem=item.itemID()+i;
+        bool alarmExist=this->currentAlarms.contains(alarmID_plcItem);
+        bool bitValue=item.getBitFromWord(i);
+        if(bitValue)
+        {
+            if(!alarmExist)
+            {
+                currentAlarms[alarmID_plcItem].AlarmID=alarmID_plcItem;
+                currentAlarms[alarmID_plcItem].comeTime=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss");
+                currentAlarms[alarmID_plcItem].alarmText=this->systemRegisteredTextList[alarmID_plcItem];
+            }
+        }
+        else
+        {
+            if(alarmExist)
+            {
+                //currentAlarms[alarmID_plcItem].moveToHistory("./HistoryAlarm/Log_alarm.txt",this->ui->textEdit_2);
+                currentAlarms[alarmID_plcItem].leaveTime=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss");
+                emit this->moveAlarmToHistory(currentAlarms[alarmID_plcItem]);
+                currentAlarms.remove(alarmID_plcItem);
+            }
+        }
+    }
+
+    QString alarmText_current="";
+    if(!this->currentAlarms.isEmpty())
+    {
+        QList<quint32> keys=this->currentAlarms.keys();
+        for(int j=0;j<keys.size();j++)
+        {
+            QString text1;
+            text1=tr("AlarmID:%1,comeTime:%2,alarmDesc.:%3 \n").arg(this->currentAlarms[keys.at(j)].AlarmID)
+                    .arg(this->currentAlarms[keys.at(j)].comeTime)
+                    .arg(this->currentAlarms[keys.at(j)].alarmText);
+            alarmText_current.append(text1);
+        }
+    }
+    emit this->updateAlarmText(alarmText_current);
+}
+void MainWindow::onUpdateAlarmText(QString text)
+{
+   this->ui->textEdit_currentAlarms->setText(text);
+}
+void MainWindow::onMoveAlarmToHistory(alarmItem alarm)
+{
+    QString alarmTextToFile;
+    alarmTextToFile=tr("AlarmID:%1,comeTime:%2,leaveTime:%3,alarmDesc.:%4,\n")
+            .arg(alarm.AlarmID)
+            .arg(alarm.comeTime)
+            .arg(alarm.leaveTime)
+            .arg(alarm.alarmText);
+    this->ui->textEdit_historyAlarm->append(alarmTextToFile);
+    QFile file1("historyAlarm.txt");
+    //limit the size of the log file:log_dispaly.txt
+    if(file1.size()>1048576)
+    {
+        if(QFile::exists("historyAlarm_old.txt"))
+           { QFile::remove("historyAlarm_old.txt");}
+        file1.rename("historyAlarm_old.txt");
+        //generate an empty "historyAlarm.txt"
+        QFile file2("historyAlarm.txt");
+        file2.open(QIODevice::WriteOnly|QIODevice::Append);
+        file2.close();
+    }
+
+    if(file1.open(QIODevice::Append|QIODevice::Text))
+    {
+        QTextStream out1(&file1);
+
+        out1<<alarmTextToFile;
+    }
+    file1.close();
 }
 void MainWindow::OnTimer_mainWindow_Timeout()
 {
     qDebug()<<tr("checking tcp comm connection status,current status:%1").
               arg(this->checking_tcpConnectionStatus?"OFFLINE":"ONLINE");
+    //if checking is true, mean there's no response from partner within specfied time, so need set connection status
+    //to false;if partner reply within specified time, then the checking flag will be reset by the reply
     if(this->checking_tcpConnectionStatus)
     {
         this->tcpConnectionStatus_receive=false;
@@ -76,6 +625,20 @@ void MainWindow::OnTimer_mainWindow_Timeout()
 
     }
     emit this->checkTcpConnectionStatus();
+    //if checking is true, mean there's no response from partner within specfied time, so need set connection status
+    //to false;if partner reply within specified time, then the checking flag will be reset by the reply
+    if(this->checking_modbusConnectionStatus)
+    {
+        this->modbusConnectionStatus_502=false;
+        this->modbusConnectionStatus_503=false;
+        this->modbusConnectionStatus_504=false;
+    }
+
+    else
+    {
+      this->checking_modbusConnectionStatus=true;
+    }
+    emit this->checkModbusConnectionStatus();
 }
 void MainWindow::OnTcpCommConnectionStateChanged(QAbstractSocket::SocketState state,quint8 ConnectionID)
 {
@@ -2325,4 +2888,75 @@ void MainWindow::on_btn_PLC2Editting_WeldPoint_clicked()
             =this->tooling_current->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()];
     this->updateWeldPoitDisplay_Editting
             (this->tempTooling_editting->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()]);
+}
+
+void MainWindow::on_pushButton_Calc_ItemID_clicked()
+{
+    quint32 calc_result=(this->ui->comboBox_PLC_Area->currentIndex()+(quint32)(0x81))*500*8192
+            +this->ui->spinBox_ByteNO->value()*8+this->ui->spinBox_BitPosInByte->value();
+    //this->bitPosInByte()+this->byteAddress()*8+DB_NO*8192+itemGroup_area*500*8192
+    this->ui->spinBox_ItemID_result->setValue(calc_result);
+}
+
+void MainWindow::on_pushButton_registText_clicked()
+{
+    this->systemRegisteredTextList[this->ui->spinBox_textID_reg->value()]=this->ui->textEdit_text_reg->toPlainText();
+    QList<quint32> keys=this->systemRegisteredTextList.keys();
+    QString itemText;
+    QString allRegistedText;
+    for(int i=0;i<keys.size();i++)
+    {
+       itemText=tr("ID:%1,Text:%2 \n").arg(keys.at(i)).arg(this->systemRegisteredTextList[keys.at(i)]);
+       allRegistedText.append(itemText);
+    }
+    this->ui->textEdit_sysRegistedText->setText(allRegistedText);
+    QFile loadFile("sysRegText.txt");
+
+         if (!loadFile.open(QIODevice::WriteOnly)) {
+             qWarning("Couldn't open  file when try to load system Registed text");
+             return;
+         }
+         else
+         {
+             qDebug()<<"file opened,file.size:"<<loadFile.size();
+             QDataStream Out1(&loadFile);
+             Out1<<QString("predefined text list")<<(this->systemRegisteredTextList);
+             qDebug()<<"save to file execed, file.size()"<<loadFile.size();
+             loadFile.close();
+         }
+
+}
+
+void MainWindow::on_spinBox_textID_reg_editingFinished()
+{
+    this->ui->textEdit_text_reg->setText(this->systemRegisteredTextList.value(this->ui->spinBox_textID_reg->value()));
+}
+
+void MainWindow::on_pushButton_registText_remove_clicked()
+{
+    this->systemRegisteredTextList.remove(this->ui->spinBox_textID_reg->value());
+    QList<quint32> keys=this->systemRegisteredTextList.keys();
+    QString itemText;
+    QString allRegistedText;
+    for(int i=0;i<keys.size();i++)
+    {
+       itemText=tr("ID:%1,Text:%2 \n").arg(keys.at(i)).arg(this->systemRegisteredTextList[keys.at(i)]);
+       allRegistedText.append(itemText);
+    }
+    this->ui->textEdit_sysRegistedText->setText(allRegistedText);
+    QFile loadFile("sysRegText.txt");
+
+         if (!loadFile.open(QIODevice::WriteOnly)) {
+             qWarning("Couldn't open  file when try to load system Registed text");
+             return;
+         }
+         else
+         {
+             qDebug()<<"file opened,file.size:"<<loadFile.size();
+             QDataStream Out1(&loadFile);
+             Out1<<QString("predefined text list")<<(this->systemRegisteredTextList);
+             qDebug()<<"save to file execed, file.size()"<<loadFile.size();
+             loadFile.close();
+         }
+
 }

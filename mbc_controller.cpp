@@ -14,8 +14,10 @@ mbc_controller::mbc_controller(QObject *parent) : QObject(parent)
     connect(worker,&worker_modbus::batchWriteDataBaseRequired,this,&mbc_controller::needbatchWriteDatabase);//signal transfer by mbc_controller
     connect(worker,&worker_modbus::modbusStateChanged,this,&mbc_controller::onModbusStateChanged);
     connect(worker,&worker_modbus::modbusErrorOccured,this,&mbc_controller::onModbusErrorOccurred);
+    connect(worker,&worker_modbus::plcItemsChanged,this,&mbc_controller::plcItemsChanged_mbc);
     connect(this,&mbc_controller::needInit,worker,&worker_modbus::onInit);
     connect(this,&mbc_controller::needWritePLC,worker,&worker_modbus::writePLCCommand);
+    connect(this,&mbc_controller::needReportConnectionStatus,worker,&worker_modbus::onCheckConnectionStatus);
     workerThread.start();
 }
 void mbc_controller::init(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count)
@@ -37,25 +39,4 @@ mbc_controller::~mbc_controller()
     workerThread.quit();
     workerThread.wait();
 
-}
-void mbc_controller::readTest(quint16 functionCode,quint16 startAddress, quint16 length)
-{
-    //this->workerMBClient1->readPLCCommand(functionCode,startAddress,length);
-}
-void mbc_controller::setCoils()
-{
-    //this->workerMBClient1->setPLCCoilsTest();
-}
-void mbc_controller::resetCoils()
-{
-    //this->workerMBClient1->resetPLCCoilsTest();
-}
-void mbc_controller::checkConnectionState()
-{
-    //this->checkConnectionState();
-}
-
-void mbc_controller::connectPLC()
-{
-    //this->workerMBClient1->connectPLC();
 }

@@ -23,7 +23,7 @@ void worker_modbus::onInit(QString IPAddr, int port, int DI_Var_count, int DO_Va
     this->HoldRegister_Var_count=0;
     this->IPAddr=IPAddr;
     this->port=port;
-    this->timerEnableFlag=false;
+    this->timerEnableFlag=true;
     this->timer=new QTimer;
     this->setVarCounts(DI_Var_count,DO_Var_count,HoldRegister_Var_count);
     this->connectPLC();
@@ -88,20 +88,20 @@ void worker_modbus::onStateChanged(QModbusDevice::State state)
   if(this->connectedFlag)
   {
 
-      QObject::connect(timer, &QTimer::timeout, this, &worker_modbus::readPLCtoRealtimeDB);
+      QObject::connect(timer, &QTimer::timeout, this, &worker_modbus::readPLCByInterval);
       QEventLoop eventloop;
 
       QTimer::singleShot(500, &eventloop, SLOT(quit()));
       eventloop.exec();
       QThread::sleep(10);
       if(this->timerEnableFlag)
-        timer->start(1000);
+        timer->start(2000);
       //emit modbusConnected();
 
   }
   else
   {
-     QObject::disconnect(timer, &QTimer::timeout, this, &worker_modbus::readPLCtoRealtimeDB);
+     QObject::disconnect(timer, &QTimer::timeout, this, &worker_modbus::readPLCByInterval);
      timer->stop();
   }
 
@@ -110,8 +110,13 @@ void worker_modbus::onErrorOccurred(QModbusDevice::Error error)
 {
   qDebug()<<"error occured:"<<error<<this->maModbusTcpClient->errorString();
 }
-void worker_modbus::readPLCtoRealtimeDB()
+void worker_modbus::readPLCByInterval()
 {
+    if(!(this->DI_enable||this->DO_enable||this->HoldRegister_enable))
+    {
+        this->timer->stop();
+    }
+
 
     if(this->connectedFlag)
    {
@@ -152,6 +157,8 @@ void worker_modbus::readPLCtoRealtimeDB()
     {
        qDebug()<<"timer is running while modbus is not connected";
     }
+    //reset checking status
+    this->checkingConnectionStatus=false;
 }
 void worker_modbus::readPLCCommand(quint16 functionCode,quint16 startAddress, quint16 length)
 {
@@ -188,7 +195,7 @@ void worker_modbus::readPLCCommand(quint16 functionCode,quint16 startAddress, qu
 
 
         if(!reply->isFinished())
-           connect(reply, &QModbusReply::finished, this, &worker_modbus::readReady);
+           connect(reply, &QModbusReply::finished, this, &worker_modbus::readReady2);
         else
            delete reply;
     }
@@ -412,8 +419,9 @@ void worker_modbus:: readReady2()
             }
             qint16 startAddress=unit.startAddress();
             qint16 length=unit.valueCount();
-            qDebug()<<QTime::currentTime()<<"PLC reply data count:"<<length<<"table name:"<<tableName;
-           QString prepareStr;
+            qDebug()<<QTime::currentTime()<<tr("PLC reply data count:%1,tableName:%2,area:%3")
+                   .arg(length).arg(tableName).arg(area);
+
            QVariantList addressList,valueList;
 
             for (int i = 0; i < length; i++)
@@ -428,7 +436,11 @@ void worker_modbus:: readReady2()
            }
             //call function to parse received data from PLC
             if(!addressList.isEmpty())
-            this->parseDataFromPLC(area,addressList,valueList);
+            {
+               this->parseDataFromPLC(area,addressList,valueList);
+
+            }
+
 
         }
         else if (reply->error() == QModbusDevice::ProtocolError)
@@ -449,19 +461,32 @@ void worker_modbus:: readReady2()
 }
 void worker_modbus::parseDataFromPLC(quint8 area,QVariantList addressList,QVariantList valueList)
 {
+    qDebug()<<"this->plcItemMap.size:"<<this->plcItemMap.size();
     QVariantList changedItems;
-    //QList<plcItem> changedItems;
+
     plcItem item1;
     QVariant v;
+    quint32 itemID;
     for(int i=0;i<addressList.size();i++)
     {
         item1.itemGroup_area=area;
         item1.wordAddress=addressList.at(i).toInt();
-        if(item1.updateValue(valueList.at(i).toInt()))
+        itemID=item1.itemID();
+        bool changed=false;
+        changed=this->plcItemMap[itemID].updateValue(valueList.at(i).toInt());
+        if(changed||this->checkingConnectionStatus)
         {
-            v.setValue(item1);
-            changedItems.append(item1);
+            this->plcItemMap[itemID].itemGroup_area=item1.itemGroup_area;
+            this->plcItemMap[itemID].wordAddress=item1.wordAddress;
+            v.setValue(this->plcItemMap[itemID]);
+            changedItems.append(v);
         }
+        qDebug()<<tr("area:%1,itemID:%2,currentValue:%3,previousValue:%4, changed?:%5")
+                  .arg(plcItemMap[itemID].itemGroup_area)
+                  .arg(plcItemMap[itemID].itemID())
+                  .arg((qint16)plcItemMap[itemID].currentValue.wordVar)
+                  .arg((qint16)plcItemMap[itemID].previousValue.wordVar)
+                  .arg(plcItemMap[itemID].previousValue.wordVar==plcItemMap[itemID].currentValue.wordVar?"false":"true");
 
     }
   if(!changedItems.isEmpty())
@@ -539,10 +564,10 @@ void worker_modbus::writePLCCommand(quint16 functionCode, quint16 Address, const
             qDebug()<<"Write error:"<<this->maModbusTcpClient->errorString();
         }
 }
-void worker_modbus::checkConnection(QString info)
+void worker_modbus::onCheckConnectionStatus()
 {
-    qDebug()<<QTime::currentTime()<<"  check state:"<<info;
-
+    qDebug()<<QTime::currentTime()<<"checking modbus connection on going";
+    this->checkingConnectionStatus=true;
     switch (this->maModbusTcpClient->state()) {
 
     case QModbusDevice::UnconnectedState:

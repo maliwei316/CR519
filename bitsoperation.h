@@ -5,6 +5,7 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QJsonDocument>
+#include <QTextEdit>
 #pragma pack(2)
  //这里就是要把数字x的第n位（bit（n-1）位）置为1
  //1U就表示的是无符号的1，宏定义可以传参的
@@ -273,7 +274,7 @@ typedef struct _plcItem
 
     bool addressType()
     {
-        return (itemGroup_area==0x81||itemGroup_area==0x83)?true:false;
+        return (itemGroup_area==0x81||itemGroup_area==0x82)?true:false;
     }
     quint16 byteAddress()
     {
@@ -301,8 +302,31 @@ typedef struct _plcItem
         this->currentValue.wordVar=value;
         return (this->previousValue.wordVar==this->currentValue.wordVar)?false:true;
     }
+
+
+    bool getBitFromWord(quint8 bitPosInWord)
+    {
+       return (this->currentValue.wordVar&(1U<<(bitPosInWord-1)))>>(bitPosInWord-1)?true:false;
+    }
+    void setBitInWord(quint8 bitPosInWord)
+    {
+        this->currentValue.wordVar= (this->currentValue.wordVar | 1U<<(bitPosInWord-1));
+    }
+    void resetBitInWord(quint8 bitPosInWord)
+    {
+        this->currentValue.wordVar=(this->currentValue.wordVar & ~(1U<<(bitPosInWord-1)));
+    }
 }plcItem;
 Q_DECLARE_METATYPE(plcItem)
+
+typedef struct _alarmItem
+{
+    quint32 AlarmID;
+    QString alarmText;
+    QString comeTime;
+    QString leaveTime;
+
+    }alarmItem;
 //typedef struct tcpCommStruct
 //{
 //        Byte initiator;
