@@ -120,7 +120,7 @@ void worker_modbus::readPLCByInterval()
 
     if(this->connectedFlag)
    {
-      qDebug()<<QTime::currentTime()<<"readPLCtoRealtimeDB executed,thread"<<QThread::currentThread();
+      //qDebug()<<QTime::currentTime()<<"readPLCtoRealtimeDB executed,thread"<<QThread::currentThread();
        if(this->DO_enable)
        {
            //qDebug()<<QTime::currentTime()<<"DO reading started";
@@ -167,7 +167,7 @@ void worker_modbus::readPLCCommand(quint16 functionCode,quint16 startAddress, qu
         return;
     if(functionCode==QModbusPdu::Invalid or functionCode>QModbusPdu::ReadInputRegisters)
     return;
-    qDebug()<<QTime::currentTime()<<"modbus connected,readPLCCommand executed ";
+    //qDebug()<<QTime::currentTime()<<"modbus connected,readPLCCommand executed ";
     QModbusDataUnit::RegisterType  dataUnitType;
     switch (functionCode)
     {
@@ -187,7 +187,7 @@ void worker_modbus::readPLCCommand(quint16 functionCode,quint16 startAddress, qu
     default:
         break;
     }
-    qDebug()<<"dataUnitType:"<<dataUnitType;
+    //qDebug()<<"dataUnitType:"<<dataUnitType;
     QModbusDataUnit readUnit(dataUnitType,startAddress,length);
     //qDebug()<<"line204 OK";
     if(auto* reply=this->maModbusTcpClient->sendReadRequest(readUnit,1))
@@ -334,7 +334,7 @@ void worker_modbus:: readReady()
             }
             qint16 startAddress=unit.startAddress();
             qint16 length=unit.valueCount();
-            qDebug()<<QTime::currentTime()<<"PLC reply data count:"<<length<<"table name:"<<tableName;
+            //qDebug()<<QTime::currentTime()<<"PLC reply data count:"<<length<<"table name:"<<tableName;
            QString prepareStr;
            QVariantList addressList,valueList;
            prepareStr=QObject::tr("insert or replace into %1(address,value) values(?,?)")
@@ -419,8 +419,8 @@ void worker_modbus:: readReady2()
             }
             qint16 startAddress=unit.startAddress();
             qint16 length=unit.valueCount();
-            qDebug()<<QTime::currentTime()<<tr("PLC reply data count:%1,tableName:%2,area:%3")
-                   .arg(length).arg(tableName).arg(area);
+            //qDebug()<<QTime::currentTime()<<tr("PLC reply data count:%1,tableName:%2,area:%3")
+                   //.arg(length).arg(tableName).arg(area);
 
            QVariantList addressList,valueList;
 
@@ -461,7 +461,7 @@ void worker_modbus:: readReady2()
 }
 void worker_modbus::parseDataFromPLC(quint8 area,QVariantList addressList,QVariantList valueList)
 {
-    qDebug()<<"this->plcItemMap.size:"<<this->plcItemMap.size();
+    //qDebug()<<"this->plcItemMap.size:"<<this->plcItemMap.size();
     QVariantList changedItems;
 
     plcItem item1;
@@ -481,12 +481,12 @@ void worker_modbus::parseDataFromPLC(quint8 area,QVariantList addressList,QVaria
             v.setValue(this->plcItemMap[itemID]);
             changedItems.append(v);
         }
-        qDebug()<<tr("area:%1,itemID:%2,currentValue:%3,previousValue:%4, changed?:%5")
-                  .arg(plcItemMap[itemID].itemGroup_area)
-                  .arg(plcItemMap[itemID].itemID())
-                  .arg((qint16)plcItemMap[itemID].currentValue.wordVar)
-                  .arg((qint16)plcItemMap[itemID].previousValue.wordVar)
-                  .arg(plcItemMap[itemID].previousValue.wordVar==plcItemMap[itemID].currentValue.wordVar?"false":"true");
+//        qDebug()<<tr("area:%1,itemID:%2,currentValue:%3,previousValue:%4, changed?:%5")
+//                  .arg(plcItemMap[itemID].itemGroup_area)
+//                  .arg(plcItemMap[itemID].itemID())
+//                  .arg((qint16)plcItemMap[itemID].currentValue.wordVar)
+//                  .arg((qint16)plcItemMap[itemID].previousValue.wordVar)
+//                  .arg(plcItemMap[itemID].previousValue.wordVar==plcItemMap[itemID].currentValue.wordVar?"false":"true");
 
     }
   if(!changedItems.isEmpty())
@@ -515,7 +515,7 @@ void worker_modbus::writePLCCommand(quint16 functionCode, quint16 Address, const
     quint16 toWriteValue;
     if(bitOperation&&dataUnitType==QModbusDataUnit::HoldingRegisters)
     {
-        quint16 *currentValue;
+        //quint16 *currentValue;
 
 //        if(this->waitReadPLCAtAddress(functionCode,Address,currentValue))
 //        {

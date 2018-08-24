@@ -4,7 +4,7 @@ QT += sql
 QT += network
 CONFIG += c++11
 QT += core gui
-
+QT += serialport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 # The following define makes your compiler emit warnings if you use
@@ -28,6 +28,7 @@ SOURCES += \
     tcp_comm.cpp \
     mainwindow.cpp \
     clstooling.cpp \
+    clsbarcode.cpp
 
 
 RESOURCES += qml.qrc
@@ -91,6 +92,7 @@ HEADERS += \
     tcp_comm.h \
     mainwindow.h \
     clstooling.h \
+    clsbarcode.h
 
 
 FORMS += \

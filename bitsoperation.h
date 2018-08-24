@@ -47,9 +47,114 @@ typedef union
                     unsigned char b5:1;
                     unsigned char b6:1;
                     unsigned char b7:1;
+                    bool getBit(quint8 bitPosInByte)
+                    {
+                        quint8 bitPos= bitPosInByte%8;
+                        bool returnValue=false;
+                        switch (bitPos) {
+                        case 0:
+                            returnValue=b0;
+                            break;
+                        case 1:
+                            returnValue=b1;
+                            break;
+                        case 2:
+                            returnValue=b2;
+                            break;
+                        case 3:
+                            returnValue=b3;
+                            break;
+                        case 4:
+                            returnValue=b4;
+                            break;
+                        case 5:
+                            returnValue=b5;
+                            break;
+                        case 6:
+                            returnValue=b6;
+                            break;
+                        case 7:
+                            returnValue=b7;
+                            break;
+                        default:
+                            break;
+                        }
+                        return returnValue;
+                    }
+                    void setBit(quint8 bitPosInByte)
+                    {
+                        quint8 bitPos= bitPosInByte%8;
+
+                        switch (bitPos) {
+                        case 0:
+                            b0=1;
+                            break;
+                        case 1:
+                            b1=1;
+                            break;
+                        case 2:
+                            b2=1;
+                            break;
+                        case 3:
+                            b3=1;
+                            break;
+                        case 4:
+                            b4=1;
+                            break;
+                        case 5:
+                            b5=1;
+                            break;
+                        case 6:
+                            b6=1;
+                            break;
+                        case 7:
+                            b7=1;
+                            break;
+                        default:
+                            break;
+                        }
+
+                    }
+                    void resetBit(quint8 bitPosInByte)
+                    {
+                        quint8 bitPos= bitPosInByte%8;
+
+                        switch (bitPos) {
+                        case 0:
+                            b0=0;
+                            break;
+                        case 1:
+                            b1=0;
+                            break;
+                        case 2:
+                            b2=0;
+                            break;
+                        case 3:
+                            b3=0;
+                            break;
+                        case 4:
+                            b4=0;
+                            break;
+                        case 5:
+                            b5=0;
+                            break;
+                        case 6:
+                            b6=0;
+                            break;
+                        case 7:
+                            b7=0;
+                            break;
+                        default:
+                            break;
+                        }
+
+                    }
+
                 }bits;
 
         unsigned char byteChar;
+
+
     } bytebits;
 
 typedef union
@@ -215,6 +320,11 @@ typedef struct _pneumaticValve
         Byte actionConfirm;
 
 }pneumaticValve;
+typedef struct
+    {
+      bytebits extendBypass;
+      bytebits retractBypass;
+    } sensorBypass;
 typedef struct _station
 {
         Byte stationNO;
@@ -223,6 +333,16 @@ typedef struct _station
         qint32 pos_lowerLimit;
         qint32 pos_setPoint;
 }station;
+typedef struct _filmFeeder
+{
+    quint8   enable=0;
+    quint32 speed=0;
+    quint32 distance_1=0;
+    quint16 distance_2=0;
+    quint8 interval=1;
+    quint8  direction=0;//0 CW,1 CCW
+
+    }filmFeeder;
 typedef struct _toolingInfo_in_PLC
 {
         Byte toolingNO;
@@ -236,6 +356,10 @@ typedef struct _toolingInfo_in_PLC
         qint32 servoSpeed_low;
         bool servoHomingDir;
         bool generator_enable[5];
+        filmFeeder feeder;
+        //bool sensors_bypass[7];
+        sensorBypass partSensorBypass;
+        sensorBypass valveSensorBypass[7];
 
 }toolingInfo_in_PLC;
 
@@ -327,6 +451,29 @@ typedef struct _alarmItem
     QString leaveTime;
 
     }alarmItem;
+typedef struct _barcodeSetting
+{
+    bool   enable=false;
+    QString portName="";
+    QString baud="9600";
+    quint8  dataBits=8;
+    quint8  stopBits=1;
+    QString  parity="No Parity";
+    quint8  maxLength=99;
+    quint8  minLength=5;
+    QString  prefix="";
+    QString suffix="";
+
+    }barcodeSetting;
+
+typedef struct _userRegInfo
+{
+        QString Name;
+        QString Password;
+        quint32 logOffTime;
+
+}userRegInfo;
+
 //typedef struct tcpCommStruct
 //{
 //        Byte initiator;

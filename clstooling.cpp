@@ -1,14 +1,27 @@
 #include "clstooling.h"
 #include <QDebug>
+
 clsTooling::clsTooling(QObject *parent) : QObject(parent)
 {
+
+    memset(&this->plcToolingInfo,0,sizeof(toolingInfo_in_PLC));
     for(int i=0;i<17;i++)
     {
         this->pointNameMapping.append("");
+        this->pointBarcodeMapping.append("Barcode_Left");
         if(i<7)
-        this->valveNameMapping.append("");
+        {
+            this->valveNameMapping.append("");
+
+            this->plcToolingInfo.pneumaticValvelist[i].valveNO=i;
+        }
+
+        this->plcToolingInfo.weldPoint_List[i].pointNO=i;
+        this->plcToolingInfo.station_List[i].stationNO=i;
+        this->plcToolingInfo.thruster_List[i].thrusterNO=i;
+
     }
-    memset(&this->plcToolingInfo,0,sizeof(toolingInfo_in_PLC));
+
 
 }
 void clsTooling::readJason(const QJsonObject &json)
@@ -25,6 +38,107 @@ void clsTooling::readJason(const QJsonObject &json)
                       this->pointNameMapping[i]=pointNameMappingVariantArray.at(i).toString();
                   }
               }
+         if (json.contains("pointBarcodeMapping") && json["pointBarcodeMapping"].isArray()) {
+                  QVariantList pointBarcodeMappingVariantArray = json["pointBarcodeMapping"].toArray().toVariantList();
+
+                  for (int i = 0; i < pointBarcodeMappingVariantArray.size(); ++i) {
+                      this->pointBarcodeMapping[i]=pointBarcodeMappingVariantArray.at(i).toString();
+                  }
+              }
+         if(json.contains("barcodeSettings_left"))
+         {
+
+             QJsonObject QJO_leftBarcodeSettings=json["barcodeSettings_left"].toObject();
+             if(QJO_leftBarcodeSettings.contains("enable"))
+             {
+                 this->leftBarcodeSettings.enable=
+                         (QJO_leftBarcodeSettings["enable"].toString().toUpper()=="TRUE")?true:false;
+
+             }
+             if(QJO_leftBarcodeSettings.contains("portName"))
+             {
+                 this->leftBarcodeSettings.portName=QJO_leftBarcodeSettings["portName"].toString();
+             }
+             if(QJO_leftBarcodeSettings.contains("baud"))
+             {
+                 this->leftBarcodeSettings.baud=QJO_leftBarcodeSettings["baud"].toString();
+             }
+             if(QJO_leftBarcodeSettings.contains("dataBits"))
+             {
+                 this->leftBarcodeSettings.dataBits=QJO_leftBarcodeSettings["dataBits"].toInt();
+             }
+             if(QJO_leftBarcodeSettings.contains("stopBits"))
+             {
+                 this->leftBarcodeSettings.stopBits=QJO_leftBarcodeSettings["stopBits"].toInt();
+             }
+             if(QJO_leftBarcodeSettings.contains("parity"))
+             {
+                 this->leftBarcodeSettings.parity=QJO_leftBarcodeSettings["parity"].toString();
+             }
+             if(QJO_leftBarcodeSettings.contains("maxLength"))
+             {
+                 this->leftBarcodeSettings.maxLength=QJO_leftBarcodeSettings["maxLength"].toInt();
+             }
+             if(QJO_leftBarcodeSettings.contains("minLength"))
+             {
+                 this->leftBarcodeSettings.minLength=QJO_leftBarcodeSettings["minLength"].toInt();
+             }
+             if(QJO_leftBarcodeSettings.contains("prefix"))
+             {
+                 this->leftBarcodeSettings.prefix=QJO_leftBarcodeSettings["prefix"].toString();
+             }
+             if(QJO_leftBarcodeSettings.contains("sufix"))
+             {
+                 this->leftBarcodeSettings.suffix=QJO_leftBarcodeSettings["sufix"].toString();
+             }
+         }
+         if(json.contains("barcodeSettings_right"))
+         {
+
+             QJsonObject QJO_rightBarcodeSettings=json["barcodeSettings_right"].toObject();
+             if(QJO_rightBarcodeSettings.contains("enable"))
+             {
+                 this->rightBarcodeSettings.enable=
+                         (QJO_rightBarcodeSettings["enable"].toString().toUpper()=="TRUE")?true:false;
+
+             }
+             if(QJO_rightBarcodeSettings.contains("portName"))
+             {
+                 this->rightBarcodeSettings.portName=QJO_rightBarcodeSettings["portName"].toString();
+             }
+             if(QJO_rightBarcodeSettings.contains("baud"))
+             {
+                 this->rightBarcodeSettings.baud=QJO_rightBarcodeSettings["baud"].toString();
+             }
+             if(QJO_rightBarcodeSettings.contains("dataBits"))
+             {
+                 this->rightBarcodeSettings.dataBits=QJO_rightBarcodeSettings["dataBits"].toInt();
+             }
+             if(QJO_rightBarcodeSettings.contains("stopBits"))
+             {
+                 this->rightBarcodeSettings.stopBits=QJO_rightBarcodeSettings["stopBits"].toInt();
+             }
+             if(QJO_rightBarcodeSettings.contains("parity"))
+             {
+                 this->rightBarcodeSettings.parity=QJO_rightBarcodeSettings["parity"].toString();
+             }
+             if(QJO_rightBarcodeSettings.contains("maxLength"))
+             {
+                 this->rightBarcodeSettings.maxLength=QJO_rightBarcodeSettings["maxLength"].toInt();
+             }
+             if(QJO_rightBarcodeSettings.contains("minLength"))
+             {
+                 this->rightBarcodeSettings.minLength=QJO_rightBarcodeSettings["minLength"].toInt();
+             }
+             if(QJO_rightBarcodeSettings.contains("prefix"))
+             {
+                 this->rightBarcodeSettings.prefix=QJO_rightBarcodeSettings["prefix"].toString();
+             }
+             if(QJO_rightBarcodeSettings.contains("sufix"))
+             {
+                 this->rightBarcodeSettings.suffix=QJO_rightBarcodeSettings["sufix"].toString();
+             }
+         }
          if (json.contains("valveNameMapping") && json["valveNameMapping"].isArray()) {
                   QVariantList valveNameMappingVariantArray = json["valveNameMapping"].toArray().toVariantList();
 
@@ -173,7 +287,6 @@ void clsTooling::readJason(const QJsonObject &json)
                             this->plcToolingInfo.thruster_List[i].thrusterNO=qjobj1["thrusterNO"].toInt();
                         }
 
-
                     }
 
                 }
@@ -295,8 +408,123 @@ void clsTooling::readJason(const QJsonObject &json)
 
                 }
             }
+            if(QJO_plcToolingInfo.contains("filmFeeder")&&QJO_plcToolingInfo["filmFeeder"].isObject())
+            {
+                QJsonObject qjobj_filmfeeder=QJO_plcToolingInfo["filmFeeder"].toObject();
+                if(qjobj_filmfeeder.contains("enable"))
+                {
+                    this->plcToolingInfo.feeder.enable=qjobj_filmfeeder["enable"].toInt();
+                }
+                if(qjobj_filmfeeder.contains("direction"))
+                {
+                    this->plcToolingInfo.feeder.direction=(qjobj_filmfeeder["direction"].toString().toUpper()=="CW")?0:1;
+                }
+                if(qjobj_filmfeeder.contains("distance_1"))
+                {
+                    this->plcToolingInfo.feeder.distance_1=qjobj_filmfeeder["distance_1"].toInt();
+                }
+                if(qjobj_filmfeeder.contains("distance_2"))
+                {
+                    this->plcToolingInfo.feeder.distance_2=qjobj_filmfeeder["distance_2"].toInt();
+                }
+                if(qjobj_filmfeeder.contains("interval"))
+                {
+                    this->plcToolingInfo.feeder.interval=qjobj_filmfeeder["interval"].toInt();
+                }
+                if(qjobj_filmfeeder.contains("speed"))
+                {
+                    this->plcToolingInfo.feeder.speed=qjobj_filmfeeder["speed"].toInt();
+                }
 
-            //this->plcToolingInfo
+            }
+        //partSensorBypass_G1
+            if(QJO_plcToolingInfo.contains("partSensorBypass_G1")&&QJO_plcToolingInfo["partSensorBypass_G1"].isArray())
+            {
+                QVariantList partSensorList_Bypass=QJO_plcToolingInfo["partSensorBypass_G1"].toArray().toVariantList();
+                for(int i=0;i<partSensorList_Bypass.size();i++)
+                {
+                    if(partSensorList_Bypass.at(i).toString().toUpper()=="BYPASS")
+                    {
+                       this->plcToolingInfo.partSensorBypass.extendBypass.bits.setBit(i);
+                    }
+
+                    else
+                    {
+                       this->plcToolingInfo.partSensorBypass.extendBypass.bits.resetBit(i);
+                    }
+
+                }
+
+            }
+        //partSensorBypass_G2
+            if(QJO_plcToolingInfo.contains("partSensorBypass_G2")&&QJO_plcToolingInfo["partSensorBypass_G2"].isArray())
+            {
+                QVariantList partSensorList_Bypass=QJO_plcToolingInfo["partSensorBypass_G2"].toArray().toVariantList();
+                for(int i=0;i<partSensorList_Bypass.size();i++)
+                {
+                    if(partSensorList_Bypass.at(i).toString().toUpper()=="BYPASS")
+                    {
+                       this->plcToolingInfo.partSensorBypass.retractBypass.bits.setBit(i);
+                    }
+
+                    else
+                    {
+                       this->plcToolingInfo.partSensorBypass.retractBypass.bits.resetBit(i);
+                    }
+
+                }
+
+            }
+        //valve SensorBypass
+            if(QJO_plcToolingInfo.contains("valveSensorBypass"))
+            {
+                QJsonObject QJO_valveSensorBypass=QJO_plcToolingInfo["valveSensorBypass"].toObject();
+
+                for(int i=0;i<7;i++)
+                {
+                   if(QJO_valveSensorBypass.contains("ExtendSensor_Bypass_Valve_"+QString::number(i))
+                           &&QJO_valveSensorBypass["ExtendSensor_Bypass_Valve_"+QString::number(i)].isArray())
+                   {
+                       QVariantList sensorBypassVariantList=
+                               QJO_valveSensorBypass["ExtendSensor_Bypass_Valve_"+QString::number(i)].toArray().toVariantList();
+                       for(int j=0;j<7;j++)
+                       {
+                           if(sensorBypassVariantList.at(j).toString().toUpper()=="BYPASS"?true:false)
+                           {
+                               this->plcToolingInfo.valveSensorBypass[i].extendBypass.bits.setBit(j);
+                           }
+                           else
+                           {
+                              this->plcToolingInfo.valveSensorBypass[i].extendBypass.bits.resetBit(j);
+                           }
+
+                       }
+
+                   }
+                   if(QJO_valveSensorBypass.contains("RetractSensor_Bypass_Valve_"+QString::number(i))
+                           &&QJO_valveSensorBypass["RetractSensor_Bypass_Valve_"+QString::number(i)].isArray())
+                   {
+                       QVariantList sensorBypassVariantList=
+                               QJO_valveSensorBypass["RetractSensor_Bypass_Valve_"+QString::number(i)].toArray().toVariantList();
+                       for(int j=0;j<7;j++)
+                       {
+                           if(sensorBypassVariantList.at(j).toString().toUpper()=="BYPASS"?true:false)
+                           {
+                               this->plcToolingInfo.valveSensorBypass[i].retractBypass.bits.setBit(j);
+                           }
+                           else
+                           {
+                              this->plcToolingInfo.valveSensorBypass[i].retractBypass.bits.resetBit(j);
+                           }
+
+                       }
+
+                   }
+
+                }
+
+            }
+        //...................
          }
 
      }
@@ -308,7 +536,35 @@ void clsTooling::writeJason(QJsonObject &json)
           json["toolingName"] =this->toolingName;
           json["toolingImageSource"]=this->toolingImageSource;
           json["pointNameMapping"]=QJsonArray::fromStringList(this->pointNameMapping);
+          json["pointBarcodeMapping"]=QJsonArray::fromStringList(this->pointBarcodeMapping);
           json["valveNameMapping"]=QJsonArray::fromStringList(this->valveNameMapping);
+
+          //json["barcodeSettings_left"]
+          QJsonObject qobj_leftBarcodeSettings,qobj_rightBarcodeSettings;
+          qobj_leftBarcodeSettings["enable"]=this->leftBarcodeSettings.enable?"TRUE":"FALSE";
+          qobj_leftBarcodeSettings["portName"]=this->leftBarcodeSettings.portName;
+          qobj_leftBarcodeSettings["baud"]=this->leftBarcodeSettings.baud;
+          qobj_leftBarcodeSettings["dataBits"]=this->leftBarcodeSettings.dataBits;
+          qobj_leftBarcodeSettings["stopBits"]=this->leftBarcodeSettings.stopBits;
+          qobj_leftBarcodeSettings["parity"]=this->leftBarcodeSettings.parity;
+          qobj_leftBarcodeSettings["maxLength"]=this->leftBarcodeSettings.maxLength;
+          qobj_leftBarcodeSettings["minLength"]=this->leftBarcodeSettings.minLength;
+          qobj_leftBarcodeSettings["prefix"]=this->leftBarcodeSettings.prefix;
+          qobj_leftBarcodeSettings["sufix"]=this->leftBarcodeSettings.suffix;
+
+          qobj_rightBarcodeSettings["enable"]=this->rightBarcodeSettings.enable?"TRUE":"FALSE";
+          qobj_rightBarcodeSettings["portName"]=this->rightBarcodeSettings.portName;
+          qobj_rightBarcodeSettings["baud"]=this->rightBarcodeSettings.baud;
+          qobj_rightBarcodeSettings["dataBits"]=this->rightBarcodeSettings.dataBits;
+          qobj_rightBarcodeSettings["stopBits"]=this->rightBarcodeSettings.stopBits;
+          qobj_rightBarcodeSettings["parity"]=this->rightBarcodeSettings.parity;
+          qobj_rightBarcodeSettings["maxLength"]=this->rightBarcodeSettings.maxLength;
+          qobj_rightBarcodeSettings["minLength"]=this->rightBarcodeSettings.minLength;
+          qobj_rightBarcodeSettings["prefix"]=this->rightBarcodeSettings.prefix;
+          qobj_rightBarcodeSettings["sufix"]=this->rightBarcodeSettings.suffix;
+
+          json["barcodeSettings_left"]=qobj_leftBarcodeSettings;
+          json["barcodeSettings_right"]=qobj_rightBarcodeSettings;
 
           QJsonObject plcToolingInfo,thrusterItem,weldPointItem,stationItem,valveItem;
           QJsonArray thrusterArray,weldPointArray,stationArray,valveArray,stepStaionConnectionArray;
@@ -328,6 +584,7 @@ void clsTooling::writeJason(QJsonObject &json)
           }
 
           plcToolingInfo["generator_enable"]=QJsonArray::fromStringList(generator_enable_list);
+
           //valve list to Json
           for(int i=0;i<7;i++)
           {
@@ -373,7 +630,7 @@ void clsTooling::writeJason(QJsonObject &json)
           }
           plcToolingInfo["station_List"]=stationArray;
           //stepStation conection to Json
-          qDebug()<<"write Json,608";
+          //qDebug()<<"write Json,608";
           for(int i=0;i<17;i++)
           {
               stepStaionConnectionArray.append(this->plcToolingInfo.stepStationConnection[i]);
@@ -462,11 +719,57 @@ void clsTooling::writeJason(QJsonObject &json)
 
           }
           plcToolingInfo["weldPoint_List"]=weldPointArray;
+          //part sensors bypass
+          QStringList  sensor_bypass_list;
+          for(int i=0;i<7;i++)
+          {
+             sensor_bypass_list.append(this->plcToolingInfo.partSensorBypass.extendBypass.bits.getBit(i)?"BYPASS":"ENABLE");
+          }
+          plcToolingInfo["partSensorBypass_G1"]=QJsonArray::fromStringList(sensor_bypass_list);
+          sensor_bypass_list.clear();
+          for(int i=0;i<7;i++)
+          {
+             sensor_bypass_list.append(this->plcToolingInfo.partSensorBypass.retractBypass.bits.getBit(i)?"BYPASS":"ENABLE");
+          }
+          plcToolingInfo["partSensorBypass_G2"]=QJsonArray::fromStringList(sensor_bypass_list);
+          sensor_bypass_list.clear();
+          //valve Sensor bypass
+          QJsonObject qjsobj_valveSensorBypass;
+          for(int j=0;j<7;j++)
+          {
+              sensor_bypass_list.clear();
+              for(int k=0;k<7;k++)
+              {
+                  sensor_bypass_list.append(this->plcToolingInfo.valveSensorBypass[j].extendBypass.bits.getBit(k)?"BYPASS":"ENABLE");
+              }
+              qjsobj_valveSensorBypass["ExtendSensor_Bypass_Valve_"+QString::number(j)]=QJsonArray::fromStringList(sensor_bypass_list);
+              sensor_bypass_list.clear();
+              for(int l=0;l<7;l++)
+              {
+                  sensor_bypass_list.append(this->plcToolingInfo.valveSensorBypass[j].retractBypass.bits.getBit(l)?"BYPASS":"ENABLE");
+              }
+              qjsobj_valveSensorBypass["RetractSensor_Bypass_Valve_"+QString::number(j)]=QJsonArray::fromStringList(sensor_bypass_list);
+              sensor_bypass_list.clear();
+          }
+          plcToolingInfo["valveSensorBypass"]=qjsobj_valveSensorBypass;
+          //film feeder
+          QJsonObject qjobj_filmfeeder;
+          qjobj_filmfeeder["enable"]=this->plcToolingInfo.feeder.enable;
+          qjobj_filmfeeder["direction"]=this->plcToolingInfo.feeder.direction?"CW":"CCW";
+          qjobj_filmfeeder["distance_1"]=(qint32)this->plcToolingInfo.feeder.distance_1;
+          qjobj_filmfeeder["distance_2"]=this->plcToolingInfo.feeder.distance_2;
+          qjobj_filmfeeder["interval"]=this->plcToolingInfo.feeder.interval;
+          qjobj_filmfeeder["speed"]=(qint32)this->plcToolingInfo.feeder.speed;
+          plcToolingInfo["filmFeeder"]=qjobj_filmfeeder;
           json["plcToolingInfo"]=plcToolingInfo;
 }
 bool clsTooling::saveToDisk(QString fileName)
 {
-    QFile saveFile(fileName);
+         QFile saveFile(fileName);
+         if(!QFile::exists(fileName))
+         {
+
+         }
 
          if (!saveFile.open(QIODevice::WriteOnly)) {
              qWarning("Couldn't open save file.");
@@ -575,6 +878,18 @@ QByteArray clsTooling::prepareCommand_getValveConfigFromPLC()
     dataToTcpCommObj[5]=0x00;//reserve byte
     return dataToTcpCommObj;
 }
+QByteArray clsTooling::prepareCommand_getFilmFeederParaFromPLC()
+{
+    //query film feeder  config
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x06;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7C;//commandNO low byte,124
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    return dataToTcpCommObj;
+}
 QByteArray clsTooling::prepareCommand_uploadWholeSettingFromPLC()
 {
     QByteArray ar1;
@@ -593,9 +908,45 @@ QByteArray clsTooling::prepareCommand_uploadWholeSettingFromPLC()
 
     ar1.append(this->prepareCommand_getValveConfigFromPLC());
     qDebug()<<"ar1.size, after exec prepareCommand_getValveConfigFromPLC"<<ar1.size();
-
+    ar1.append(this->prepareCommand_getFilmFeederParaFromPLC());
+    qDebug()<<"ar1.size, after exec prepareCommand_getFilmFeederParaFromPLC"<<ar1.size();
     return ar1;
 }
+QByteArray clsTooling::prepareCommand_set_get_toolID(bool set_get_flag)
+{
+
+    QByteArray dataToTcpCommObj;
+    //get toolID from PLC
+    if(!set_get_flag)
+    {
+
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7A;//commandNO low byte,122
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x00;//0==get,1==set
+        dataToTcpCommObj[7]=0x00;//reserve byte
+        dataToTcpCommObj[8]=0x00;//reserve byte
+        dataToTcpCommObj[9]=0x00;//reserve byte
+    }
+    else
+    {
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7A;//commandNO low byte,122
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x01;//0==get,1==set
+        dataToTcpCommObj[7]=this->plcToolingInfo.toolingNO;//editting ID
+        dataToTcpCommObj[8]=0x00;//reserve byte
+        dataToTcpCommObj[9]=0x00;//reserve byte
+    }
+    return dataToTcpCommObj;
+}
+
 QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
 {
     QByteArrayList ar1;
@@ -611,11 +962,17 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
         ar2[5]=0x00;//reserve byte
         bytebits bb1;
         bb1.byteChar=0;
-
-        bb1.bits.b1=this->plcToolingInfo.generator_enable[1];
-        bb1.bits.b2=this->plcToolingInfo.generator_enable[2];
-        bb1.bits.b3=this->plcToolingInfo.generator_enable[3];
-        bb1.bits.b4=this->plcToolingInfo.generator_enable[4];
+        for(int i=1;i<=4;i++)
+        {
+            if(this->plcToolingInfo.generator_enable[i])
+                bb1.bits.setBit(i);
+            else
+                bb1.bits.resetBit(i);
+        }
+        //bb1.bits.b1=this->plcToolingInfo.generator_enable[1];
+        //bb1.bits.b2=this->plcToolingInfo.generator_enable[2];
+        //bb1.bits.b3=this->plcToolingInfo.generator_enable[3];
+        //bb1.bits.b4=this->plcToolingInfo.generator_enable[4];
 
         ar2[6]=bb1.byteChar;//gen enable/disable status
         ar2[7]=0x00;//reserve
@@ -641,7 +998,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
         {
             ar2[6]=i;
             ar2[7]=this->plcToolingInfo.thruster_List[i].GenNO;
-            ar2[8]=this->plcToolingInfo.thruster_List[i].ChannelNO;
+            ar2[8]=(this->plcToolingInfo.thruster_List[i].ChannelNO>0)?(this->plcToolingInfo.thruster_List[i].ChannelNO-1):0;
             ar2[9]=this->plcToolingInfo.thruster_List[i].enable?1:0;
             ar1.append(ar2);
 
@@ -864,9 +1221,47 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
         }
 
     }
-    ar2.clear();
+
+    //preparation for film feeder setting downloading
+    if(true)
+    {
+      ar2.clear();
+
+      ar2[0]=0x00;//length high byte
+      ar2[1]=0x18;//length low byte
+      ar2[2]=0x00;//commandNO high byte
+      ar2[3]=0x7B;//commandNO low byte,123
+      ar2[4]=0x00;//reserve byte
+      ar2[5]=0x00;//reserve byte
+      ar2[6]=this->plcToolingInfo.feeder.enable;//filmfeeder Enable
+      ar2[7]=this->plcToolingInfo.feeder.direction;//filmfeeder dir
+      dWordBytes dw1;
+      dw1.DWordVar=plcToolingInfo.feeder.speed;//filmfeeder speed
+      ar2[8]=dw1.bytesVar.B0;
+      ar2[9]=dw1.bytesVar.B1;
+      ar2[10]=dw1.bytesVar.B2;
+      ar2[11]=dw1.bytesVar.B3;
+      dw1.DWordVar=this->plcToolingInfo.feeder.distance_1;//distance
+      ar2[12]=dw1.bytesVar.B0;
+      ar2[13]=dw1.bytesVar.B1;
+      ar2[14]=dw1.bytesVar.B2;
+      ar2[15]=dw1.bytesVar.B3;
+      dw1.DWordVar=this->plcToolingInfo.feeder.distance_2;//distance_2
+      ar2[16]=dw1.bytesVar.B0;
+      ar2[17]=dw1.bytesVar.B1;
+      ar2[18]=dw1.bytesVar.B2;
+      ar2[19]=dw1.bytesVar.B3;
+      ar2[20]=this->plcToolingInfo.feeder.interval;//interval
+      ar2[21]=0;//reserve
+      ar2[22]=0;//reserve
+      ar2[23]=0;//reserve
+      ar1.append(ar2);
+    }
+    //set toolID;
+    if(true)
+    {
+        ar1.append(this->prepareCommand_set_get_toolID(true));
+    }
     qDebug()<<"whole settings.size:"<<ar1.size();
     return ar1;
-
-
 }

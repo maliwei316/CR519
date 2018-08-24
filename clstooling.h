@@ -18,6 +18,8 @@ public:
     QByteArray prepareCommand_getstationParaFromPLC();
     QByteArray prepareCommand_getStepStationConnectionFromPLC();
     QByteArray prepareCommand_getValveConfigFromPLC();
+    QByteArray prepareCommand_set_get_toolID(bool set_get_flag);
+    QByteArray prepareCommand_getFilmFeederParaFromPLC();
     QByteArray prepareCommand_uploadWholeSettingFromPLC();
     QByteArrayList prepareCommand_downloadWholeSettingToPLC();
 signals:
@@ -29,6 +31,9 @@ public:
     QStringList pointNameMapping;
     QStringList valveNameMapping;
     toolingInfo_in_PLC plcToolingInfo;
+    QStringList pointBarcodeMapping;
+    barcodeSetting leftBarcodeSettings;
+    barcodeSetting rightBarcodeSettings;
 };
 
 #endif // CLSTOOLING_H

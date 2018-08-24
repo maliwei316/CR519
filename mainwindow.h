@@ -8,6 +8,15 @@
 #include "clstooling.h"
 #include <QTimer>
 #include <QLabel>
+#include "clsbarcode.h"
+typedef struct _pageInfo
+{
+        quint16 previousPage_Index_mainStackWidget;
+
+
+}pageInfo;
+
+
 namespace Ui {
 class MainWindow;
 }
@@ -25,6 +34,10 @@ public:
     void updateDisplay_All_EdittingValue();
     void updateDisplay_ALL_CurrentValue();
     void handleAlarm(plcItem item);
+    void getBarcode_left();
+    void getBarcode_right();
+    void changePage(quint16 targetPageIndex);
+    void handleBarcodeError(QSerialPort::SerialPortError error);
     ~MainWindow();
 signals:
 
@@ -285,6 +298,145 @@ private slots:
 
     void on_pushButton_registText_remove_clicked();
 
+    void on_pushButton_weldByManual_checkAlarm_clicked();
+
+    void on_pushButton_leaveAlarmPage_clicked();
+
+    void on_comboBox_barcode_assignment_currentIndexChanged(const QString &arg1);
+
+    void on_checkBox_barcode_left_enable_stateChanged(int arg1);
+
+    void on_checkBox_barcode_right_enable_stateChanged(int arg1);
+
+    void on_comboBox_BarcodePort_Left_currentIndexChanged(const QString &arg1);
+
+    void on_comboBox__BarcodePort_Right_currentIndexChanged(const QString &arg1);
+
+    void on_comboBox_Baud_currentIndexChanged(const QString &arg1);
+
+    void on_spinBox_barcodeDataBits_valueChanged(int arg1);
+
+    void on_spinBox_barcodeStopBits_valueChanged(int arg1);
+
+    void on_comboBox_parity_currentIndexChanged(const QString &arg1);
+
+    void on_spinBox_barcodeMaxLength_valueChanged(int arg1);
+
+    void on_spinBox_BarcodeMinLength_valueChanged(int arg1);
+
+    void on_lineEdit_barcode_prefix_textEdited(const QString &arg1);
+
+    void on_lineEdit_barcode_suffix_textEdited(const QString &arg1);
+
+    void on_pushButton_toolingSettingRefresh_clicked();
+
+    void on_spinBox_filmFeeder_enable_valueChanged(int arg1);
+
+    void on_spinBox_filmFeeder_speed_valueChanged(int arg1);
+
+    void on_spinBox_filmFeeder_distance_valueChanged(int arg1);
+
+    void on_spinBox_filmFeeder_distance_2_valueChanged(int arg1);
+
+    void on_spinBox_filmFeeder_Interval_valueChanged(int arg1);
+
+    void on_comboBox_filmFeeder_Dir_currentIndexChanged(int index);
+
+    void on_pushButton_toolingSettingSearch_clicked();
+
+    void on_checkBox_PartSensor_1_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_2_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_3_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_4_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_5_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_6_stateChanged(int arg1);
+
+    void on_btn_Edit2PLC_FilmFeeder_clicked();
+
+    void on_btn_refresh_FilmFeeder_clicked();
+
+    void on_btn_PLC2Edit_FilmFeeder_clicked();
+
+    void on_Clamper_Extend_clicked();
+
+    void on_Clamper_Free_clicked();
+
+    void on_Clamper_Retract_clicked();
+
+    void on_actionautoRun_triggered();
+
+    void on_ToolingChange_valveNO_valueChanged(int arg1);
+
+    void on_Clamper_Extend_toolingChange_clicked();
+
+    void on_Clamper_Free_ToolingChange_clicked();
+
+    void on_Clamper_Retract_ToolingChange_clicked();
+
+    void on_pushButton_Advance_clicked();
+
+    void on_btn_alarmPage_clicked();
+
+    void on_btn_IOTable_clicked();
+
+    void on_btn_IO_Table_Quit_clicked();
+
+
+    void on_btn_Edit2PLC_PartSensor_clicked();
+
+    void on_btn_refresh_PartSensor_clicked();
+
+    void on_btn_PLC2Edit_PartSensor_clicked();
+
+    void on_sensorBypass_valveNO_valueChanged(int arg1);
+
+    void on_btn_refresh_valveSensor_clicked();
+
+    void on_btn_Edit2PLC_valveSensor_clicked();
+
+    void on_btn_PLC2Edit_valveSensor_clicked();
+
+    void on_checkBox_PartSensor_7_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_8_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_9_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_10_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_11_stateChanged(int arg1);
+
+    void on_checkBox_PartSensor_12_stateChanged(int arg1);
+
+    void on_checkBox_ValveExtendSensorBypass_1_stateChanged(int arg1);
+
+    void on_checkBox_ValveExtendSensorBypass_2_stateChanged(int arg1);
+
+    void on_checkBox_ValveExtendSensorBypass_3_stateChanged(int arg1);
+
+    void on_checkBox_ValveExtendSensorBypass_4_stateChanged(int arg1);
+
+    void on_checkBox_ValveExtendSensorBypass_5_stateChanged(int arg1);
+
+    void on_checkBox_ValveExtendSensorBypass_6_stateChanged(int arg1);
+
+    void on_checkBox_ValveRetractSensorBypass_1_stateChanged(int arg1);
+
+    void on_checkBox_ValveRetractSensorBypass_2_stateChanged(int arg1);
+
+    void on_checkBox_ValveRetractSensorBypass_3_stateChanged(int arg1);
+
+    void on_checkBox_ValveRetractSensorBypass_4_stateChanged(int arg1);
+
+    void on_checkBox_ValveRetractSensorBypass_5_stateChanged(int arg1);
+
+    void on_checkBox_ValveRetractSensorBypass_6_stateChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
@@ -309,6 +461,19 @@ public:
     bool checking_modbusConnectionStatus;
     QMap<quint32,alarmItem> currentAlarms;
     QMap<quint32,QString> systemRegisteredTextList;
+    clsBarcode *clsBarcode_left;
+    clsBarcode *clsBarcode_right;
+    pageInfo pageInfo1;
+
+    QString barcode_previous_left;
+    QString barcode_in_use_left;
+    QString barcode_to_use_left;
+
+    QString barcode_previous_right;
+    QString barcode_in_use_right;
+    QString barcode_to_use_right;
+
+
 
 
 };

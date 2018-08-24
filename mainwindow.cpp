@@ -4,19 +4,157 @@
 #include <bitsoperation.h>
 #include <QTime>
 #include <QFileDialog>
+#include <QDir>
 #include <clstooling.h>
 #include <QDebug>
 #include "myevent.h"
+#include <QSerialPortInfo>
+#include <QMessageBox>
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    this->clsBarcode_left=new clsBarcode(this);
+    this->clsBarcode_right=new clsBarcode(this);
     this->wp1=nullptr;
     this->tempTooling_editting=new clsTooling(this);
     this->tooling_current=new clsTooling(this);
     this->toolID_editing=1;
     this->tempTooling_editting->plcToolingInfo.toolingNO=1;
+    const auto serialPortInfos = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
+    {
+       qDebug()<< "serial Port: " << serialPortInfo.portName();
+       this->ui->comboBox_BarcodePort_Left->addItem(serialPortInfo.portName());
+       this->ui->comboBox__BarcodePort_Right->addItem(serialPortInfo.portName());
+    }
+    if(QFile::exists("toolingConfig/currentTooling.dc"))
+    {
+        this->tempTooling_editting->loadFromDisk("toolingConfig/currentTooling.dc");
+        this->toolID_editing=this->tempTooling_editting->plcToolingInfo.toolingNO;
+        this->ui->toolID_Editting->setValue(this->toolID_editing);
+        if(this->tempTooling_editting->leftBarcodeSettings.enable)
+        {
+
+            this->clsBarcode_left->setPortName(this->tempTooling_editting->leftBarcodeSettings.portName);
+            QString baudstr=this->tempTooling_editting->leftBarcodeSettings.baud;
+            quint32 baud_quint32;
+            if(baudstr=="4800")
+            {
+               baud_quint32=4800;
+            }
+            else if(baudstr=="19200")
+            {
+                baud_quint32=19200;
+            }
+            else if(baudstr=="38400")
+            {
+                baud_quint32=38400;
+            }
+            else if(baudstr=="57600")
+            {
+                baud_quint32=57600;
+            }
+            else
+            {
+               baud_quint32=9600;
+            }
+            this->clsBarcode_left->setBaudRate(baud_quint32);
+            this->clsBarcode_left->setDataBits((QSerialPort::DataBits)this->tempTooling_editting->leftBarcodeSettings.dataBits);
+            this->clsBarcode_left->setStopBits((QSerialPort::StopBits)this->tempTooling_editting->leftBarcodeSettings.stopBits);
+            QString parity_str=this->tempTooling_editting->leftBarcodeSettings.parity.toUpper();
+            quint8  parity_uint8;
+            if(parity_str=="EVEN")
+            {
+               parity_uint8=2;
+            }
+            else if (parity_str=="ODD")
+            {
+                parity_uint8=3;
+            }
+            else
+            {
+                parity_uint8=0;
+            }
+            this->clsBarcode_left->setParity((QSerialPort::Parity)parity_uint8);
+            if(!this->clsBarcode_left->open(QIODevice::ReadOnly))
+            {
+                qWarning()<<tr("failed to open serial port for left barcode,portName:%1,error:%2")
+                            .arg(this->tempTooling_editting->leftBarcodeSettings.portName)
+                            .arg(this->clsBarcode_left->errorString());
+            }
+            else
+            {
+                qDebug()<<tr("Success to open serial port for left barcode,portName:%1")
+                          .arg(this->tempTooling_editting->leftBarcodeSettings.portName);
+                connect(this->clsBarcode_left,&QSerialPort::readyRead,this,&MainWindow::getBarcode_left);
+                connect(this->clsBarcode_left,&QSerialPort::errorOccurred,this,&MainWindow::handleBarcodeError);
+
+            }
+        }
+        if(this->tempTooling_editting->rightBarcodeSettings.enable)
+        {
+
+            this->clsBarcode_right->setPortName(this->tempTooling_editting->rightBarcodeSettings.portName);
+            QString baudstr=this->tempTooling_editting->rightBarcodeSettings.baud;
+            quint32 baud_quint32;
+            if(baudstr=="4800")
+            {
+               baud_quint32=4800;
+            }
+            else if(baudstr=="19200")
+            {
+                baud_quint32=19200;
+            }
+            else if(baudstr=="38400")
+            {
+                baud_quint32=38400;
+            }
+            else if(baudstr=="57600")
+            {
+                baud_quint32=57600;
+            }
+            else
+            {
+               baud_quint32=9600;
+            }
+            this->clsBarcode_right->setBaudRate(baud_quint32);
+            this->clsBarcode_right->setDataBits((QSerialPort::DataBits)this->tempTooling_editting->rightBarcodeSettings.dataBits);
+            this->clsBarcode_right->setStopBits((QSerialPort::StopBits)this->tempTooling_editting->rightBarcodeSettings.stopBits);
+            QString parity_str=this->tempTooling_editting->rightBarcodeSettings.parity.toUpper();
+            quint8  parity_uint8;
+            if(parity_str=="EVEN")
+            {
+               parity_uint8=2;
+            }
+            else if (parity_str=="ODD")
+            {
+                parity_uint8=3;
+            }
+            else
+            {
+                parity_uint8=0;
+            }
+            this->clsBarcode_right->setParity((QSerialPort::Parity)parity_uint8);
+            if(!this->clsBarcode_right->open(QIODevice::ReadOnly))
+            {
+                qWarning()<<tr("failed to open serial port for right barcode,portName:%1,error:%2")
+                            .arg(this->tempTooling_editting->rightBarcodeSettings.portName)
+                            .arg(this->clsBarcode_right->errorString());
+            }
+            else
+            {
+                qDebug()<<tr("Success to open serial port for right barcode,portName:%1")
+                          .arg(this->tempTooling_editting->rightBarcodeSettings.portName);
+                connect(this->clsBarcode_right,&QSerialPort::readyRead,this,&MainWindow::getBarcode_right);
+                connect(this->clsBarcode_right,&QSerialPort::errorOccurred,this,&MainWindow::handleBarcodeError);
+
+            }
+        }
+
+        }
     this->toolID_PLC=0;
     this->setPLCValueVisible(false);
     this->uploadingWholeSettingFromPLCInProcess=false;
@@ -53,6 +191,57 @@ MainWindow::~MainWindow()
     //tooling_current->deleteLater();
 
 }
+void MainWindow::changePage(quint16 targetPageIndex)
+{
+    if(targetPageIndex==255)
+    {
+        quint16 temp;
+        temp=this->pageInfo1.previousPage_Index_mainStackWidget;
+        this->pageInfo1.previousPage_Index_mainStackWidget=this->ui->stackedWidget_mainProgram->currentIndex();
+        this->ui->stackedWidget_mainProgram->setCurrentIndex(temp);
+    }
+    else
+    {
+        this->pageInfo1.previousPage_Index_mainStackWidget=this->ui->stackedWidget_mainProgram->currentIndex();
+        this->ui->stackedWidget_mainProgram->setCurrentIndex(targetPageIndex);
+    }
+
+}
+void MainWindow::getBarcode_left()
+{
+    if(this->clsBarcode_left->bytesAvailable()>=this->tempTooling_editting->leftBarcodeSettings.minLength)
+    {
+        QEventLoop eventloop;
+        QTimer::singleShot(20, &eventloop, SLOT(quit()));
+        eventloop.exec();
+        this->barcode_to_use_left=QString(this->clsBarcode_left->readAll());
+        qDebug()<<tr("left barcode, port:%1,new got barcode:%2")
+               .arg(this->clsBarcode_left->portName())
+               .arg(this->barcode_to_use_left);
+        this->ui->lineEdit_scannedBarcode_left->setText(this->barcode_to_use_left);
+        ;
+    }
+}
+void MainWindow::getBarcode_right()
+{
+    if(this->clsBarcode_right->bytesAvailable()>=this->tempTooling_editting->leftBarcodeSettings.minLength)
+    {
+        QEventLoop eventloop;
+        QTimer::singleShot(20, &eventloop, SLOT(quit()));
+        eventloop.exec();
+        this->barcode_to_use_right=QString(this->clsBarcode_right->readAll());
+        qDebug()<<tr("right barcode, port:%1,new got barcode:%2")
+               .arg(this->clsBarcode_right->portName())
+               .arg(this->barcode_to_use_right);
+        this->ui->lineEdit_scannedBarcode_right->setText(this->barcode_to_use_right);
+    }
+}
+ void MainWindow::handleBarcodeError(QSerialPort::SerialPortError error)
+ {
+     qDebug()<<tr("barcode error, error:%1")
+            .arg(error);
+
+ }
 void MainWindow::OnPLCItemsChanged_Modbus(QVariantList changedItems)
 {
     plcItem item;
@@ -60,8 +249,8 @@ void MainWindow::OnPLCItemsChanged_Modbus(QVariantList changedItems)
     {
 
         item=changedItems.at(i).value<plcItem>();
-        qDebug()<<tr("receivedItems from Modbus,area:%1, itemID:%2,index:%3")
-                  .arg(item.itemGroup_area).arg(item.itemID()).arg(i);
+        //qDebug()<<tr("receivedItems from Modbus,area:%1, itemID:%2,index:%3")
+                  //.arg(item.itemGroup_area).arg(item.itemID()).arg(i);
         QCoreApplication::postEvent(this,new myEvent_updateDisplay((QEvent::Type)5011,item));
     }
 
@@ -290,7 +479,122 @@ void MainWindow::updatePLCItem(plcItem item)
         this->switchItemOnOff(this->ui->LED_I37,item.currentValue.wordVar?true:false);
         break;
     }
-
+    //IB11~IB13
+    case 528384088://I11.0
+    {
+        this->switchItemOnOff(this->ui->LED_I110_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384089://I11.1
+    {
+        this->switchItemOnOff(this->ui->LED_I111_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384090://I11.2
+    {
+        this->switchItemOnOff(this->ui->LED_I112_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384091://I11.3
+    {
+        this->switchItemOnOff(this->ui->LED_I113_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384092://I11.4
+    {
+        this->switchItemOnOff(this->ui->LED_I114_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384093://I11.5
+    {
+        this->switchItemOnOff(this->ui->LED_I115_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384094://I11.6
+    {
+        this->switchItemOnOff(this->ui->LED_I116_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384095://I11.7
+    {
+        this->switchItemOnOff(this->ui->LED_I117_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384096://I12.0
+    {
+        this->switchItemOnOff(this->ui->LED_I120_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384097://I12.1
+    {
+        this->switchItemOnOff(this->ui->LED_I121_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384098://I12.2
+    {
+        this->switchItemOnOff(this->ui->LED_I122_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384099://I12.3
+    {
+        this->switchItemOnOff(this->ui->LED_I123_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384100://I12.4
+    {
+        this->switchItemOnOff(this->ui->LED_I124_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384101://I12.5
+    {
+        this->switchItemOnOff(this->ui->LED_I125_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384102://I12.6
+    {
+        this->switchItemOnOff(this->ui->LED_I126_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384103://I12.7
+    {
+        this->switchItemOnOff(this->ui->LED_I127_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384104://I13.0
+    {
+        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384105://I13.1
+    {
+        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384106://I13.2
+    {
+        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384107://I13.3
+    {
+        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384108://I13.4
+    {
+        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384109://I13.5
+    {
+        this->switchItemOnOff(this->ui->LED_I135_2,item.currentValue.wordVar?true:false);
+        break;
+    }
+    case 528384110://I13.6
+    {
+        this->switchItemOnOff(this->ui->LED_I136_2,item.currentValue.wordVar?true:false);
+        break;
+    }
     //QB0~QB3
     case 532480000://Q0.0
     {
@@ -497,8 +801,323 @@ void MainWindow::updatePLCItem(plcItem item)
         this->switchItemOnOff(this->ui->LED_M37,item.currentValue.bitsVar.b15?true:false);
         break;
     }
-    //DW0,alarm word,
+    //MW16
+    case 536576128://MW16
+    {
+
+        quint8 toolID_PLC_2=(quint8)(item.currentValue.wordVar%256);
+        if(this->toolID_PLC!=toolID_PLC_2)
+        {
+            this->toolID_PLC=toolID_PLC_2;
+            this->ui->toolID_fromPLC->setValue(this->toolID_PLC);
+        }
+        //qDebug()<<"got PLC tooling_ID:"<<toolID_PLC_2;
+        break;
+    }
+    //MW18
+    case 536576144://MW18
+    {
+        quint16 indicatingMsg;
+        indicatingMsg=(quint16)item.currentValue.wordVar;
+        qDebug()<<"got indicating MSG:"<<indicatingMsg;
+
+        qDebug()<<"got indicating MSG:"<<this->systemRegisteredTextList.value(1000+indicatingMsg);
+        this->ui->label_IndicatingMSG->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
+        this->ui->label_IndicatingMSG_2->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
+        break;
+    }
+   //DW0,alarm word,
     case 540672000:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672016:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672032:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672048:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672064:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672080:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672096:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672112:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672128:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672144:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672160:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672176:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672192:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672208:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672224:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672240:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672256:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672272:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 54067288:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672304:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672320:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672336:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672352:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672368:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672384:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672400:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672416:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672432:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672448:
+    {
+        if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
+            break;
+        else
+        {
+            this->handleAlarm(item);
+            break;
+        }
+    }
+    case 540672464:
     {
         if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
             break;
@@ -528,7 +1147,7 @@ void MainWindow::switchItemOnOff(QLabel* targetLabel,bool onOff)
 }
 void MainWindow::handleAlarm(plcItem item)
 {
-    qDebug()<<tr("handling alarm,itemID:%1").arg(item.itemID());
+    //qDebug()<<tr("handling alarm,itemID:%1").arg(item.itemID());
     quint32 alarmID_plcItem;
     for(int i=0;i<16;i++)
     {
@@ -678,21 +1297,9 @@ void MainWindow::OnTcpCommConnectionStateChanged(QAbstractSocket::SocketState st
 
     else
     {
-        //get toolID from PLC
-        QByteArray dataToTcpCommObj;
-        dataToTcpCommObj[0]=0x00;//length high byte
-        dataToTcpCommObj[1]=0x0A;//length low byte
-        dataToTcpCommObj[2]=0x00;//commandNO high byte
-        dataToTcpCommObj[3]=0x7A;//commandNO low byte,122
-        dataToTcpCommObj[4]=0x00;//reserve byte
-        dataToTcpCommObj[5]=0x00;//reserve byte
-        dataToTcpCommObj[6]=0x00;//reserve byte
-        dataToTcpCommObj[7]=0x00;//reserve byte
-        dataToTcpCommObj[8]=0x00;//reserve byte
-        dataToTcpCommObj[9]=0x00;//reserve byte
-        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
         //set label text to online
         this->ui->OnOffLine_Label->setText("ONLINE");
+        if(this->toolID_editing==this->toolID_PLC&&this->toolID_editing>0)
         this->setPLCValueVisible(true);
     }
 
@@ -703,7 +1310,7 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
     if(dataFromTcpCommObj_size<6)
     {
        qDebug()<<"subData size <6";
-        return;
+       return;
     }
     if(dataFromTcpCommObj_size!=(quint8)dataFromTcpCommObj.at(0)*256+dataFromTcpCommObj.at(1))
     {
@@ -735,11 +1342,14 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         bytebits bb1;
         bb1.byteChar=dataLoad[0];
         qDebug()<<tr("CommandNO:%1,got gen enable/disable info,gen Enable status:%2").arg(command).arg(QString::number((int)dataLoad[0],2));
-
-        this->tooling_current->plcToolingInfo.generator_enable[1]=bb1.bits.b1;
-        this->tooling_current->plcToolingInfo.generator_enable[2]=bb1.bits.b2;
-        this->tooling_current->plcToolingInfo.generator_enable[3]=bb1.bits.b3;
-        this->tooling_current->plcToolingInfo.generator_enable[4]=bb1.bits.b4;
+        for(int i=1;i<=4;i++)
+        {
+           this->tooling_current->plcToolingInfo.generator_enable[i]=bb1.bits.getBit(i);
+        }
+        //this->tooling_current->plcToolingInfo.generator_enable[1]=bb1.bits.b1;
+        //this->tooling_current->plcToolingInfo.generator_enable[2]=bb1.bits.b2;
+        //this->tooling_current->plcToolingInfo.generator_enable[3]=bb1.bits.b3;
+        //this->tooling_current->plcToolingInfo.generator_enable[4]=bb1.bits.b4;
 
         this->ui->CV_GenEnable_1->setChecked(bb1.bits.b1);
         this->ui->CV_GenEnable_2->setChecked(bb1.bits.b2);
@@ -747,10 +1357,14 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         this->ui->CV_GenEnable_4->setChecked(bb1.bits.b4);
         if(this->uploadingWholeSettingFromPLCInProcess)
         {
-            this->tempTooling_editting->plcToolingInfo.generator_enable[1]=bb1.bits.b1;
-            this->tempTooling_editting->plcToolingInfo.generator_enable[2]=bb1.bits.b2;
-            this->tempTooling_editting->plcToolingInfo.generator_enable[3]=bb1.bits.b3;
-            this->tempTooling_editting->plcToolingInfo.generator_enable[4]=bb1.bits.b4;
+            for(int i=1;i<=4;i++)
+            {
+               this->tempTooling_editting->plcToolingInfo.generator_enable[i]=bb1.bits.getBit(i);
+            }
+            //this->tempTooling_editting->plcToolingInfo.generator_enable[1]=bb1.bits.b1;
+            //this->tempTooling_editting->plcToolingInfo.generator_enable[2]=bb1.bits.b2;
+            //this->tempTooling_editting->plcToolingInfo.generator_enable[3]=bb1.bits.b3;
+            //this->tempTooling_editting->plcToolingInfo.generator_enable[4]=bb1.bits.b4;
             this->ui->checkBox_GenEnable_1->setChecked(bb1.bits.b1);
             this->ui->checkBox_GenEnable_2->setChecked(bb1.bits.b2);
             this->ui->checkBox_GenEnable_3->setChecked(bb1.bits.b3);
@@ -772,7 +1386,7 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
             this->ui->CV_pointPara_realTime_Freq->setValue((quint32)dw1.DWordVar);
             this->ui->CV_pointPara_realTime_Amp->setValue(dataLoad[8]);
             this->ui->CV_pointPara_realTime_Power->setValue((quint8)dataLoad[6]*256+dataLoad[7]);
-            this->ui->usTest_Channel->setValue((quint8)dataLoad[9]);
+            this->ui->usTest_Channel->setValue((quint8)dataLoad[9]+1);
         }
 
     }
@@ -813,24 +1427,24 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         if(thrusterNOFromPLC==this->ui->spinBox_thrusterNO->value())
         {
             this->ui->CV_thrusterEnable->setValue(dataLoad[3]);
-            this->ui->CV_GenNO->setValue(dataLoad[1]);
-            this->ui->CV_Channel->setValue(dataLoad[2]);
+            this->ui->CV_GenNO->setValue((quint8)dataLoad[1]);
+            this->ui->CV_Channel->setValue((quint8)dataLoad[2]+1);
             if(this->uploadingWholeSettingFromPLCInProcess)
             {
                 this->ui->spinBox_thrusterEnable->setValue(dataLoad[3]);
-                this->ui->spinBox_GenNO->setValue(dataLoad[1]);
-                this->ui->spinBox_channel->setValue(dataLoad[2]);
+                this->ui->spinBox_GenNO->setValue((quint8)dataLoad[1]);
+                this->ui->spinBox_channel->setValue((quint8)dataLoad[2]+1);
             }
         }
         //store any received thruster info into tooling info on background
         this->tooling_current->plcToolingInfo.thruster_List[thrusterNOFromPLC].enable=dataLoad[3];
         this->tooling_current->plcToolingInfo.thruster_List[thrusterNOFromPLC].GenNO=dataLoad[1];
-        this->tooling_current->plcToolingInfo.thruster_List[thrusterNOFromPLC].ChannelNO=dataLoad[2];
+        this->tooling_current->plcToolingInfo.thruster_List[thrusterNOFromPLC].ChannelNO=(quint8)dataLoad[2]+1;
         if(this->uploadingWholeSettingFromPLCInProcess)
         {
             this->tempTooling_editting->plcToolingInfo.thruster_List[thrusterNOFromPLC].enable=dataLoad[3];
             this->tempTooling_editting->plcToolingInfo.thruster_List[thrusterNOFromPLC].GenNO=dataLoad[1];
-            this->tempTooling_editting->plcToolingInfo.thruster_List[thrusterNOFromPLC].ChannelNO=dataLoad[2];
+            this->tempTooling_editting->plcToolingInfo.thruster_List[thrusterNOFromPLC].ChannelNO=(quint8)dataLoad[2]+1;
         }
         break;
     }
@@ -1185,12 +1799,82 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         break;
     case 15://received toolID from PLC
     {
-        this->toolID_PLC=dataLoad[3];
+
+
+        this->toolID_PLC=(quint8)dataLoad[2];
+        qDebug()<<"toolID from PLC:"<<this->toolID_PLC;
         this->ui->toolID_fromPLC->setValue(this->toolID_PLC);
         this->tooling_current->plcToolingInfo.toolingNO=this->toolID_PLC;
         break;
     }
+    case 23://received filmfeeder Para from PLC
+    {
+        this->tooling_current->plcToolingInfo.feeder.enable=dataLoad[0]?1:0;
+        this->tooling_current->plcToolingInfo.feeder.direction=dataLoad[1]?1:0;
+        this->ui->CV_filmFeeder_Enable->setValue(this->tooling_current->plcToolingInfo.feeder.enable);
+        this->ui->CV_filmFeeder_Dir->setCurrentIndex(this->tooling_current->plcToolingInfo.feeder.direction);
+        if(uploadingWholeSettingFromPLCInProcess)
+        {
+           this->tempTooling_editting->plcToolingInfo.feeder.enable=
+                    this->tooling_current->plcToolingInfo.feeder.enable;
+           this->tempTooling_editting->plcToolingInfo.feeder.direction=
+                    this->tooling_current->plcToolingInfo.feeder.direction;
+           this->ui->spinBox_filmFeeder_enable->setValue
+                    (this->tempTooling_editting->plcToolingInfo.feeder.enable);
+           this->ui->comboBox_filmFeeder_Dir->setCurrentIndex
+                    (this->tempTooling_editting->plcToolingInfo.feeder.direction);
+        }
+        dWordBytes dw1;
+        qint32 dw_int_v1;
+        dw1.bytesVar.B0=dataLoad[2];
+        dw1.bytesVar.B1=dataLoad[3];
+        dw1.bytesVar.B2=dataLoad[4];
+        dw1.bytesVar.B3=dataLoad[5];
+        dw_int_v1=(qint32)dw1.DWordVar;
+        this->tooling_current->plcToolingInfo.feeder.speed=dw_int_v1;
+        this->ui->CV_filmFeeder_speed->setValue(dw_int_v1);
+        if(uploadingWholeSettingFromPLCInProcess)
+        {
+            this->tempTooling_editting->plcToolingInfo.feeder.speed=dw_int_v1;
+            this->ui->spinBox_filmFeeder_speed->setValue(dw_int_v1);
+        }
 
+        dw1.bytesVar.B0=dataLoad[6];
+        dw1.bytesVar.B1=dataLoad[7];
+        dw1.bytesVar.B2=dataLoad[8];
+        dw1.bytesVar.B3=dataLoad[9];
+        dw_int_v1=(qint32)dw1.DWordVar;
+        this->tooling_current->plcToolingInfo.feeder.distance_1=dw_int_v1;
+        this->ui->CV_filmFeeder_distance->setValue(dw_int_v1);
+        if(uploadingWholeSettingFromPLCInProcess)
+        {
+            this->tempTooling_editting->plcToolingInfo.feeder.distance_1=dw_int_v1;
+            this->ui->spinBox_filmFeeder_distance->setValue(dw_int_v1);
+        }
+
+        dw1.bytesVar.B0=dataLoad[10];
+        dw1.bytesVar.B1=dataLoad[11];
+        dw1.bytesVar.B2=dataLoad[12];
+        dw1.bytesVar.B3=dataLoad[13];
+        dw_int_v1=(qint32)dw1.DWordVar;
+        this->tooling_current->plcToolingInfo.feeder.distance_2=dw_int_v1;
+        this->ui->CV_filmFeeder_distance_2->setValue(dw_int_v1);
+        if(uploadingWholeSettingFromPLCInProcess)
+        {
+            this->tempTooling_editting->plcToolingInfo.feeder.distance_2=dw_int_v1;
+            this->ui->spinBox_filmFeeder_distance_2->setValue(dw_int_v1);
+        }
+        this->tooling_current->plcToolingInfo.feeder.interval=(quint8)dataLoad[14];
+        this->ui->CV_filmFeeder_Interval->setValue(this->tooling_current->plcToolingInfo.feeder.interval);
+        if(uploadingWholeSettingFromPLCInProcess)
+        {
+            this->tempTooling_editting->plcToolingInfo.feeder.interval=
+                    this->tooling_current->plcToolingInfo.feeder.interval;
+            this->ui->spinBox_filmFeeder_Interval->setValue
+                    (this->tempTooling_editting->plcToolingInfo.feeder.interval);
+        }
+        break;
+    }
     case 100://change HMI page NO
 
         break;
@@ -1299,6 +1983,21 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->btn_undoServoSetting->setVisible(true);
         this->ui->btn_PLC2Editting_WeldPoint->setVisible(true);
 
+        this->ui->btn_refresh_FilmFeeder->setVisible(true);
+        this->ui->btn_Edit2PLC_FilmFeeder->setVisible(true);
+        this->ui->btn_PLC2Edit_FilmFeeder->setVisible(true);
+        this->ui->CV_filmFeeder_Enable->setVisible(true);
+        this->ui->CV_filmFeeder_speed->setVisible(true);
+        this->ui->CV_filmFeeder_distance->setVisible(true);
+        this->ui->CV_filmFeeder_distance_2->setVisible(true);
+        this->ui->CV_filmFeeder_Interval->setVisible(true);
+        this->ui->CV_filmFeeder_Dir->setVisible(true);
+
+        this->ui->btn_filmfeeder_JOG1->setVisible(true);
+        this->ui->btn_filmfeeder_JOG2->setVisible(true);
+        this->ui->btn_filmfeeder_RunRelative->setVisible(true);
+        this->ui->btn_filmfeeder_RunSpeed->setVisible(true);
+
     }
     else
     {
@@ -1391,6 +2090,23 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->btn_setServoPara->setVisible(false);
         this->ui->btn_undoServoSetting->setVisible(false);
         this->ui->btn_PLC2Editting_WeldPoint->setVisible(false);
+
+        this->ui->btn_refresh_FilmFeeder->setVisible(false);
+        this->ui->btn_Edit2PLC_FilmFeeder->setVisible(false);
+        this->ui->btn_PLC2Edit_FilmFeeder->setVisible(false);
+        this->ui->CV_filmFeeder_Enable->setVisible(false);
+        this->ui->CV_filmFeeder_speed->setVisible(false);
+        this->ui->CV_filmFeeder_distance->setVisible(false);
+        this->ui->CV_filmFeeder_distance_2->setVisible(false);
+        this->ui->CV_filmFeeder_Interval->setVisible(false);
+        this->ui->CV_filmFeeder_Dir->setVisible(false);
+
+        this->ui->btn_filmfeeder_JOG1->setVisible(false);
+        this->ui->btn_filmfeeder_JOG2->setVisible(false);
+        this->ui->btn_filmfeeder_RunRelative->setVisible(false);
+        this->ui->btn_filmfeeder_RunSpeed->setVisible(false);
+
+
     }
 
 }
@@ -1482,17 +2198,30 @@ void MainWindow::updateDisplay_All_EdittingValue()
     this->ui->checkBox_GenEnable_3->setChecked(this->tempTooling_editting->plcToolingInfo.generator_enable[3]);
     this->ui->checkBox_GenEnable_4->setChecked(this->tempTooling_editting->plcToolingInfo.generator_enable[4]);
     //update thruster page
-    //this->ui->spinBox_thrusterNO->setValue(1);
+    if(this->ui->spinBox_thrusterNO->value()==0)
+    {
+     this->ui->spinBox_thrusterNO->setValue(1);
+    }
+
     this->ui->spinBox_thrusterEnable->setValue(this->tempTooling_editting->plcToolingInfo.thruster_List[this->ui->spinBox_thrusterNO->value()].enable);
     this->ui->spinBox_GenNO->setValue(this->tempTooling_editting->plcToolingInfo.thruster_List[this->ui->spinBox_thrusterNO->value()].GenNO);
     this->ui->spinBox_channel->setValue(this->tempTooling_editting->plcToolingInfo.thruster_List[this->ui->spinBox_thrusterNO->value()].ChannelNO);
     //update weld point page
-    //this->ui->spinBox_PointNO_pointPara->setValue(1);
+    if(this->ui->spinBox_PointNO_pointPara->value()==0)
+    {
+       this->ui->spinBox_PointNO_pointPara->setValue(1);
+    }
+
     this->ui->PointName_display->setText(this->tempTooling_editting->pointNameMapping[this->ui->spinBox_PointNO_pointPara->value()]);
+    //this->ui->comboBox_barcode_assignment->setCurrentIndex(this->tempTooling_editting->pointBarcodeMapping[this->ui->spinBox_PointNO_pointPara->value()]);
+    this->ui->comboBox_barcode_assignment->setCurrentText(this->tempTooling_editting->pointBarcodeMapping[this->ui->spinBox_PointNO_pointPara->value()]);
     //dispaly ultrasonic pararmeters
     this->updateWeldPoitDisplay_Editting(this->tempTooling_editting->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()]);
     //update station setting page
-    //this->ui->stationPara_stationNO->setValue(1);
+    if(this->ui->stationPara_stationNO->value()==0)
+    {
+      this->ui->stationPara_stationNO->setValue(1);
+    }
     this->ui->stationPara_upperLimit->setValue(this->tempTooling_editting->plcToolingInfo.station_List
                                                [this->ui->stationPara_stationNO->value()].pos_upperLimit);
     this->ui->stationPara_lowerLimit->setValue(this->tempTooling_editting->plcToolingInfo.station_List
@@ -1506,11 +2235,19 @@ void MainWindow::updateDisplay_All_EdittingValue()
     this->ui->stationPara_LowSpeed->setValue(this->tempTooling_editting->plcToolingInfo.servoSpeed_low);
     this->ui->servoPara_CWCCW->setCurrentIndex(this->tempTooling_editting->plcToolingInfo.servoHomingDir?1:0);
     //update stepStation Connection page
-    //this->ui->spinBox_stepNO->setValue(1);
+    if(this->ui->spinBox_stepNO->value()==0)
+    {
+      this->ui->spinBox_stepNO->setValue(1);
+    }
+
     this->ui->spinBox_stationNO->setValue(this->tempTooling_editting->plcToolingInfo.stepStationConnection
                                           [this->ui->spinBox_stepNO->value()]);
     //update valve page
-    //this->ui->spinBox_valveNO->setValue(1);
+    if(this->ui->spinBox_valveNO->value()==0)
+    {
+        this->ui->spinBox_valveNO->setValue(1);
+    }
+
     this->ui->valveName_lineEdit->setText(this->tempTooling_editting->valveNameMapping
                                           [this->ui->spinBox_valveNO->value()]);
     this->ui->spinBox_valveEnable->setValue(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist
@@ -1523,15 +2260,49 @@ void MainWindow::updateDisplay_All_EdittingValue()
                                                [this->ui->spinBox_valveNO->value()].startStep);
     this->ui->spinBox_valveEndStep->setValue(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist
                                              [this->ui->spinBox_valveNO->value()].stopStep);
-
+    //update barcode page
+    this->ui->lineEdit_barcode_prefix->setText(this->tempTooling_editting->leftBarcodeSettings.prefix);
+    this->ui->lineEdit_barcode_suffix->setText(this->tempTooling_editting->leftBarcodeSettings.suffix);
+    this->ui->checkBox_barcode_left_enable->setChecked(this->tempTooling_editting->leftBarcodeSettings.enable);
+    this->ui->checkBox_barcode_right_enable->setChecked(this->tempTooling_editting->rightBarcodeSettings.enable);
+    this->ui->comboBox_BarcodePort_Left->setCurrentText(this->tempTooling_editting->leftBarcodeSettings.portName);
+    this->ui->comboBox__BarcodePort_Right->setCurrentText(this->tempTooling_editting->rightBarcodeSettings.portName);
+    this->ui->comboBox_Baud->setCurrentText(this->tempTooling_editting->leftBarcodeSettings.baud);
+    this->ui->spinBox_barcodeDataBits->setValue(this->tempTooling_editting->leftBarcodeSettings.dataBits);
+    this->ui->spinBox_barcodeStopBits->setValue(this->tempTooling_editting->leftBarcodeSettings.stopBits);
+    this->ui->comboBox_parity->setCurrentText(this->tempTooling_editting->leftBarcodeSettings.parity);
+    this->ui->spinBox_barcodeMaxLength->setValue(this->tempTooling_editting->leftBarcodeSettings.maxLength);
+    this->ui->spinBox_BarcodeMinLength->setValue(this->tempTooling_editting->leftBarcodeSettings.minLength);
+    //update filmFeeder page
+    this->ui->spinBox_filmFeeder_enable->setValue(this->tempTooling_editting->plcToolingInfo.feeder.enable);
+    this->ui->spinBox_filmFeeder_speed->setValue(this->tempTooling_editting->plcToolingInfo.feeder.speed);
+    this->ui->spinBox_filmFeeder_distance->setValue(this->tempTooling_editting->plcToolingInfo.feeder.distance_1);
+    this->ui->spinBox_filmFeeder_distance_2->setValue(this->tempTooling_editting->plcToolingInfo.feeder.distance_2);
+    this->ui->spinBox_filmFeeder_Interval->setValue(this->tempTooling_editting->plcToolingInfo.feeder.interval);
+    this->ui->comboBox_filmFeeder_Dir->setCurrentIndex(this->tempTooling_editting->plcToolingInfo.feeder.direction);
+    //update part sensor page
+    this->ui->checkBox_PartSensor_1->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b1);
+    this->ui->checkBox_PartSensor_2->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b2);
+    this->ui->checkBox_PartSensor_3->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b3);
+    this->ui->checkBox_PartSensor_4->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b4);
+    this->ui->checkBox_PartSensor_5->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b5);
+    this->ui->checkBox_PartSensor_6->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b6);
+    this->ui->checkBox_PartSensor_7->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b1);
+    this->ui->checkBox_PartSensor_8->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b2);
+    this->ui->checkBox_PartSensor_9->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b3);
+    this->ui->checkBox_PartSensor_10->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b4);
+    this->ui->checkBox_PartSensor_11->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b5);
+    this->ui->checkBox_PartSensor_12->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b6);
 
 }
 void MainWindow::updateDisplay_ALL_CurrentValue()
 {
+    //generator
     this->ui->CV_GenEnable_1->setChecked(this->tooling_current->plcToolingInfo.generator_enable[1]);
     this->ui->CV_GenEnable_2->setChecked(this->tooling_current->plcToolingInfo.generator_enable[2]);
     this->ui->CV_GenEnable_3->setChecked(this->tooling_current->plcToolingInfo.generator_enable[3]);
     this->ui->CV_GenEnable_4->setChecked(this->tooling_current->plcToolingInfo.generator_enable[4]);
+    //thruster
     this->ui->CV_thrusterEnable->setValue(this->tooling_current->plcToolingInfo.thruster_List
                                           [this->ui->spinBox_thrusterNO->value()].enable?1:0);
     this->ui->CV_GenNO->setValue(this->tooling_current->plcToolingInfo.thruster_List
@@ -1542,6 +2313,7 @@ void MainWindow::updateDisplay_ALL_CurrentValue()
     //display weld point para
     this->updateWeldPoitDisplay_Current(this->tooling_current->plcToolingInfo.weldPoint_List
                                               [this->ui->spinBox_PointNO_pointPara->value()]);
+    //stepstation and stations
     this->ui->CV_stationNO->setValue(this->tooling_current->plcToolingInfo.stepStationConnection
                                      [this->ui->spinBox_stepNO->value()]);
     this->ui->CV_stationPara_upperLimit->setValue(this->tooling_current->plcToolingInfo.station_List
@@ -1552,12 +2324,13 @@ void MainWindow::updateDisplay_ALL_CurrentValue()
                                                   [this->ui->stationPara_stationNO->value()].pos_setPoint);
     this->ui->CV_stationPara_speedType->setCurrentIndex(this->tooling_current->plcToolingInfo.station_List
                                                   [this->ui->stationPara_stationNO->value()].speedType);
-
+    //servo speed
     this->ui->CV_stationPara_HighSpeed->setValue(this->tooling_current->plcToolingInfo.servoSpeed_high);
     this->ui->CV_stationPara_MediumSpeed->setValue(this->tooling_current->plcToolingInfo.servoSpeed_medium);
     this->ui->CV_stationPara_lowSpeed->setValue(this->tooling_current->plcToolingInfo.servoSpeed_low);
     //this->ui->CV_stationPara_defaultSpeed->setValue(this->tooling_current->plcToolingInfo.defaultSpeed);
     this->ui->CV_servoPara_CWCCW->setCurrentIndex(this->tooling_current->plcToolingInfo.servoHomingDir?1:0);
+    //valves
     this->ui->CV_valveEnableBypass->setValue(this->tooling_current->plcToolingInfo.pneumaticValvelist
                                              [this->ui->spinBox_valveNO->value()].enable?1:0);
     this->ui->comboBox_ValveType->setCurrentIndex(this->tooling_current->plcToolingInfo.pneumaticValvelist
@@ -1569,7 +2342,52 @@ void MainWindow::updateDisplay_ALL_CurrentValue()
                                              [this->ui->spinBox_valveNO->value()].startStep);
     this->ui->CV_valveStartStep->setValue(this->tooling_current->plcToolingInfo.pneumaticValvelist
                                              [this->ui->spinBox_valveNO->value()].stopStep);
+    //filmFeeder page
+    this->ui->CV_filmFeeder_Enable->setValue(this->tooling_current->plcToolingInfo.feeder.enable);
+    this->ui->CV_filmFeeder_speed->setValue(this->tooling_current->plcToolingInfo.feeder.speed);
+    this->ui->CV_filmFeeder_distance->setValue(this->tooling_current->plcToolingInfo.feeder.distance_1);
+    this->ui->CV_filmFeeder_distance_2->setValue(this->tooling_current->plcToolingInfo.feeder.distance_2);
+    this->ui->CV_filmFeeder_Interval->setValue(this->tooling_current->plcToolingInfo.feeder.interval);
+    this->ui->CV_filmFeeder_Dir->setCurrentIndex(this->tooling_current->plcToolingInfo.feeder.direction);
+    //part sensors
+    this->ui->CV_PartSensor_1->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b1);
+    this->ui->CV_PartSensor_2->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b2);
+    this->ui->CV_PartSensor_3->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b3);
+    this->ui->CV_PartSensor_4->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b4);
+    this->ui->CV_PartSensor_5->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b5);
+    this->ui->CV_PartSensor_6->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b6);
 
+    this->ui->CV_PartSensor_7->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b1);
+    this->ui->CV_PartSensor_8->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b2);
+    this->ui->CV_PartSensor_9->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b3);
+    this->ui->CV_PartSensor_10->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b4);
+    this->ui->CV_PartSensor_11->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b5);
+    this->ui->CV_PartSensor_12->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b6);
+    //valve sensor
+    this->ui->CV_ValveExtendSensorBypass_1->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                       [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b1);
+    this->ui->CV_ValveExtendSensorBypass_2->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                       [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b2);
+    this->ui->CV_ValveExtendSensorBypass_3->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                       [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b3);
+    this->ui->CV_ValveExtendSensorBypass_4->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                       [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b4);
+    this->ui->CV_ValveExtendSensorBypass_5->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                       [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b5);
+    this->ui->CV_ValveExtendSensorBypass_6->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                       [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b6);
+    this->ui->CV_ValveRetractSensorBypass_1->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                        [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b1);
+    this->ui->CV_ValveRetractSensorBypass_2->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                        [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b2);
+    this->ui->CV_ValveRetractSensorBypass_3->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                        [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b3);
+    this->ui->CV_ValveRetractSensorBypass_4->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                        [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b4);
+    this->ui->CV_ValveRetractSensorBypass_5->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                        [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b5);
+    this->ui->CV_ValveRetractSensorBypass_6->setChecked(this->tooling_current->plcToolingInfo.valveSensorBypass
+                                                        [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b6);
 }
 
 void MainWindow::on_btn_setThrusterConfig_clicked()
@@ -1585,7 +2403,7 @@ void MainWindow::on_btn_setThrusterConfig_clicked()
     dataToTcpCommObj[5]=0x00;//reserve byte
     dataToTcpCommObj[6]=this->ui->spinBox_thrusterNO->value();
     dataToTcpCommObj[7]=this->ui->spinBox_GenNO->value();
-    dataToTcpCommObj[8]=this->ui->spinBox_channel->value();
+    dataToTcpCommObj[8]=(this->ui->spinBox_channel->value()>0)?(this->ui->spinBox_channel->value()-1):0;
     dataToTcpCommObj[9]=this->ui->spinBox_thrusterEnable->value();
     dataToTcpCommObj[10]=0x00;
     dataToTcpCommObj[11]=0x00;
@@ -1930,9 +2748,47 @@ void MainWindow::on_btn_QuerystationPara_clicked()
 
 void MainWindow::on_actionTooling_Config_triggered()
 {
-    this->ui->stackedWidget->setCurrentIndex(0);
+    this->changePage(0);
+    //this->ui->stackedWidget_mainProgram->setCurrentIndex(0);
+}
+void MainWindow::on_actionautoRun_triggered()
+{
+    this->changePage(4);
+    //this->ui->stackedWidget_mainProgram->setCurrentIndex(4);
+}
+void MainWindow::on_actionWeld_By_Manual_triggered()
+{
+    this->changePage(1);
+    //this->ui->stackedWidget_mainProgram->setCurrentIndex(1);
+}
+void MainWindow::on_pushButton_weldByManual_checkAlarm_clicked()
+{
+    this->changePage(3);
+    //this->ui->stackedWidget_mainProgram->setCurrentIndex(3);
+}
+void MainWindow::on_btn_alarmPage_clicked()
+{
+    this->changePage(3);
+}
+void MainWindow::on_pushButton_leaveAlarmPage_clicked()
+{
+    this->changePage(255);
+    //this->ui->stackedWidget_mainProgram->setCurrentIndex(1);
+}
+void MainWindow::on_pushButton_Advance_clicked()
+{
+    changePage(6);
+    //this->ui->stackedWidget_mainProgram->setCurrentIndex(6);
+}
+void MainWindow::on_btn_IOTable_clicked()
+{
+    this->changePage(2);
 }
 
+void MainWindow::on_btn_IO_Table_Quit_clicked()
+{
+    changePage(255);
+}
 void MainWindow::on_btn_undoStationPara_clicked()
 {
     this->ui->stationPara_setPoint->setValue(this->ui->CV_stationPara_setPoint->value());
@@ -1949,13 +2805,6 @@ void MainWindow::on_btn_undoServoSetting_clicked()
     this->ui->stationPara_LowSpeed->setValue(this->ui->CV_stationPara_lowSpeed->value());
     this->ui->stationPara_DefaultSpeed->setValue(this->ui->CV_stationPara_defaultSpeed->value());
     this->ui->servoPara_CWCCW->setCurrentIndex(this->ui->CV_servoPara_CWCCW->currentIndex());
-}
-
-
-
-void MainWindow::on_actionWeld_By_Manual_triggered()
-{
-    this->ui->stackedWidget->setCurrentIndex(1);
 }
 
 void MainWindow::on_WeldByManual_PointNO_valueChanged(int arg1)
@@ -2035,7 +2884,65 @@ void MainWindow::on_weldByManual_runWeld_clicked()
         emit this->sendDataToTCPCommObj(dataToTcpCommObj);
 
 }
+void MainWindow::on_Clamper_Extend_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=this->ui->WeldByManual_valveNO->value();//valveNO
+    dataToTcpCommObj[7]=0x01;//coilA
+    dataToTcpCommObj[8]=0x00;//coilB
+    dataToTcpCommObj[9]=0x00;//reserve
+    dataToTcpCommObj[10]=0x00;//reserve
+    dataToTcpCommObj[11]=0x00;//reserve
 
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_Clamper_Free_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=this->ui->WeldByManual_valveNO->value();//valveNO
+    dataToTcpCommObj[7]=0x00;//coilA
+    dataToTcpCommObj[8]=0x00;//coilB
+    dataToTcpCommObj[9]=0x00;//reserve
+    dataToTcpCommObj[10]=0x00;//reserve
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_Clamper_Retract_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=this->ui->WeldByManual_valveNO->value();//valveNO
+    dataToTcpCommObj[7]=0x00;//coilA
+    dataToTcpCommObj[8]=0x01;//coilB
+    dataToTcpCommObj[9]=0x00;//reserve
+    dataToTcpCommObj[10]=0x00;//reserve
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
 
 void MainWindow::on_btn_pointPara_TEST_toggled(bool checked)
 {
@@ -2320,7 +3227,7 @@ void MainWindow::on_toolID_Editting_valueChanged(int arg1)
     this->toolID_editing=arg1;
     this->tempTooling_editting->plcToolingInfo.toolingNO=arg1;
     //load config file if exist
-    QString fileName="toolingConfig_"+QString::number(this->ui->toolID_Editting->value())+".dc";
+    QString fileName="toolingConfig/toolingConfig_"+QString::number(this->ui->toolID_Editting->value())+".dc";
     if(QFile::exists(fileName))
     {
         qDebug()<<"found config file,will load it ";
@@ -2363,7 +3270,7 @@ void MainWindow::on_toolID_Editting_valueChanged(int arg1)
         // press "upload from PLC" button, temp_tooling_Editting&&Editting value will also be overwritten
 
         emit this->sendDataToTCPCommObj(this->tempTooling_editting->prepareCommand_uploadWholeSettingFromPLC());
-        qDebug()<<"the next 2 sec, any data from PLC will apply to editting value";
+
     }
 
 }
@@ -2393,8 +3300,14 @@ void MainWindow::on_btn_saveToDisk_clicked()
 {
 
    //To DO
-    QString fileName="toolingConfig_"+QString::number(this->ui->toolID_Editting->value())+".dc";
+    QString fileName="toolingConfig/toolingConfig_"+QString::number(this->ui->toolID_Editting->value())+".dc";
+    if(!QFile::exists(fileName))
+    {
+       QDir dir1(fileName);
+       dir1.mkdir("./toolingConfig");
+    }
     this->tempTooling_editting->saveToDisk(fileName);
+    this->tempTooling_editting->saveToDisk("toolingConfig/currentTooling.dc");
 }
 
 
@@ -2669,11 +3582,17 @@ void MainWindow::on_PointName_display_textEdited(const QString &arg1)
     this->tempTooling_editting->pointNameMapping[this->ui->spinBox_PointNO_pointPara->value()]=arg1;
 }
 
+void MainWindow::on_comboBox_barcode_assignment_currentIndexChanged(const QString &arg1)
+{
+    this->tempTooling_editting->pointBarcodeMapping[this->ui->spinBox_PointNO_pointPara->value()]=arg1;
+}
 void MainWindow::on_spinBox_PointNO_pointPara_valueChanged(int arg1)
 {
 
     this->ui->PointName_display->setText(this->tempTooling_editting->pointNameMapping[arg1]);
-    this->tempTooling_editting->plcToolingInfo.weldPoint_List[arg1].pointNO=arg1;
+    //comboBox_barcode_assignment
+    this->ui->comboBox_barcode_assignment->setCurrentText(this->tempTooling_editting->pointBarcodeMapping[arg1]);
+    //this->tempTooling_editting->plcToolingInfo.weldPoint_List[arg1].pointNO=arg1;
     this->updateWeldPoitDisplay_Editting(this->tempTooling_editting->plcToolingInfo.weldPoint_List[arg1]);
     qDebug()<<tr("pointNO:%1,tooID_Editting:%2,toolID_PLC:%3").arg(arg1).arg(this->toolID_editing).arg(this->toolID_PLC);
     if(toolID_PLC==toolID_editing && toolID_PLC>0)
@@ -2689,15 +3608,17 @@ void MainWindow::on_spinBox_PointNO_pointPara_valueChanged(int arg1)
 
 void MainWindow::on_spinBox_thrusterNO_valueChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.thruster_List[arg1].thrusterNO=arg1;
+    //this->tempTooling_editting->plcToolingInfo.thruster_List[arg1].thrusterNO=arg1;
     this->ui->spinBox_thrusterEnable->setValue(this->tempTooling_editting->plcToolingInfo.thruster_List[arg1].enable);
     this->ui->spinBox_GenNO->setValue(this->tempTooling_editting->plcToolingInfo.thruster_List[arg1].GenNO);
     this->ui->spinBox_channel->setValue(this->tempTooling_editting->plcToolingInfo.thruster_List[arg1].ChannelNO);
     if(this->toolID_PLC==this->tempTooling_editting->plcToolingInfo.toolingNO && this->toolID_PLC>0)
     {
-        this->ui->CV_thrusterEnable->setValue(this->tooling_current->plcToolingInfo.thruster_List[arg1].enable?1:0);
-        this->ui->CV_GenNO->setValue(this->tooling_current->plcToolingInfo.thruster_List[arg1].GenNO);
-        this->ui->CV_Channel->setValue(this->tooling_current->plcToolingInfo.thruster_List[arg1].ChannelNO);
+        //this->ui->CV_thrusterEnable->setValue(this->tooling_current->plcToolingInfo.thruster_List[arg1].enable?1:0);
+        //this->ui->CV_GenNO->setValue(this->tooling_current->plcToolingInfo.thruster_List[arg1].GenNO);
+        //this->ui->CV_Channel->setValue(this->tooling_current->plcToolingInfo.thruster_List[arg1].ChannelNO);
+        if(this->tcpConnectionStatus_receive&&this->tcpConnectionStatus_send)
+        emit this->sendDataToTCPCommObj(this->tempTooling_editting->prepareCommand_getThrusterConfigFromPLC());
     }
 }
 void MainWindow::on_stationPara_stationNO_valueChanged(int arg1)
@@ -2741,7 +3662,7 @@ void MainWindow::on_spinBox_valveStartStep_valueChanged(int arg1)
 void MainWindow::on_spinBox_valveNO_valueChanged(int arg1)
 {
     this->ui->valveName_lineEdit->setText(this->tempTooling_editting->valveNameMapping[arg1]);
-    this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveNO=arg1;
+    //this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveNO=arg1;
     if(arg1==1)
     {
        this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType=0;
@@ -2866,7 +3787,7 @@ void MainWindow::on_btn_downLoadToPLC_clicked()
        emit this->sendDataToTCPCommObj(arl1.at(i));
        this->ui->btn_downLoadToPLC->setText("downloading,Item:"+QString::number(i));
        QEventLoop eventloop;
-       QTimer::singleShot(50, &eventloop, SLOT(quit()));
+       QTimer::singleShot(100, &eventloop, SLOT(quit()));
        eventloop.exec();
 
     }
@@ -2960,3 +3881,629 @@ void MainWindow::on_pushButton_registText_remove_clicked()
          }
 
 }
+
+void MainWindow::on_checkBox_barcode_left_enable_stateChanged(int arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.enable=arg1;
+}
+
+void MainWindow::on_checkBox_barcode_right_enable_stateChanged(int arg1)
+{
+    this->tempTooling_editting->rightBarcodeSettings.enable=arg1;
+}
+
+void MainWindow::on_comboBox_BarcodePort_Left_currentIndexChanged(const QString &arg1)
+{
+    qDebug()<<"on_comboBox_BarcodePort_Left_currentIndexChanged,arg1:"<<arg1;
+    this->tempTooling_editting->leftBarcodeSettings.portName=arg1;
+}
+
+void MainWindow::on_comboBox__BarcodePort_Right_currentIndexChanged(const QString &arg1)
+{
+    qDebug()<<"on_comboBox_BarcodePort_right_currentIndexChanged,arg1:"<<arg1;
+    this->tempTooling_editting->rightBarcodeSettings.portName=arg1;
+}
+
+void MainWindow::on_comboBox_Baud_currentIndexChanged(const QString &arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.baud=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.baud=arg1;
+}
+
+void MainWindow::on_spinBox_barcodeDataBits_valueChanged(int arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.dataBits=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.dataBits=arg1;
+}
+
+void MainWindow::on_spinBox_barcodeStopBits_valueChanged(int arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.stopBits=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.stopBits=arg1;
+}
+
+void MainWindow::on_comboBox_parity_currentIndexChanged(const QString &arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.parity=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.parity=arg1;
+}
+
+void MainWindow::on_spinBox_barcodeMaxLength_valueChanged(int arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.maxLength=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.maxLength=arg1;
+}
+
+void MainWindow::on_spinBox_BarcodeMinLength_valueChanged(int arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.minLength=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.minLength=arg1;
+}
+
+void MainWindow::on_lineEdit_barcode_prefix_textEdited(const QString &arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.prefix=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.prefix=arg1;
+}
+
+void MainWindow::on_lineEdit_barcode_suffix_textEdited(const QString &arg1)
+{
+    this->tempTooling_editting->leftBarcodeSettings.suffix=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.suffix=arg1;
+}
+
+void MainWindow::on_pushButton_toolingSettingRefresh_clicked()
+{
+
+    QJsonObject json;
+    this->tempTooling_editting->writeJason(json);
+
+    QJsonDocument jsonDoc(json);
+
+    this->ui->textEdit_toolingSetting_Overview->setText(QString(jsonDoc.toJson()));
+
+}
+
+void MainWindow::on_spinBox_filmFeeder_enable_valueChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.feeder.enable=arg1;
+}
+
+void MainWindow::on_spinBox_filmFeeder_speed_valueChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.feeder.speed=arg1;
+}
+
+void MainWindow::on_spinBox_filmFeeder_distance_valueChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.feeder.distance_1=arg1;
+}
+
+void MainWindow::on_spinBox_filmFeeder_distance_2_valueChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.feeder.distance_2=arg1;
+}
+
+void MainWindow::on_spinBox_filmFeeder_Interval_valueChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.feeder.interval=arg1;
+}
+
+void MainWindow::on_comboBox_filmFeeder_Dir_currentIndexChanged(int index)
+{
+    this->tempTooling_editting->plcToolingInfo.feeder.direction=index;
+}
+
+void MainWindow::on_pushButton_toolingSettingSearch_clicked()
+{
+    QString search_text = this->ui->lineEdit_SearchWordsFromSettingOverview->text();
+        if (search_text.trimmed().isEmpty()) {
+            QMessageBox::information(this, tr("Empty search field"), tr("The search field is empty."));
+        } else {
+            QTextDocument *document =this->ui->textEdit_toolingSetting_Overview->document();
+            bool found = false;
+            QTextCursor highlight_cursor(document);
+            QTextCursor cursor(document);
+            //开始
+            cursor.beginEditBlock();
+            QTextCharFormat color_format(highlight_cursor.charFormat());
+            color_format.setForeground(Qt::red);
+            color_format.setBackground(Qt::yellow);
+            while (!highlight_cursor.isNull() && !highlight_cursor.atEnd()) {
+                //查找指定的文本，匹配整个单词
+                highlight_cursor = document->find(search_text, highlight_cursor);
+                if (!highlight_cursor.isNull()) {
+                    if(!found)
+                        found = true;
+                    highlight_cursor.mergeCharFormat(color_format);
+                }
+            }
+            cursor.endEditBlock();
+            //结束
+            if (found == false) {
+                QMessageBox::information(this, tr("Word not found"), tr("Sorry,the word cannot be found."));
+            }
+        }
+}
+
+void MainWindow::on_checkBox_PartSensor_1_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b1=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_2_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b2=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_3_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b3=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_4_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b4=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_5_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b5=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_6_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b6=arg1;
+}
+void MainWindow::on_checkBox_PartSensor_7_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b1=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_8_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b2=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_9_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b3=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_10_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b4=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_11_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b5=arg1;
+}
+
+void MainWindow::on_checkBox_PartSensor_12_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b6=arg1;
+}
+
+void MainWindow::on_checkBox_ValveExtendSensorBypass_1_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b1=arg1;
+}
+
+void MainWindow::on_checkBox_ValveExtendSensorBypass_2_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b2=arg1;
+}
+
+void MainWindow::on_checkBox_ValveExtendSensorBypass_3_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b3=arg1;
+}
+
+void MainWindow::on_checkBox_ValveExtendSensorBypass_4_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b4=arg1;
+}
+
+void MainWindow::on_checkBox_ValveExtendSensorBypass_5_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b5=arg1;
+}
+
+void MainWindow::on_checkBox_ValveExtendSensorBypass_6_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b6=arg1;
+}
+
+void MainWindow::on_checkBox_ValveRetractSensorBypass_1_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b1=arg1;
+}
+
+void MainWindow::on_checkBox_ValveRetractSensorBypass_2_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b2=arg1;
+}
+
+void MainWindow::on_checkBox_ValveRetractSensorBypass_3_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b3=arg1;
+}
+
+void MainWindow::on_checkBox_ValveRetractSensorBypass_4_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b4=arg1;
+}
+
+void MainWindow::on_checkBox_ValveRetractSensorBypass_5_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b5=arg1;
+}
+
+void MainWindow::on_checkBox_ValveRetractSensorBypass_6_stateChanged(int arg1)
+{
+    this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b6=arg1;
+}
+
+void MainWindow::on_btn_Edit2PLC_FilmFeeder_clicked()
+{
+    //set film feeder related parameters
+    qDebug()<<"set film feeder para btn clicked";
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x18;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7B;//commandNO low byte,123
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=this->ui->spinBox_filmFeeder_enable->value();
+    dataToTcpCommObj[7]=this->ui->comboBox_filmFeeder_Dir->currentIndex();
+    dWordBytes dw1;
+    dw1.DWordVar=this->ui->spinBox_filmFeeder_speed->value();
+    dataToTcpCommObj[8]=dw1.bytesVar.B0;
+    dataToTcpCommObj[9]=dw1.bytesVar.B1;
+    dataToTcpCommObj[10]=dw1.bytesVar.B2;
+    dataToTcpCommObj[11]=dw1.bytesVar.B3;
+    dw1.DWordVar=this->ui->spinBox_filmFeeder_distance->value();
+    dataToTcpCommObj[12]=dw1.bytesVar.B0;
+    dataToTcpCommObj[13]=dw1.bytesVar.B1;
+    dataToTcpCommObj[14]=dw1.bytesVar.B2;
+    dataToTcpCommObj[15]=dw1.bytesVar.B3;
+    dw1.DWordVar=this->ui->spinBox_filmFeeder_distance_2->value();
+    dataToTcpCommObj[16]=dw1.bytesVar.B0;
+    dataToTcpCommObj[17]=dw1.bytesVar.B1;
+    dataToTcpCommObj[18]=dw1.bytesVar.B2;
+    dataToTcpCommObj[19]=dw1.bytesVar.B3;
+    dataToTcpCommObj[20]=this->ui->spinBox_filmFeeder_Interval->value();
+    dataToTcpCommObj[21]=0;//reserve
+    dataToTcpCommObj[22]=0;//reserve
+    dataToTcpCommObj[23]=0;//reserve
+    //emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    //query film feeder  config,doing
+    dataToTcpCommObj[24]=0x00;//length high byte
+    dataToTcpCommObj[25]=0x06;//length low byte
+    dataToTcpCommObj[26]=0x00;//commandNO high byte
+    dataToTcpCommObj[27]=0x7C;//commandNO low byte,124
+    dataToTcpCommObj[28]=0x00;//reserve byte
+    dataToTcpCommObj[29]=0x00;//reserve byte
+    if(this->tcpConnectionStatus_send)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_refresh_FilmFeeder_clicked()
+{
+    //query film feeder  config
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x06;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7C;//commandNO low byte,124
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    if(this->tcpConnectionStatus_send)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_PLC2Edit_FilmFeeder_clicked()
+{
+    this->ui->spinBox_filmFeeder_enable->setValue(this->ui->CV_filmFeeder_Enable->value());
+    this->ui->spinBox_filmFeeder_speed->setValue(this->ui->CV_filmFeeder_speed->value());
+    this->ui->spinBox_filmFeeder_distance->setValue(this->ui->CV_filmFeeder_distance->value());
+    this->ui->spinBox_filmFeeder_distance_2->setValue(this->ui->CV_filmFeeder_distance_2->value());
+    this->ui->spinBox_filmFeeder_Interval->setValue(this->ui->CV_filmFeeder_Interval->value());
+    this->ui->comboBox_filmFeeder_Dir->setCurrentIndex(this->ui->CV_filmFeeder_Dir->currentIndex());
+}
+
+
+void MainWindow::on_ToolingChange_valveNO_valueChanged(int arg1)
+{
+    this->ui->comboBox_ValveType_toolingChange->setCurrentIndex(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType);
+}
+
+void MainWindow::on_Clamper_Extend_toolingChange_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=this->ui->ToolingChange_valveNO->value();//valveNO
+    dataToTcpCommObj[7]=0x01;//coilA
+    dataToTcpCommObj[8]=0x00;//coilB
+    dataToTcpCommObj[9]=0x00;//reserve
+    dataToTcpCommObj[10]=0x00;//reserve
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_Clamper_Free_ToolingChange_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=this->ui->ToolingChange_valveNO->value();//valveNO
+    dataToTcpCommObj[7]=0x00;//coilA
+    dataToTcpCommObj[8]=0x00;//coilB
+    dataToTcpCommObj[9]=0x00;//reserve
+    dataToTcpCommObj[10]=0x00;//reserve
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_Clamper_Retract_ToolingChange_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=this->ui->ToolingChange_valveNO->value();//valveNO
+    dataToTcpCommObj[7]=0x00;//coilA
+    dataToTcpCommObj[8]=0x01;//coilB
+    dataToTcpCommObj[9]=0x00;//reserve
+    dataToTcpCommObj[10]=0x00;//reserve
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+
+
+void MainWindow::on_btn_Edit2PLC_PartSensor_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x01;//0x01=set,0x02=get
+    dataToTcpCommObj[7]=0x01;//0x01=part sensor,0x02=valve sensor
+    dataToTcpCommObj[8]=0x00;//valve NO
+    bytebits bb1;
+    bb1.byteChar=0;
+    bb1.bits.b1=this->ui->checkBox_PartSensor_1->isChecked();
+    bb1.bits.b2=this->ui->checkBox_PartSensor_2->isChecked();
+    bb1.bits.b3=this->ui->checkBox_PartSensor_3->isChecked();
+    bb1.bits.b4=this->ui->checkBox_PartSensor_4->isChecked();
+    bb1.bits.b5=this->ui->checkBox_PartSensor_5->isChecked();
+    bb1.bits.b6=this->ui->checkBox_PartSensor_6->isChecked();
+    dataToTcpCommObj[9]=bb1.byteChar;//sensors enable status in Byte
+    bb1.byteChar=0;
+    bb1.bits.b1=this->ui->checkBox_PartSensor_7->isChecked();
+    bb1.bits.b2=this->ui->checkBox_PartSensor_8->isChecked();
+    bb1.bits.b3=this->ui->checkBox_PartSensor_9->isChecked();
+    bb1.bits.b4=this->ui->checkBox_PartSensor_10->isChecked();
+    bb1.bits.b5=this->ui->checkBox_PartSensor_11->isChecked();
+    bb1.bits.b6=this->ui->checkBox_PartSensor_12->isChecked();
+    dataToTcpCommObj[10]=bb1.byteChar;//sensors enable status in Byte
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_refresh_PartSensor_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x02;//0x01=set,0x02=get
+    dataToTcpCommObj[7]=0x01;//0x01=part sensor,0x02=valve sensor
+    dataToTcpCommObj[8]=0x00;//valve NO
+
+    dataToTcpCommObj[9]=0x00;//sensors enable status in Byte
+
+    dataToTcpCommObj[10]=0x00;//sensors enable status in Byte
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_PLC2Edit_PartSensor_clicked()
+{
+    this->ui->checkBox_PartSensor_1->setChecked(this->ui->CV_PartSensor_1->isChecked());
+    this->ui->checkBox_PartSensor_2->setChecked(this->ui->CV_PartSensor_2->isChecked());
+    this->ui->checkBox_PartSensor_3->setChecked(this->ui->CV_PartSensor_3->isChecked());
+    this->ui->checkBox_PartSensor_4->setChecked(this->ui->CV_PartSensor_4->isChecked());
+    this->ui->checkBox_PartSensor_5->setChecked(this->ui->CV_PartSensor_5->isChecked());
+    this->ui->checkBox_PartSensor_6->setChecked(this->ui->CV_PartSensor_6->isChecked());
+    this->ui->checkBox_PartSensor_7->setChecked(this->ui->CV_PartSensor_7->isChecked());
+    this->ui->checkBox_PartSensor_8->setChecked(this->ui->CV_PartSensor_8->isChecked());
+    this->ui->checkBox_PartSensor_9->setChecked(this->ui->CV_PartSensor_9->isChecked());
+    this->ui->checkBox_PartSensor_10->setChecked(this->ui->CV_PartSensor_10->isChecked());
+    this->ui->checkBox_PartSensor_11->setChecked(this->ui->CV_PartSensor_11->isChecked());
+    this->ui->checkBox_PartSensor_12->setChecked(this->ui->CV_PartSensor_12->isChecked());
+}
+
+void MainWindow::on_sensorBypass_valveNO_valueChanged(int arg1)
+{
+    this->ui->checkBox_ValveExtendSensorBypass_1->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b1);
+    this->ui->checkBox_ValveExtendSensorBypass_2->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b2);
+    this->ui->checkBox_ValveExtendSensorBypass_3->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b3);
+    this->ui->checkBox_ValveExtendSensorBypass_4->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b4);
+    this->ui->checkBox_ValveExtendSensorBypass_5->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b5);
+    this->ui->checkBox_ValveExtendSensorBypass_6->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b6);
+    this->ui->checkBox_ValveRetractSensorBypass_1->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b1);
+    this->ui->checkBox_ValveRetractSensorBypass_2->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b2);
+    this->ui->checkBox_ValveRetractSensorBypass_3->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b3);
+    this->ui->checkBox_ValveRetractSensorBypass_4->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b4);
+    this->ui->checkBox_ValveRetractSensorBypass_5->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b5);
+    this->ui->checkBox_ValveRetractSensorBypass_6->setChecked
+            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b6);
+    this->ui->CV_ValveExtendSensorBypass_1->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b1);
+    this->ui->CV_ValveExtendSensorBypass_2->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b2);
+    this->ui->CV_ValveExtendSensorBypass_3->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b3);
+    this->ui->CV_ValveExtendSensorBypass_4->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b4);
+    this->ui->CV_ValveExtendSensorBypass_5->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b5);
+    this->ui->CV_ValveExtendSensorBypass_6->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b6);
+    this->ui->CV_ValveRetractSensorBypass_1->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b1);
+    this->ui->CV_ValveRetractSensorBypass_2->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b2);
+    this->ui->CV_ValveRetractSensorBypass_3->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b3);
+    this->ui->CV_ValveRetractSensorBypass_4->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b4);
+    this->ui->CV_ValveRetractSensorBypass_5->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b5);
+    this->ui->CV_ValveRetractSensorBypass_6->setChecked
+            (this->tooling_current->plcToolingInfo.valveSensorBypass[arg1].retractBypass.bits.b6);
+
+
+}
+
+void MainWindow::on_btn_refresh_valveSensor_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x01;//0x01=set,0x02=get
+    dataToTcpCommObj[7]=0x02;//0x01=part sensor,0x02=valve sensor
+    dataToTcpCommObj[8]=this->ui->sensorBypass_valveNO->value();//valve NO
+
+    dataToTcpCommObj[9]=0x00;//sensors enable status in Byte
+
+    dataToTcpCommObj[10]=0x00;//sensors enable status in Byte
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_Edit2PLC_valveSensor_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x01;//0x01=set,0x02=get
+    dataToTcpCommObj[7]=0x02;//0x01=part sensor,0x02=valve sensor
+    dataToTcpCommObj[8]=this->ui->sensorBypass_valveNO->value();//valve NO
+    bytebits bb1;
+    bb1.byteChar=0;
+    bb1.bits.b1=this->ui->checkBox_ValveExtendSensorBypass_1->isChecked();
+    bb1.bits.b2=this->ui->checkBox_ValveExtendSensorBypass_2->isChecked();
+    bb1.bits.b3=this->ui->checkBox_ValveExtendSensorBypass_3->isChecked();
+    bb1.bits.b4=this->ui->checkBox_ValveExtendSensorBypass_4->isChecked();
+    bb1.bits.b5=this->ui->checkBox_ValveExtendSensorBypass_5->isChecked();
+    bb1.bits.b6=this->ui->checkBox_ValveExtendSensorBypass_6->isChecked();
+    dataToTcpCommObj[9]=bb1.byteChar;//sensors enable status in Byte
+    bb1.byteChar=0;
+    bb1.bits.b1=this->ui->checkBox_ValveRetractSensorBypass_1->isChecked();
+    bb1.bits.b2=this->ui->checkBox_ValveRetractSensorBypass_2->isChecked();
+    bb1.bits.b3=this->ui->checkBox_ValveRetractSensorBypass_3->isChecked();
+    bb1.bits.b4=this->ui->checkBox_ValveRetractSensorBypass_4->isChecked();
+    bb1.bits.b5=this->ui->checkBox_ValveRetractSensorBypass_5->isChecked();
+    bb1.bits.b6=this->ui->checkBox_ValveRetractSensorBypass_6->isChecked();
+    dataToTcpCommObj[10]=bb1.byteChar;//sensors enable status in Byte
+    dataToTcpCommObj[11]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_PLC2Edit_valveSensor_clicked()
+{
+    this->ui->checkBox_ValveRetractSensorBypass_1->setChecked
+            (this->ui->CV_ValveRetractSensorBypass_1->isChecked());
+    this->ui->checkBox_ValveRetractSensorBypass_2->setChecked
+            (this->ui->CV_ValveRetractSensorBypass_2->isChecked());
+    this->ui->checkBox_ValveRetractSensorBypass_3->setChecked
+            (this->ui->CV_ValveRetractSensorBypass_3->isChecked());
+    this->ui->checkBox_ValveRetractSensorBypass_4->setChecked
+            (this->ui->CV_ValveRetractSensorBypass_4->isChecked());
+    this->ui->checkBox_ValveRetractSensorBypass_5->setChecked
+            (this->ui->CV_ValveRetractSensorBypass_5->isChecked());
+    this->ui->checkBox_ValveRetractSensorBypass_6->setChecked
+            (this->ui->CV_ValveRetractSensorBypass_6->isChecked());
+    this->ui->checkBox_ValveExtendSensorBypass_1->setChecked
+            (this->ui->CV_ValveExtendSensorBypass_1->isChecked());
+    this->ui->checkBox_ValveExtendSensorBypass_2->setChecked
+            (this->ui->CV_ValveExtendSensorBypass_2->isChecked());
+    this->ui->checkBox_ValveExtendSensorBypass_3->setChecked
+            (this->ui->CV_ValveExtendSensorBypass_3->isChecked());
+    this->ui->checkBox_ValveExtendSensorBypass_4->setChecked
+            (this->ui->CV_ValveExtendSensorBypass_4->isChecked());
+    this->ui->checkBox_ValveExtendSensorBypass_5->setChecked
+            (this->ui->CV_ValveExtendSensorBypass_5->isChecked());
+    this->ui->checkBox_ValveExtendSensorBypass_6->setChecked
+            (this->ui->CV_ValveExtendSensorBypass_6->isChecked());
+
+}
+

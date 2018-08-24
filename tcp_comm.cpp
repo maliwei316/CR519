@@ -208,8 +208,12 @@ void tcp_comm::parseDataFromPLC(const QByteArray& dataToParse)
     case 13:
         emit sendDataToWindow(dataToParse);
         break;
-
-
+    case 15:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 23:
+        emit sendDataToWindow(dataToParse);
+        break;
 
     default:
         qDebug()<<"Command not match , no assigned hanlder";

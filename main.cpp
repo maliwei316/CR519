@@ -12,6 +12,7 @@
 #include "worker_modbus.h"
 #include "tcp_comm.h"
 #include "mainwindow.h"
+#include <clsbarcode.h>
 
 
 int main(int argc, char *argv[])
@@ -23,6 +24,7 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     MainWindow w;
+    clsBarcode bar1;
 
     qRegisterMetaType<QModbusDevice::State>();
     qRegisterMetaType<QModbusDevice::Error>();
@@ -35,9 +37,9 @@ int main(int argc, char *argv[])
     QString filename="HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3";
     dbhc2.init("QSQLITE","HistoryDataDB",filename);
     mbc_controller mbcc1;
-    mbcc1.init("169.254.0.2",502,0,0,0);
+    mbcc1.init("169.254.0.2",502,300,0,20);
     mbc_controller mbcc2;
-    mbcc2.init("169.254.0.2",503,0,0,0);
+    mbcc2.init("169.254.0.2",503,0,0,30);
     tcp_comm tcpcomm1(2000,2001);
 
     //QObject::connect(&tcpcomm1,&tcp_comm::writeBackReceivedData,&tcpcomm1,&tcp_comm::writeDataViaTCP);

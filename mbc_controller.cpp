@@ -28,11 +28,11 @@ void mbc_controller::init(QString IPAddr, int port, int DI_Var_count, int DO_Var
 //}
 void mbc_controller::onModbusStateChanged(QModbusDevice::State state)
 {
-
+    qDebug()<<"mbc_controller says, modbus state changed,current state:"<<state;
 }
 void mbc_controller::onModbusErrorOccurred(QModbusDevice::Error error)
 {
-
+    qDebug()<<"mbc controller says, modbus error occured,error:"<<error;
 }
 mbc_controller::~mbc_controller()
 {
