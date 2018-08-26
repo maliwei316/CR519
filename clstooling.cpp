@@ -910,6 +910,12 @@ QByteArray clsTooling::prepareCommand_uploadWholeSettingFromPLC()
     qDebug()<<"ar1.size, after exec prepareCommand_getValveConfigFromPLC"<<ar1.size();
     ar1.append(this->prepareCommand_getFilmFeederParaFromPLC());
     qDebug()<<"ar1.size, after exec prepareCommand_getFilmFeederParaFromPLC"<<ar1.size();
+    //get part sensor bypass info
+    ar1.append(this->prepareCommand_getSensorBypassStatusFromPLC(0x01));
+    qDebug()<<"after exec prepareCommand_getSensorBypassStatusFromPLC(0x01),get part sensor bypass info,ar1.size:"<<ar1.size();
+    ar1.append(this->prepareCommand_getSensorBypassStatusFromPLC(0x02));
+    qDebug()<<"after exec prepareCommand_getSensorBypassStatusFromPLC(0x02),get valve sensor bypass info,ar1.size:"<<ar1.size();
+
     return ar1;
 }
 QByteArray clsTooling::prepareCommand_set_get_toolID(bool set_get_flag)
@@ -946,7 +952,29 @@ QByteArray clsTooling::prepareCommand_set_get_toolID(bool set_get_flag)
     }
     return dataToTcpCommObj;
 }
+QByteArray clsTooling::prepareCommand_getSensorBypassStatusFromPLC(quint8 sensorGroup)
+{
 
+   QByteArray ar1;
+   if(sensorGroup!=0x01&&sensorGroup!=0x02)
+   {
+       qDebug()<<"invalid command on getting sensor bypass info";
+       return ar1;
+   }
+   ar1[0]=0x00;//length high byte
+   ar1[1]=0x0C;//length low byte
+   ar1[2]=0x00;//commandNO high byte
+   ar1[3]=0x70;//commandNO low byte,112
+   ar1[4]=0x00;//reserve byte
+   ar1[5]=0x00;//reserve byte
+   ar1[6]=0x02;//0x01=set,0x02=get
+   ar1[7]=sensorGroup;//0x01=part sensor,0x02=valve sensor
+   ar1[8]=0x00;//valve NO
+   ar1[9]=0x00;//sensors enable status in Byte
+   ar1[10]=0x00;//sensors enable status in Byte
+   ar1[11]=0x00;//reserve
+   return ar1;
+}
 QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
 {
     QByteArrayList ar1;
@@ -1210,14 +1238,15 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
         ar2[9]=0x00;//actionConfirm
         ar2[10]=0x00;//reserve
         ar2[11]=0x00;//reserve
-        for(int i=1;i<7;i++)
+        for(int i=1;i<6;i++)
         {
             ar2[6]=i;
             ar2[7]=this->plcToolingInfo.pneumaticValvelist[i].startStep;
             ar2[8]=this->plcToolingInfo.pneumaticValvelist[i].stopStep;
             ar2[9]=this->plcToolingInfo.pneumaticValvelist[i].actionConfirm?1:0;
+            ar2[10]=this->plcToolingInfo.pneumaticValvelist[i].enable?1:0;
+            ar2[11]=this->plcToolingInfo.pneumaticValvelist[i].valveType;
             ar1.append(ar2);
-
         }
 
     }
@@ -1226,7 +1255,6 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
     if(true)
     {
       ar2.clear();
-
       ar2[0]=0x00;//length high byte
       ar2[1]=0x18;//length low byte
       ar2[2]=0x00;//commandNO high byte
@@ -1256,6 +1284,53 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
       ar2[22]=0;//reserve
       ar2[23]=0;//reserve
       ar1.append(ar2);
+    }
+    //preparation for part sensor bypass
+    if(true)
+    {
+        ar2.clear();
+        ar2[0]=0x00;//length high byte
+        ar2[1]=0x0C;//length low byte
+        ar2[2]=0x00;//commandNO high byte
+        ar2[3]=0x70;//commandNO low byte,112
+        ar2[4]=0x00;//reserve byte
+        ar2[5]=0x00;//reserve byte
+        ar2[6]=0x01;//0x01=set,0x02=get
+        ar2[7]=0x01;//0x01=part sensor,0x02=valve sensor
+        ar2[8]=0x00;//valve NO
+        ar2[9]=this->plcToolingInfo.partSensorBypass.extendBypass.byteChar;
+        qDebug()<<tr("part sensor-G1 bypass status, byteChar:%1").arg((quint8)ar2[9]);
+        ar2[10]=this->plcToolingInfo.partSensorBypass.retractBypass.byteChar;
+        qDebug()<<tr("part sensor-G1 bypass status, byteChar:%1").arg((quint8)ar2[10]);
+        ar2[11]=0x00;//reserve
+        ar1.append(ar2);
+    }
+    //preparation for valve sensor bypass
+    if(true)
+    {
+        ar2.clear();
+        ar2[0]=0x00;//length high byte
+        ar2[1]=0x0C;//length low byte
+        ar2[2]=0x00;//commandNO high byte
+        ar2[3]=0x70;//commandNO low byte,112
+        ar2[4]=0x00;//reserve byte
+        ar2[5]=0x00;//reserve byte
+        ar2[6]=0x01;//0x01=set,0x02=get
+        ar2[7]=0x02;//0x01=part sensor,0x02=valve sensor
+        ar2[8]=0x00;//valve NO
+        ar2[9]=0x00;//sensors enable status in Byte
+        ar2[10]=0x00;//sensors enable status in Byte
+        ar2[11]=0x00;//reserve
+
+        for(int i=1;i<6;i++)
+        {
+            ar2[8]=i;
+            ar2[9]=this->plcToolingInfo.valveSensorBypass[i].extendBypass.byteChar;
+            ar2[10]=this->plcToolingInfo.valveSensorBypass[i].retractBypass.byteChar;
+            qDebug()<<tr("valve[%1] sensor bypass, extend:%2,retract:%3").arg(i)
+                      .arg((quint8)ar2[9]).arg((quint8)ar2[10]);
+            ar1.append(ar2);
+        }
     }
     //set toolID;
     if(true)

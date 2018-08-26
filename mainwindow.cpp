@@ -193,17 +193,33 @@ MainWindow::~MainWindow()
 }
 void MainWindow::changePage(quint16 targetPageIndex)
 {
+
     if(targetPageIndex==255)
     {
-        quint16 temp;
-        temp=this->pageInfo1.previousPage_Index_mainStackWidget;
-        this->pageInfo1.previousPage_Index_mainStackWidget=this->ui->stackedWidget_mainProgram->currentIndex();
-        this->ui->stackedWidget_mainProgram->setCurrentIndex(temp);
+
+        this->pageInfo1.targetPage_Index_mainStackWidget=this->pageInfo1.previousPage_Index_mainStackWidget;
     }
     else
     {
-        this->pageInfo1.previousPage_Index_mainStackWidget=this->ui->stackedWidget_mainProgram->currentIndex();
-        this->ui->stackedWidget_mainProgram->setCurrentIndex(targetPageIndex);
+        this->pageInfo1.targetPage_Index_mainStackWidget=targetPageIndex;
+    }
+    qDebug()<<"page changed required,target page:"<<this->pageInfo1.targetPage_Index_mainStackWidget;
+    bool needLogOn=(this->pageInfo1.targetPage_Index_mainStackWidget==0)
+            ||(this->pageInfo1.targetPage_Index_mainStackWidget==1)
+            ||(this->pageInfo1.targetPage_Index_mainStackWidget==6);
+    qDebug()<<tr("need log on:%1").arg(needLogOn?"true":"false");
+    if((!this->logInStatus)&&needLogOn)
+    {
+
+       qDebug()<<"going to logOn page";
+       this->ui->stackedWidget_mainProgram->setCurrentIndex(5);
+       this->ui->label_password_wrong->setVisible(false);
+       return;
+    }
+    else
+    {
+       qDebug()<<"going to target page";
+        this->ui->stackedWidget_mainProgram->setCurrentIndex(this->pageInfo1.targetPage_Index_mainStackWidget);
     }
 
 }
@@ -1417,6 +1433,112 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
 
     }
         break;
+    case 5://received sensor bypass info,update coresponding display area
+    {
+        quint8 valveNO=(quint8) dataLoad[2];
+        quint8 sensorgroup=(quint8) dataLoad[1];
+        if(sensorgroup==1)//received partSensor info
+        {
+            this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.byteChar=dataLoad[3];
+            this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.byteChar=dataLoad[4];
+            this->ui->CV_PartSensor_1->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b1);
+            this->ui->CV_PartSensor_2->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b2);
+            this->ui->CV_PartSensor_3->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b3);
+            this->ui->CV_PartSensor_4->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b4);
+            this->ui->CV_PartSensor_5->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b5);
+            this->ui->CV_PartSensor_6->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.extendBypass.bits.b6);
+            this->ui->CV_PartSensor_7->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b1);
+            this->ui->CV_PartSensor_8->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b2);
+            this->ui->CV_PartSensor_9->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b3);
+            this->ui->CV_PartSensor_10->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b4);
+            this->ui->CV_PartSensor_11->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b5);
+            this->ui->CV_PartSensor_12->setChecked(this->tooling_current->plcToolingInfo.partSensorBypass.retractBypass.bits.b6);
+            if(uploadingWholeSettingFromPLCInProcess)
+            {
+                this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.byteChar=dataLoad[3];
+                this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.byteChar=dataLoad[4];
+                this->ui->checkBox_PartSensor_1->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b1);
+                this->ui->checkBox_PartSensor_2->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b2);
+                this->ui->checkBox_PartSensor_3->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b3);
+                this->ui->checkBox_PartSensor_4->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b4);
+                this->ui->checkBox_PartSensor_5->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b5);
+                this->ui->checkBox_PartSensor_6->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b6);
+                this->ui->checkBox_PartSensor_7->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b1);
+                this->ui->checkBox_PartSensor_8->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b2);
+                this->ui->checkBox_PartSensor_9->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b3);
+                this->ui->checkBox_PartSensor_10->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b4);
+                this->ui->checkBox_PartSensor_11->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b5);
+                this->ui->checkBox_PartSensor_12->setChecked(this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b6);
+            }
+        }
+        else if(sensorgroup==2)//received valve sensor info
+        {
+            this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.byteChar=dataLoad[3];
+            this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.byteChar=dataLoad[4];
+            if(valveNO==this->ui->sensorBypass_valveNO->value())
+            {
+                this->ui->CV_ValveExtendSensorBypass_1->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b1);
+                this->ui->CV_ValveExtendSensorBypass_2->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b2);
+                this->ui->CV_ValveExtendSensorBypass_3->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b3);
+                this->ui->CV_ValveExtendSensorBypass_4->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b4);
+                this->ui->CV_ValveExtendSensorBypass_5->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b5);
+                this->ui->CV_ValveExtendSensorBypass_6->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b6);
+                this->ui->CV_ValveRetractSensorBypass_1->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b1);
+                this->ui->CV_ValveRetractSensorBypass_2->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b2);
+                this->ui->CV_ValveRetractSensorBypass_3->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b3);
+                this->ui->CV_ValveRetractSensorBypass_4->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b4);
+                this->ui->CV_ValveRetractSensorBypass_5->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b5);
+                this->ui->CV_ValveRetractSensorBypass_6->setChecked
+                        (this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b6);
+            }
+
+            if(uploadingWholeSettingFromPLCInProcess)
+            {
+                this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.byteChar=dataLoad[3];
+                this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.byteChar=dataLoad[4];
+                if(valveNO==this->ui->sensorBypass_valveNO->value())
+                {
+                    this->ui->checkBox_ValveExtendSensorBypass_1->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b1);
+                    this->ui->checkBox_ValveExtendSensorBypass_2->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b2);
+                    this->ui->checkBox_ValveExtendSensorBypass_3->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b3);
+                    this->ui->checkBox_ValveExtendSensorBypass_4->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b4);
+                    this->ui->checkBox_ValveExtendSensorBypass_5->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b5);
+                    this->ui->checkBox_ValveExtendSensorBypass_6->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.bits.b6);
+                    this->ui->checkBox_ValveRetractSensorBypass_1->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b1);
+                    this->ui->checkBox_ValveRetractSensorBypass_2->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b2);
+                    this->ui->checkBox_ValveRetractSensorBypass_3->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b3);
+                    this->ui->checkBox_ValveRetractSensorBypass_4->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b4);
+                    this->ui->checkBox_ValveRetractSensorBypass_5->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b5);
+                    this->ui->checkBox_ValveRetractSensorBypass_6->setChecked
+                            (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.bits.b6);
+                }
+
+            }
+        }
+        break;
+    }
 
     case 6://get thruster config info from PLC, then update the display value
     {
@@ -1998,6 +2120,14 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->btn_filmfeeder_RunRelative->setVisible(true);
         this->ui->btn_filmfeeder_RunSpeed->setVisible(true);
 
+        this->ui->btn_refresh_PartSensor->setVisible(true);
+        this->ui->btn_Edit2PLC_PartSensor->setVisible(true);
+        this->ui->btn_PLC2Edit_PartSensor->setVisible(true);
+        this->ui->groupBox_PartSensor_PLC->setVisible(true);
+        this->ui->btn_refresh_valveSensor->setVisible(true);
+        this->ui->btn_Edit2PLC_valveSensor->setVisible(true);
+        this->ui->btn_PLC2Edit_valveSensor->setVisible(true);
+        this->ui->groupBox_ValveSensor_PLC->setVisible(true);
     }
     else
     {
@@ -2106,6 +2236,14 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->btn_filmfeeder_RunRelative->setVisible(false);
         this->ui->btn_filmfeeder_RunSpeed->setVisible(false);
 
+        this->ui->btn_refresh_PartSensor->setVisible(false);
+        this->ui->btn_Edit2PLC_PartSensor->setVisible(false);
+        this->ui->btn_PLC2Edit_PartSensor->setVisible(false);
+        this->ui->groupBox_PartSensor_PLC->setVisible(false);
+        this->ui->btn_refresh_valveSensor->setVisible(false);
+        this->ui->btn_Edit2PLC_valveSensor->setVisible(false);
+        this->ui->btn_PLC2Edit_valveSensor->setVisible(false);
+        this->ui->groupBox_ValveSensor_PLC->setVisible(false);
 
     }
 
@@ -2777,8 +2915,8 @@ void MainWindow::on_pushButton_leaveAlarmPage_clicked()
 }
 void MainWindow::on_pushButton_Advance_clicked()
 {
-    changePage(6);
-    //this->ui->stackedWidget_mainProgram->setCurrentIndex(6);
+    //changePage(6);
+    this->ui->stackedWidget_mainProgram->setCurrentIndex(6);
 }
 void MainWindow::on_btn_IOTable_clicked()
 {
@@ -3320,23 +3458,23 @@ void MainWindow::on_toolID_fromPLC_valueChanged(int arg1)
 
 void MainWindow::on_checkBox_GenEnable_1_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.generator_enable[1]=arg1;
+    this->tempTooling_editting->plcToolingInfo.generator_enable[1]=arg1?true:false;
 
 }
 
 void MainWindow::on_checkBox_GenEnable_2_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.generator_enable[2]=arg1;
+    this->tempTooling_editting->plcToolingInfo.generator_enable[2]=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_GenEnable_3_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.generator_enable[3]=arg1;
+    this->tempTooling_editting->plcToolingInfo.generator_enable[3]=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_GenEnable_4_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.generator_enable[4]=arg1;
+    this->tempTooling_editting->plcToolingInfo.generator_enable[4]=arg1?true:false;
 }
 
 void MainWindow::on_spinBox_thrusterEnable_valueChanged(int arg1)
@@ -3524,12 +3662,12 @@ void MainWindow::on_spinBox_energyUpperLimit_BAD_valueChanged(int arg1)
 
 void MainWindow::on_checkBox_LimitsEnable_BAD_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()].ultrasonicPara.B21_EnableSuspectBadByte.bits.b1=arg1;
+    this->tempTooling_editting->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()].ultrasonicPara.B21_EnableSuspectBadByte.bits.b1=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_LimitsEnable_SUSPECT_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()].ultrasonicPara.B21_EnableSuspectBadByte.bits.b0=arg1;
+    this->tempTooling_editting->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()].ultrasonicPara.B21_EnableSuspectBadByte.bits.b0=arg1?true:false;
 }
 
 void MainWindow::on_stationPara_upperLimit_valueChanged(int arg1)
@@ -3711,7 +3849,14 @@ void MainWindow::on_spinBox_valveNO_valueChanged(int arg1)
     this->ui->spinBox_valveActionConfirm->setValue(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].actionConfirm);
     this->ui->spinBox_valveStartStep->setValue(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].startStep);
     this->ui->spinBox_valveEndStep->setValue(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].stopStep);
+    if(toolID_PLC==toolID_editing && toolID_PLC>0)
+    {
+        if(this->tcpConnectionStatus_receive&&this->tcpConnectionStatus_send)
+        emit this->sendDataToTCPCommObj(
+                    this->tempTooling_editting->prepareCommand_getValveConfigFromPLC());
 
+
+    }
 }
 
 void MainWindow::on_spinBox_valveEnable_valueChanged(int arg1)
@@ -3770,6 +3915,10 @@ void MainWindow::on_btn_uploadFromPLC_clicked()
 
 
 }
+ void MainWindow::OnLogInTimeout()
+ {
+     this->logInStatus=false;
+ }
 void MainWindow::OnUploadWholeSettingsTimeout()
 {
   this->uploadingWholeSettingFromPLCInProcess=false;
@@ -3884,12 +4033,12 @@ void MainWindow::on_pushButton_registText_remove_clicked()
 
 void MainWindow::on_checkBox_barcode_left_enable_stateChanged(int arg1)
 {
-    this->tempTooling_editting->leftBarcodeSettings.enable=arg1;
+    this->tempTooling_editting->leftBarcodeSettings.enable=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_barcode_right_enable_stateChanged(int arg1)
 {
-    this->tempTooling_editting->rightBarcodeSettings.enable=arg1;
+    this->tempTooling_editting->rightBarcodeSettings.enable=arg1?true:false;
 }
 
 void MainWindow::on_comboBox_BarcodePort_Left_currentIndexChanged(const QString &arg1)
@@ -4028,133 +4177,141 @@ void MainWindow::on_pushButton_toolingSettingSearch_clicked()
 
 void MainWindow::on_checkBox_PartSensor_1_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b1=arg1;
+    qDebug()<<"on_checkBox_PartSensor_1_stateChanged(int arg1),arg1:"<<arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b1=arg1?true:false;
+    qDebug()<<"tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b1,b1:"<<this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b1;
 }
 
 void MainWindow::on_checkBox_PartSensor_2_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b2=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b2=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_3_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b3=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b3=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_4_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b4=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b4=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_5_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b5=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b5=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_6_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b6=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.extendBypass.bits.b6=arg1?true:false;
 }
 void MainWindow::on_checkBox_PartSensor_7_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b1=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b1=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_8_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b2=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b2=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_9_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b3=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b3=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_10_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b4=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b4=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_11_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b5=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b5=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_PartSensor_12_stateChanged(int arg1)
 {
-    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b6=arg1;
+    this->tempTooling_editting->plcToolingInfo.partSensorBypass.retractBypass.bits.b6=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveExtendSensorBypass_1_stateChanged(int arg1)
 {
+    qDebug()<<"on_checkBox_ValveExtendSensorBypass_1_stateChanged(int arg1),arg1:"<<arg1;
+
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b1=arg1;
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b1=arg1?true:false;
+    qDebug()<<tr("valveSensorBypass[%1].extendBypass.bits.b1:%2").arg(this->ui->sensorBypass_valveNO->value())
+              .arg(this->tempTooling_editting->plcToolingInfo.valveSensorBypass
+                   [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b1);
+
 }
 
 void MainWindow::on_checkBox_ValveExtendSensorBypass_2_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b2=arg1;
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b2=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveExtendSensorBypass_3_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b3=arg1;
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b3=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveExtendSensorBypass_4_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b4=arg1;
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b4=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveExtendSensorBypass_5_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b5=arg1;
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b5=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveExtendSensorBypass_6_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b6=arg1;
+            [this->ui->sensorBypass_valveNO->value()].extendBypass.bits.b6=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveRetractSensorBypass_1_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b1=arg1;
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b1=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveRetractSensorBypass_2_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b2=arg1;
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b2=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveRetractSensorBypass_3_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b3=arg1;
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b3=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveRetractSensorBypass_4_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b4=arg1;
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b4=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveRetractSensorBypass_5_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b5=arg1;
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b5=arg1?true:false;
 }
 
 void MainWindow::on_checkBox_ValveRetractSensorBypass_6_stateChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.valveSensorBypass
-            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b6=arg1;
+            [this->ui->sensorBypass_valveNO->value()].retractBypass.bits.b6=arg1?true:false;
 }
 
 void MainWindow::on_btn_Edit2PLC_FilmFeeder_clicked()
@@ -4229,7 +4386,8 @@ void MainWindow::on_btn_PLC2Edit_FilmFeeder_clicked()
 
 void MainWindow::on_ToolingChange_valveNO_valueChanged(int arg1)
 {
-    this->ui->comboBox_ValveType_toolingChange->setCurrentIndex(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType);
+    this->ui->comboBox_ValveType_toolingChange->setCurrentIndex
+            (this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType);
 }
 
 void MainWindow::on_Clamper_Extend_toolingChange_clicked()
@@ -4300,7 +4458,7 @@ void MainWindow::on_btn_Edit2PLC_PartSensor_clicked()
     dataToTcpCommObj[0]=0x00;//length high byte
     dataToTcpCommObj[1]=0x0C;//length low byte
     dataToTcpCommObj[2]=0x00;//commandNO high byte
-    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[3]=0x70;//commandNO low byte,112
     dataToTcpCommObj[4]=0x00;//reserve byte
     dataToTcpCommObj[5]=0x00;//reserve byte
     dataToTcpCommObj[6]=0x01;//0x01=set,0x02=get
@@ -4335,7 +4493,7 @@ void MainWindow::on_btn_refresh_PartSensor_clicked()
     dataToTcpCommObj[0]=0x00;//length high byte
     dataToTcpCommObj[1]=0x0C;//length low byte
     dataToTcpCommObj[2]=0x00;//commandNO high byte
-    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[3]=0x70;//commandNO low byte,112
     dataToTcpCommObj[4]=0x00;//reserve byte
     dataToTcpCommObj[5]=0x00;//reserve byte
     dataToTcpCommObj[6]=0x02;//0x01=set,0x02=get
@@ -4369,6 +4527,8 @@ void MainWindow::on_btn_PLC2Edit_PartSensor_clicked()
 
 void MainWindow::on_sensorBypass_valveNO_valueChanged(int arg1)
 {
+    this->ui->comboBox_ValveType_sensorBypass->setCurrentIndex
+            (this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType);
     this->ui->checkBox_ValveExtendSensorBypass_1->setChecked
             (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b1);
     this->ui->checkBox_ValveExtendSensorBypass_2->setChecked
@@ -4427,10 +4587,10 @@ void MainWindow::on_btn_refresh_valveSensor_clicked()
     dataToTcpCommObj[0]=0x00;//length high byte
     dataToTcpCommObj[1]=0x0C;//length low byte
     dataToTcpCommObj[2]=0x00;//commandNO high byte
-    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[3]=0x70;//commandNO low byte,112
     dataToTcpCommObj[4]=0x00;//reserve byte
     dataToTcpCommObj[5]=0x00;//reserve byte
-    dataToTcpCommObj[6]=0x01;//0x01=set,0x02=get
+    dataToTcpCommObj[6]=0x02;//0x01=set,0x02=get
     dataToTcpCommObj[7]=0x02;//0x01=part sensor,0x02=valve sensor
     dataToTcpCommObj[8]=this->ui->sensorBypass_valveNO->value();//valve NO
 
@@ -4449,7 +4609,7 @@ void MainWindow::on_btn_Edit2PLC_valveSensor_clicked()
     dataToTcpCommObj[0]=0x00;//length high byte
     dataToTcpCommObj[1]=0x0C;//length low byte
     dataToTcpCommObj[2]=0x00;//commandNO high byte
-    dataToTcpCommObj[3]=0x7E;//commandNO low byte,126
+    dataToTcpCommObj[3]=0x70;//commandNO low byte,112
     dataToTcpCommObj[4]=0x00;//reserve byte
     dataToTcpCommObj[5]=0x00;//reserve byte
     dataToTcpCommObj[6]=0x01;//0x01=set,0x02=get
@@ -4507,3 +4667,69 @@ void MainWindow::on_btn_PLC2Edit_valveSensor_clicked()
 
 }
 
+void MainWindow::on_pushButton_logIN_leave_clicked()
+{
+    this->changePage(255);
+}
+
+void MainWindow::on_pushButton_logIN_GO_clicked()
+{
+    if(this->ui->lineEdit_password->text()!=this->systemRegisteredTextList.value(this->ui->UserID_spinbox->value()))
+    {
+       this->ui->label_password_wrong->setVisible(true);
+    }
+    else
+    {
+        this->ui->lineEdit_password->clear();
+        this->ui->label_password_wrong->setVisible(false);
+        this->ui->stackedWidget_mainProgram->setCurrentIndex(this->pageInfo1.targetPage_Index_mainStackWidget);
+        quint8 loginDuration;
+        bool needLogOff=true;
+        switch (this->ui->comboBox_LogOffTime->currentIndex()) {
+        case 0:
+            this->logInStatus=false;
+            needLogOff=true;
+            break;
+        case 1:
+            this->logInStatus=true;
+            needLogOff=true;
+            loginDuration=1;
+            break;
+        case 2:
+            this->logInStatus=true;
+            needLogOff=true;
+            loginDuration=5;
+            break;
+        case 3:
+            this->logInStatus=true;
+            needLogOff=true;
+            loginDuration=10;
+            break;
+        case 4:
+            this->logInStatus=true;
+            needLogOff=false;
+            loginDuration=10;
+            break;
+        default:
+            break;
+        }
+
+
+        if(this->logInStatus&&needLogOff)
+        {
+          QTimer::singleShot(60000*loginDuration, this, &OnLogInTimeout);
+        }
+
+    }
+
+}
+
+void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
+{
+    this->pageInfo1.previousPage_Index_mainStackWidget=this->pageInfo1.currentPage_Index_mainStackWidget;
+    this->pageInfo1.currentPage_Index_mainStackWidget=arg1;
+    qDebug()<<"page changed,previous page:"<<this->pageInfo1.previousPage_Index_mainStackWidget;
+    qDebug()<<"page changed,current page:"<<this->pageInfo1.currentPage_Index_mainStackWidget;
+
+
+}

@@ -12,7 +12,8 @@
 typedef struct _pageInfo
 {
         quint16 previousPage_Index_mainStackWidget;
-
+        quint16 targetPage_Index_mainStackWidget;
+        quint16 currentPage_Index_mainStackWidget;
 
 }pageInfo;
 
@@ -49,6 +50,7 @@ signals:
 public slots:
   void receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj);
   void OnUploadWholeSettingsTimeout();
+  void OnLogInTimeout();
   void onMoveAlarmToHistory(alarmItem alarm);
 
   void OnDownloadWholeSettingsTimeout();
@@ -437,6 +439,14 @@ private slots:
 
     void on_checkBox_ValveRetractSensorBypass_6_stateChanged(int arg1);
 
+    void on_pushButton_logIN_leave_clicked();
+
+    void on_pushButton_logIN_GO_clicked();
+
+
+
+    void on_stackedWidget_mainProgram_currentChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
@@ -472,6 +482,7 @@ public:
     QString barcode_previous_right;
     QString barcode_in_use_right;
     QString barcode_to_use_right;
+    bool logInStatus;
 
 
 

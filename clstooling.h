@@ -20,6 +20,7 @@ public:
     QByteArray prepareCommand_getValveConfigFromPLC();
     QByteArray prepareCommand_set_get_toolID(bool set_get_flag);
     QByteArray prepareCommand_getFilmFeederParaFromPLC();
+    QByteArray prepareCommand_getSensorBypassStatusFromPLC(quint8 sensorGroup);
     QByteArray prepareCommand_uploadWholeSettingFromPLC();
     QByteArrayList prepareCommand_downloadWholeSettingToPLC();
 signals:

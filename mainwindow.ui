@@ -49,7 +49,7 @@
        </rect>
       </property>
       <property name="currentIndex">
-       <number>9</number>
+       <number>8</number>
       </property>
       <widget class="QWidget" name="Overview">
        <attribute name="title">
@@ -4179,7 +4179,7 @@
               <number>1</number>
              </property>
              <property name="maximum">
-              <number>6</number>
+              <number>5</number>
              </property>
             </widget>
            </item>
@@ -6090,7 +6090,7 @@
          <string>&lt;--</string>
         </property>
        </widget>
-       <widget class="QGroupBox" name="groupBox_PartSensor_PLC_2">
+       <widget class="QGroupBox" name="groupBox_ValveSensor_PLC">
         <property name="geometry">
          <rect>
           <x>380</x>
@@ -6348,7 +6348,7 @@
          <number>1</number>
         </property>
         <property name="maximum">
-         <number>2</number>
+         <number>5</number>
         </property>
        </widget>
        <widget class="QLabel" name="label_152">
@@ -6664,7 +6664,7 @@
         <rect>
          <x>20</x>
          <y>20</y>
-         <width>221</width>
+         <width>281</width>
          <height>161</height>
         </rect>
        </property>
@@ -7889,7 +7889,7 @@
        <rect>
         <x>10</x>
         <y>220</y>
-        <width>221</width>
+        <width>321</width>
         <height>191</height>
        </rect>
       </property>
@@ -7918,10 +7918,10 @@
         </size>
        </property>
        <property name="minimum">
-        <number>1</number>
+        <number>3</number>
        </property>
        <property name="maximum">
-        <number>6</number>
+        <number>5</number>
        </property>
       </widget>
       <widget class="QLabel" name="label_136">
@@ -14995,30 +14995,7 @@
        </font>
       </property>
       <property name="text">
-       <string>User Name:</string>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="lineEdit_userName">
-      <property name="geometry">
-       <rect>
-        <x>260</x>
-        <y>140</y>
-        <width>251</width>
-        <height>31</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QDialogButtonBox" name="buttonBox_logon">
-      <property name="geometry">
-       <rect>
-        <x>290</x>
-        <y>250</y>
-        <width>171</width>
-        <height>51</height>
-       </rect>
-      </property>
-      <property name="standardButtons">
-       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+       <string>User ID:</string>
       </property>
      </widget>
      <widget class="QLabel" name="label_150">
@@ -15050,6 +15027,138 @@
       </property>
       <property name="echoMode">
        <enum>QLineEdit::Password</enum>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkBox_autoLogOff">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>360</y>
+        <width>211</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string> log OFF after 1 minute</string>
+      </property>
+      <property name="checked">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QSpinBox" name="UserID_spinbox">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>140</y>
+        <width>251</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="buttonSymbols">
+       <enum>QAbstractSpinBox::NoButtons</enum>
+      </property>
+      <property name="minimum">
+       <number>1</number>
+      </property>
+      <property name="maximum">
+       <number>5</number>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_logIN_leave">
+      <property name="geometry">
+       <rect>
+        <x>420</x>
+        <y>280</y>
+        <width>75</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Leave</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButton_logIN_GO">
+      <property name="geometry">
+       <rect>
+        <x>280</x>
+        <y>280</y>
+        <width>75</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Go</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_password_wrong">
+      <property name="geometry">
+       <rect>
+        <x>520</x>
+        <y>190</y>
+        <width>171</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>password not correct</string>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboBox_LogOffTime">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>230</y>
+        <width>251</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <item>
+       <property name="text">
+        <string>Every Time</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>1 Minute</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>5 Minutes</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>10 Minutes</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Never</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLabel" name="label_LogOffTime">
+      <property name="geometry">
+       <rect>
+        <x>130</x>
+        <y>220</y>
+        <width>101</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <pointsize>12</pointsize>
+       </font>
+      </property>
+      <property name="text">
+       <string>Logoff Time:</string>
       </property>
      </widget>
     </widget>
