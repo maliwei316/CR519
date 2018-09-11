@@ -1,5 +1,8 @@
 #include "dbh_controller.h"
 #include "db_handler.h"
+
+extern bool loggingEnable;
+extern quint8 loggingLevel;
 typedef union
     {
     struct
@@ -36,6 +39,8 @@ dbh_controller::dbh_controller(QObject *parent) : QObject(parent)
     connect(this,&dbh_controller::addTaskToEventQueue_writeDB,worker,&DB_Handler::onAddTaskToEventQueue_writeDB);
     connect(this,&dbh_controller::addTaskToEventQueue_batchWriteDB,worker,&DB_Handler::onAddTaskToEventQueue_batchWriteDB);
     connect(this,&dbh_controller::needInit,worker,&DB_Handler::onInit);
+    //logging
+    connect(worker,&DB_Handler::logRequest,this,&dbh_controller::logRequest);
     workerThread.start();
 }
 void dbh_controller::init(QString dbDriverName, QString dbConnectionName,QString databaseName)

@@ -10,6 +10,10 @@
 #include "myevent.h"
 #include <QSerialPortInfo>
 #include <QMessageBox>
+
+extern bool loggingEnable;
+extern quint8 loggingLevel;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -23,10 +27,11 @@ MainWindow::MainWindow(QWidget *parent) :
     this->tooling_current=new clsTooling(this);
     this->toolID_editing=1;
     this->tempTooling_editting->plcToolingInfo.toolingNO=1;
+    this->logInStatus=false;
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
     {
-       qDebug()<< "serial Port: " << serialPortInfo.portName();
+       //qDebug()<< "serial Port: " << serialPortInfo.portName();
        this->ui->comboBox_BarcodePort_Left->addItem(serialPortInfo.portName());
        this->ui->comboBox__BarcodePort_Right->addItem(serialPortInfo.portName());
     }
@@ -57,6 +62,10 @@ MainWindow::MainWindow(QWidget *parent) :
             {
                 baud_quint32=57600;
             }
+            else if (baudstr=="115200")
+            {
+                baud_quint32=115200;
+            }
             else
             {
                baud_quint32=9600;
@@ -84,14 +93,39 @@ MainWindow::MainWindow(QWidget *parent) :
                 qWarning()<<tr("failed to open serial port for left barcode,portName:%1,error:%2")
                             .arg(this->tempTooling_editting->leftBarcodeSettings.portName)
                             .arg(this->clsBarcode_left->errorString());
+                if(loggingEnable&&loggingLevel>0)
+                {
+                    QString logcontents=tr("Time:%1,failed to open serial port for left barcode,portName:%2,error:%3")
+                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                            .arg(this->tempTooling_editting->leftBarcodeSettings.portName)
+                            .arg(this->clsBarcode_left->errorString());
+                    emit this->logRequest(logcontents,200,0);
+                }
             }
             else
             {
                 qDebug()<<tr("Success to open serial port for left barcode,portName:%1")
                           .arg(this->tempTooling_editting->leftBarcodeSettings.portName);
+                if(loggingEnable&&loggingLevel>0)
+                {
+                    QString logcontents=tr("Time:%1,Success to open serial port for left barcode,portName:%2")
+                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                            .arg(this->tempTooling_editting->leftBarcodeSettings.portName);
+
+                    emit this->logRequest(logcontents,205,0);
+                }
                 connect(this->clsBarcode_left,&QSerialPort::readyRead,this,&MainWindow::getBarcode_left);
                 connect(this->clsBarcode_left,&QSerialPort::errorOccurred,this,&MainWindow::handleBarcodeError);
 
+            }
+        }
+        else
+        {
+            qWarning()<<tr("left barcode is disabled");
+            if(loggingEnable&&loggingLevel>0)
+            {
+                QString logcontents=tr("left barcode is disabled");
+                emit this->logRequest(logcontents,200,0);
             }
         }
         if(this->tempTooling_editting->rightBarcodeSettings.enable)
@@ -115,6 +149,10 @@ MainWindow::MainWindow(QWidget *parent) :
             else if(baudstr=="57600")
             {
                 baud_quint32=57600;
+            }
+            else if(baudstr=="115200")
+            {
+                baud_quint32=115200;
             }
             else
             {
@@ -143,27 +181,62 @@ MainWindow::MainWindow(QWidget *parent) :
                 qWarning()<<tr("failed to open serial port for right barcode,portName:%1,error:%2")
                             .arg(this->tempTooling_editting->rightBarcodeSettings.portName)
                             .arg(this->clsBarcode_right->errorString());
+                if(loggingEnable&&loggingLevel>0)
+                {
+                    QString logcontents=tr("Time:%1,failed to open serial port for right barcode,portName:%2,error:%3")
+                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                            .arg(this->tempTooling_editting->rightBarcodeSettings.portName)
+                            .arg(this->clsBarcode_right->errorString());
+
+                    emit this->logRequest(logcontents,210,0);
+                }
             }
             else
             {
                 qDebug()<<tr("Success to open serial port for right barcode,portName:%1")
                           .arg(this->tempTooling_editting->rightBarcodeSettings.portName);
+                if(loggingEnable&&loggingLevel>0)
+                {
+                    QString logcontents=tr("Time:%1,Success to open serial port for right barcode,portName:%2")
+                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                            .arg(this->tempTooling_editting->rightBarcodeSettings.portName);
+                    emit this->logRequest(logcontents,215,0);
+                }
                 connect(this->clsBarcode_right,&QSerialPort::readyRead,this,&MainWindow::getBarcode_right);
                 connect(this->clsBarcode_right,&QSerialPort::errorOccurred,this,&MainWindow::handleBarcodeError);
 
             }
         }
-
+        else
+        {
+            qWarning()<<tr("right barcode is disabled");
+            if(loggingEnable&&loggingLevel>0)
+            {
+                QString logcontents=tr("right barcode is disabled");
+                emit this->logRequest(logcontents,200,0);
+            }
         }
+    }
+    else
+    {
+        qWarning()<<tr("did not find currentTooling.dc");
+        if(loggingEnable&&loggingLevel>0)
+        {
+            QString logcontents=tr("did not find currentTooling.dc");
+            emit this->logRequest(logcontents,200,0);
+        }
+    }
     this->toolID_PLC=0;
     this->setPLCValueVisible(false);
     this->uploadingWholeSettingFromPLCInProcess=false;
-    this->timer_mainWindow.setInterval(100000);
+    this->timer_mainWindow.setInterval(10000);
     connect(&this->timer_mainWindow,&QTimer::timeout,this,&MainWindow::OnTimer_mainWindow_Timeout);
     this->timer_mainWindow.start();
 
     connect(this,&MainWindow::updateAlarmText,this,&MainWindow::onUpdateAlarmText);
     connect(this,&MainWindow::moveAlarmToHistory,this,&MainWindow::onMoveAlarmToHistory);
+    connect(this,&MainWindow::logRequest,this,&MainWindow::execLogging);
+    connect(this,&MainWindow::receivedPointCycleData,this,&MainWindow::onReceivedPointCycleData);
 
     if(QFile::exists("sysRegText.txt"))
     {
@@ -191,6 +264,63 @@ MainWindow::~MainWindow()
     //tooling_current->deleteLater();
 
 }
+void MainWindow::execLogging(QString logContents,quint16 logID,quint8 logLevel)
+{
+
+    QString newLogItems=tr("logID:%1,LogLevel:%2,LogContents:%3")
+                        .arg(logID).arg(logLevel).arg(logContents);
+    this->recentRunningLogs.append(newLogItems);
+    this->ui->textEdit_runningLog->append(newLogItems);
+    if(this->recentRunningLogs.size()>500)
+    {
+
+        if(QFile::exists("runLog.txt"))
+        {
+            QFile file1("runLog.txt");
+            if(file1.size()>1048576)
+            {
+                if(QFile::exists("runLog_old.txt"))
+                   { QFile::remove("runLog_old.txt");}
+                file1.rename("runLog_old.txt");
+            }
+        }
+
+        QStringList first300Items=this->recentRunningLogs.mid(0,300);
+        QStringList latestItems=this->recentRunningLogs.mid(301,this->recentRunningLogs.size()-1);
+
+        QFile loadFile("runLog.txt");
+
+             if (!loadFile.open(QIODevice::WriteOnly|QIODevice::Text)) {
+                 qWarning("Couldn't open  file when try to update runlog to disk");
+                 this->ui->textEdit_runningLog->append("!!!Couldn't open  file when try to update runlog to disk");
+                 return;
+             }
+             else
+             {
+
+                 qDebug()<<"file opened,file.size:"<<loadFile.size();
+                 QTextStream Out1(&loadFile);
+                 for(int i=0;i<first300Items.size();i++)
+                 {
+                     Out1<<first300Items.at(i)+"\n";
+
+                 }
+
+                 qDebug()<<"save to file execed, file.size()"<<loadFile.size();
+                 loadFile.close();
+                 this->recentRunningLogs.clear();
+                 this->recentRunningLogs.append(latestItems);
+                 QString logsTodisplay;
+                 for(int i=0;i<this->recentRunningLogs.size();i++)
+                 {
+                     logsTodisplay.append(this->recentRunningLogs.at(i)+"\n");
+                 }
+                 this->ui->textEdit_runningLog->clear();
+                 this->ui->textEdit_runningLog->setText(logsTodisplay);
+             }
+    }
+
+}
 void MainWindow::changePage(quint16 targetPageIndex)
 {
 
@@ -203,7 +333,15 @@ void MainWindow::changePage(quint16 targetPageIndex)
     {
         this->pageInfo1.targetPage_Index_mainStackWidget=targetPageIndex;
     }
+    if(loggingEnable&&loggingLevel>0)
+        {
+            QString logcontents=tr("Time:%1,page changed required,target page:%2")
+                    .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                    .arg(this->pageInfo1.targetPage_Index_mainStackWidget);
+            emit this->logRequest(logcontents,35,0);
+        }
     qDebug()<<"page changed required,target page:"<<this->pageInfo1.targetPage_Index_mainStackWidget;
+
     bool needLogOn=(this->pageInfo1.targetPage_Index_mainStackWidget==0)
             ||(this->pageInfo1.targetPage_Index_mainStackWidget==1)
             ||(this->pageInfo1.targetPage_Index_mainStackWidget==6);
@@ -218,13 +356,20 @@ void MainWindow::changePage(quint16 targetPageIndex)
     }
     else
     {
-       qDebug()<<"going to target page";
+        if(loggingEnable&&loggingLevel>0)
+            {
+                QString logcontents=tr("Time:%1,going to target page")
+                        .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"));
+                emit this->logRequest(logcontents,35,0);
+            }
+        qDebug()<<"going to target page";
         this->ui->stackedWidget_mainProgram->setCurrentIndex(this->pageInfo1.targetPage_Index_mainStackWidget);
     }
 
 }
 void MainWindow::getBarcode_left()
 {
+    qDebug()<<"getBarcoede_Left executed";
     if(this->clsBarcode_left->bytesAvailable()>=this->tempTooling_editting->leftBarcodeSettings.minLength)
     {
         QEventLoop eventloop;
@@ -235,7 +380,8 @@ void MainWindow::getBarcode_left()
                .arg(this->clsBarcode_left->portName())
                .arg(this->barcode_to_use_left);
         this->ui->lineEdit_scannedBarcode_left->setText(this->barcode_to_use_left);
-        ;
+        this->ui->lineEdit_barcode_left->setText(this->barcode_to_use_left);
+
     }
 }
 void MainWindow::getBarcode_right()
@@ -250,14 +396,19 @@ void MainWindow::getBarcode_right()
                .arg(this->clsBarcode_right->portName())
                .arg(this->barcode_to_use_right);
         this->ui->lineEdit_scannedBarcode_right->setText(this->barcode_to_use_right);
+        this->ui->lineEdit_barcode_right->setText(this->barcode_to_use_right);
     }
 }
- void MainWindow::handleBarcodeError(QSerialPort::SerialPortError error)
+void MainWindow::handleBarcodeError(QSerialPort::SerialPortError error)
  {
      qDebug()<<tr("barcode error, error:%1")
             .arg(error);
 
  }
+void MainWindow::moveCycleDataToHistory()
+{
+
+}
 void MainWindow::OnPLCItemsChanged_Modbus(QVariantList changedItems)
 {
     plcItem item;
@@ -817,11 +968,32 @@ void MainWindow::updatePLCItem(plcItem item)
         this->switchItemOnOff(this->ui->LED_M37,item.currentValue.bitsVar.b15?true:false);
         break;
     }
+    //MW10
+    case 536576080://MW10
+    {
+        this->plcVars.currentPointNO_gen1=item.currentValue.wordVar/256;
+        this->plcVars.currentPointNO_gen2=item.currentValue.wordVar%256;
+        this->ui->spinBox_currentPoint_Gen2->setValue(this->plcVars.currentPointNO_gen2);
+        this->ui->spinBox_currentPoint_Gen1->setValue(this->plcVars.currentPointNO_gen1);
+        break;
+    }
+    //MW12
+    case 536576096://MW12
+    {
+        this->plcVars.currentPointNO_gen3=item.currentValue.wordVar/256;
+        this->plcVars.currentPointNO_gen4=item.currentValue.wordVar%256;
+        this->ui->spinBox_currentPoint_Gen3->setValue(this->plcVars.currentPointNO_gen3);
+        this->ui->spinBox_currentPoint_Gen4->setValue(this->plcVars.currentPointNO_gen4);
+        break;
+    }
+
     //MW16
-    case 536576128://MW16
+    case 536576128://MW16,toolID
     {
 
         quint8 toolID_PLC_2=(quint8)(item.currentValue.wordVar%256);
+        this->ui->spinBox_toolID_fromPLC_runscreen->setValue(toolID_PLC_2);
+        this->ui->lineEdit_toolName_runScreen->setText(this->tempTooling_editting->toolingName);
         if(this->toolID_PLC!=toolID_PLC_2)
         {
             this->toolID_PLC=toolID_PLC_2;
@@ -830,20 +1002,124 @@ void MainWindow::updatePLCItem(plcItem item)
         //qDebug()<<"got PLC tooling_ID:"<<toolID_PLC_2;
         break;
     }
-    //MW18
+    //MW18,indicating MSG
     case 536576144://MW18
     {
         quint16 indicatingMsg;
         indicatingMsg=(quint16)item.currentValue.wordVar;
-        qDebug()<<"got indicating MSG:"<<indicatingMsg;
+        //qDebug()<<"got indicating MSG:"<<indicatingMsg;
 
-        qDebug()<<"got indicating MSG:"<<this->systemRegisteredTextList.value(1000+indicatingMsg);
+        //qDebug()<<"got indicating MSG:"<<this->systemRegisteredTextList.value(1000+indicatingMsg);
         this->ui->label_IndicatingMSG->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
-        this->ui->label_IndicatingMSG_2->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
+        //this->ui->label_IndicatingMSG_2->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
         break;
     }
-   //DW0,alarm word,
-    case 540672000:
+    //MW20
+    case 536576160://MW20,ultrasonic status
+    {
+        this->switchItemOnOff(this->ui->LED_US_Gen1,item.currentValue.bitsVar.b8?true:false);
+        this->switchItemOnOff(this->ui->LED_US_Gen2,item.currentValue.bitsVar.b9?true:false);
+        this->switchItemOnOff(this->ui->LED_US_Gen3,item.currentValue.bitsVar.b10?true:false);
+        this->switchItemOnOff(this->ui->LED_US_Gen4,item.currentValue.bitsVar.b11?true:false);
+        break;
+    }
+    //MW24
+    case 536576192://MW24,current stepNO
+    {
+        quint8 receivedStepNO=(quint8)(item.currentValue.wordVar/256);
+        if(receivedStepNO!=this->plcVars.currentStepNO)
+        {
+
+            this->plcVars.currentStepNO=receivedStepNO;
+            //the first/second step,move last cycle data to history.
+            if(this->plcVars.currentStepNO==1||
+                    (this->plcVars.currentStepNO==2&&(!this->plcVars.somePointWelded)))
+            {
+                this->moveCycleDataToHistory();
+                this->ui->tableWidget_lastCycleData->clearContents();
+            }
+            if(this->plcVars.currentStepNO==16)//the last step
+            {
+                //update the point bypass status
+                QByteArray dataToTcpCommObj;
+                dataToTcpCommObj[0]=0x00;//length high byte
+                dataToTcpCommObj[1]=0x0C;//length low byte
+                dataToTcpCommObj[2]=0x00;//commandNO high byte
+                dataToTcpCommObj[3]=0x7F;//commandNO low byte,127
+                dataToTcpCommObj[4]=0x00;//reserve byte
+                dataToTcpCommObj[5]=0x00;//reserve byte
+                dataToTcpCommObj[6]=0x02;//01==set,02==get
+                dataToTcpCommObj[7]=0x00;//retain flag
+                dataToTcpCommObj[8]=0x00;//point 1~8
+                dataToTcpCommObj[9]=0x00;//point 9~16
+                dataToTcpCommObj[10]=0x00;//reserve
+                dataToTcpCommObj[11]=0x00;//reserve
+                if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+                    emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+            }
+        }
+
+        this->ui->spinBox_run_liveStepNO->setValue(this->plcVars.currentStepNO);
+        this->ui->progressBar->setValue(this->plcVars.currentStepNO);
+
+        break;
+    }
+
+    //MW26, tRCV_MSG_count
+    case 536576208://MW26,count of PLC received Msg
+    {
+        quint16 Msg_count;
+        Msg_count=(quint16)item.currentValue.wordVar;
+        qDebug()<<"TRCV_MSG_Count:"<<Msg_count;
+
+        QString msg_str=tr("PLC received new Msg,MsgCount:%1").arg((quint16)Msg_count);
+        this->ui->textEdit_weldByManual->append(msg_str);
+        break;
+    }
+    case 536576240://MW30,work mode
+    {
+
+        quint8 currentWorkMode;
+        if(item.currentValue.bitsVar.b2)
+            currentWorkMode=2;
+        else if(item.currentValue.bitsVar.b3)
+            currentWorkMode=3;
+        if(this->plcVars.work_Mode!=currentWorkMode)
+        {
+            this->changePage(currentWorkMode==2?1:4);
+            this->plcVars.work_Mode=currentWorkMode;
+        }
+        this->switchItemOnOff(this->ui->LED_ManualMode,item.currentValue.bitsVar.b2?true:false);
+        //somePoint welded flag
+        this->plcVars.somePointWelded=item.currentValue.bitsVar.b9;
+        break;
+    }
+    case 536576256://MW32,part counter-total
+    {
+
+        this->ui->spinBox_partCounter_total->setValue(item.currentValue.wordVar);
+        break;
+    }
+    case 536576272://MW34,part counter-good
+    {
+
+        this->ui->spinBox_partCounter_good->setValue(item.currentValue.wordVar);
+        break;
+    }
+    case 536576288://MW36,part counter-bad
+    {
+
+        this->ui->spinBox_partCounter_bad->setValue(item.currentValue.wordVar);
+        break;
+    }
+    case 536576304://MW38,part counter-suspect
+    {
+
+        this->ui->spinBox_partCounter_suspect->setValue(item.currentValue.wordVar);
+        break;
+    }
+    //DW0,alarm word,
+    case 540672000://dw0,gen_1 alarm
     {
         if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
             break;
@@ -853,7 +1129,7 @@ void MainWindow::updatePLCItem(plcItem item)
             break;
         }
     }
-    case 540672016:
+    case 540672016://dw2,gen_2 alarm
     {
         if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
             break;
@@ -1172,16 +1448,38 @@ void MainWindow::handleAlarm(plcItem item)
         bool bitValue=item.getBitFromWord(i);
         if(bitValue)
         {
-            if(!alarmExist)
+            if(!alarmExist)//if bitValue==ture while the corresponding alarm not in alarm list, then add it
             {
                 currentAlarms[alarmID_plcItem].AlarmID=alarmID_plcItem;
                 currentAlarms[alarmID_plcItem].comeTime=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss");
-                currentAlarms[alarmID_plcItem].alarmText=this->systemRegisteredTextList[alarmID_plcItem];
+                QString alarmText_temp=this->systemRegisteredTextList[alarmID_plcItem];
+                //if the alarm is generator related , then need display the current point of this generator
+                if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_1"))
+                {
+                    QString currentPointsInfo=tr("pointNO:%1").arg(this->plcVars.currentPointNO_gen3);
+                    alarmText_temp.append(currentPointsInfo);
+                }
+                else if (this->systemRegisteredTextList[alarmID_plcItem].contains("gen_2"))
+                {
+                    QString currentPointsInfo=tr("pointNO:%1").arg(this->plcVars.currentPointNO_gen2);
+                    alarmText_temp.append(currentPointsInfo);
+                }
+                else if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_3"))
+                {
+                    QString currentPointsInfo=tr("pointNO:%1").arg(this->plcVars.currentPointNO_gen3);
+                    alarmText_temp.append(currentPointsInfo);
+                }
+                else if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_4"))
+                {
+                    QString currentPointsInfo=tr("pointNO:%1").arg(this->plcVars.currentPointNO_gen4);
+                    alarmText_temp.append(currentPointsInfo);
+                }
+                currentAlarms[alarmID_plcItem].alarmText=alarmText_temp;
             }
         }
         else
         {
-            if(alarmExist)
+            if(alarmExist)//if bitValue is false,while the corresponding alarm is still in alarm list, then move it to history
             {
                 //currentAlarms[alarmID_plcItem].moveToHistory("./HistoryAlarm/Log_alarm.txt",this->ui->textEdit_2);
                 currentAlarms[alarmID_plcItem].leaveTime=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss");
@@ -1240,6 +1538,44 @@ void MainWindow::onMoveAlarmToHistory(alarmItem alarm)
     }
     file1.close();
 }
+void MainWindow::onReceivedPointCycleData(pointCycleData data1)
+{
+    qDebug()<<"received point cycle data,wordmode:"<<this->plcVars.work_Mode;
+    if(this->plcVars.work_Mode==2)//manual mode
+    {
+
+    }
+    else if (this->plcVars.work_Mode==3) //auto mode
+    {
+
+        QString pointName=this->tempTooling_editting->pointNameMapping[data1.pointNO];
+        QString barcode=this->tempTooling_editting->pointBarcodeMapping[data1.pointNO];
+        QString dataTime1=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz");
+        QString weldResult_str;
+        if(data1.weldResult==0)
+            weldResult_str="unWelded";
+        else if(data1.weldResult==1)
+            weldResult_str="good";
+        else if(data1.weldResult==2)
+            weldResult_str="suspect";
+        else if(data1.weldResult==3)
+            weldResult_str="bad";
+        //tableWidget->setItem(0,1,new QTableWidgetItem(QIcon("images/IED.png"), "Jan's month"));
+        if(data1.pointNO>0)
+        {
+            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,0,new QTableWidgetItem(pointName));
+            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,1,new QTableWidgetItem(weldResult_str));
+            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,2,new QTableWidgetItem(QString::number(data1.weldTime)));
+            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,3,new QTableWidgetItem(QString::number(data1.peakPower)));
+            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,4,new QTableWidgetItem(QString::number(data1.weldEnergy)));
+            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,5,new QTableWidgetItem(QString::number(data1.thrusterDownPressure)));
+            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,6,new QTableWidgetItem(dataTime1));
+            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,7,new QTableWidgetItem(barcode.contains("left")?this->barcode_in_use_left:this->barcode_in_use_right));
+
+        }
+
+    }
+}
 void MainWindow::OnTimer_mainWindow_Timeout()
 {
     qDebug()<<tr("checking tcp comm connection status,current status:%1").
@@ -1251,7 +1587,7 @@ void MainWindow::OnTimer_mainWindow_Timeout()
         this->tcpConnectionStatus_receive=false;
         this->tcpConnectionStatus_send=false;
         this->setPLCValueVisible(false);
-        this->ui->OnOffLine_Label->setText("OFFLINE");
+        //this->ui->OnOffLine_Label->setText("OFFLINE");
     }
     else
     {
@@ -1307,14 +1643,14 @@ void MainWindow::OnTcpCommConnectionStateChanged(QAbstractSocket::SocketState st
     if(!(this->tcpConnectionStatus_receive&&this->tcpConnectionStatus_send))
     {
         this->checking_tcpConnectionStatus=false;
-        this->ui->OnOffLine_Label->setText("OFFLINE");
+        //this->ui->OnOffLine_Label->setText("OFFLINE");
         this->setPLCValueVisible(false);
     }
 
     else
     {
         //set label text to online
-        this->ui->OnOffLine_Label->setText("ONLINE");
+        //this->ui->OnOffLine_Label->setText("ONLINE");
         if(this->toolID_editing==this->toolID_PLC&&this->toolID_editing>0)
         this->setPLCValueVisible(true);
     }
@@ -1391,9 +1727,12 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
 
     case 2://received gen realtime data, update display area accorddingly
     {
-        if(dataLoad[1]==this->ui->spinBox_PointNO_pointPara->value())
+        quint8 receivedPointNO=dataLoad[1];
+        quint8 receivedGenNO=dataLoad[0];
+
+        if(receivedPointNO==this->ui->spinBox_PointNO_pointPara->value())
         {
-            this->ui->UStest_genNO->setValue(dataLoad[0]);
+            this->ui->UStest_genNO->setValue(receivedGenNO);
             dWordBytes dw1;
             dw1.bytesVar.B0=dataLoad[2];
             dw1.bytesVar.B1=dataLoad[3];
@@ -1420,14 +1759,18 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         dw1.bytesVar.B1=dataLoad[7];
         dw1.bytesVar.B2=dataLoad[8];
         dw1.bytesVar.B3=dataLoad[9];
-        this->ui->weldByManual_realtimeSpeed->setText(QString::number((qint16)dw1.DWordVar));
-        this->ui->servo_realTimeSpeed->setText(QString::number((qint16)dw1.DWordVar));
+        QString realtimeSpeed=QString::number((qint16)dw1.DWordVar);
+        this->ui->weldByManual_realtimeSpeed->setText(realtimeSpeed);
+        this->ui->servo_realTimeSpeed->setText(realtimeSpeed);
+        this->ui->servo_realTimeSpeed_runScreen->setText(realtimeSpeed);
         dw1.bytesVar.B0=dataLoad[10];
         dw1.bytesVar.B1=dataLoad[11];
         dw1.bytesVar.B2=dataLoad[12];
         dw1.bytesVar.B3=dataLoad[13];
-        this->ui->weldByManual_realtimePos->setText(QString::number((qint32)dw1.DWordVar));
-        this->ui->servo_realTimePos->setText(QString::number((qint32)dw1.DWordVar));
+        QString realtimePOS=QString::number((qint32)dw1.DWordVar);
+        this->ui->weldByManual_realtimePos->setText(realtimePOS);
+        this->ui->servo_realTimePos->setText(realtimePOS);
+        this->ui->servo_realTimePos_runScreen->setText(realtimePOS);
         this->ui->weldByManual_currentStationNO->setValue(dataLoad[0]);
         this->ui->weldByManual_targetStationNO->setValue(dataLoad[1]);
 
@@ -1473,8 +1816,11 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         }
         else if(sensorgroup==2)//received valve sensor info
         {
+            qDebug()<<"received valve sensor bypass info,valveNO:"<<valveNO;
             this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].extendBypass.byteChar=dataLoad[3];
+            qDebug()<<"extend sensors status:"<<quint8(dataLoad[3]);
             this->tooling_current->plcToolingInfo.valveSensorBypass[valveNO].retractBypass.byteChar=dataLoad[4];
+            qDebug()<<"extend sensors status:"<<quint8(dataLoad[4]);
             if(valveNO==this->ui->sensorBypass_valveNO->value())
             {
                 this->ui->CV_ValveExtendSensorBypass_1->setChecked
@@ -1570,35 +1916,35 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         }
         break;
     }
-    case 7://get weld point config info from PLC, then update the display value
-    {
-        quint8 weldPointNOFromPLC;
-        weldPointNOFromPLC=dataLoad[0];
-        //update display if point NO is desired
-        if(weldPointNOFromPLC==this->ui->spinBox_PointNO_pointPara->value())
-        {
-            this->ui->CV_weldPointEnable->setValue(dataLoad[3]);
-            this->ui->CV_thrusterNO_WPC->setValue(dataLoad[1]);
-            this->ui->CV_stepNO_WPC->setValue(dataLoad[2]);
-            if(this->uploadingWholeSettingFromPLCInProcess)
-            {
-                this->ui->spinBox_weldPointEnable->setValue(dataLoad[3]);
-                this->ui->spinBox_thrusterNOWPC->setValue(dataLoad[1]);
-                this->ui->spinBox_stepNO_WPC->setValue(dataLoad[2]);
-            }
-        }
-        //store any received point info into tooling info on background
-        this->tooling_current->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].enable=dataLoad[3];
-        this->tooling_current->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].ThrusterNO=dataLoad[1];
-        this->tooling_current->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].stepNO=dataLoad[2];
-        if(this->uploadingWholeSettingFromPLCInProcess)
-        {
-            this->tempTooling_editting->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].enable=dataLoad[3];
-            this->tempTooling_editting->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].ThrusterNO=dataLoad[1];
-            this->tempTooling_editting->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].stepNO=dataLoad[2];
-        }
-        break;
-    }
+//    case 7://get weld point config info from PLC, then update the display value
+//    {
+//        quint8 weldPointNOFromPLC;
+//        weldPointNOFromPLC=dataLoad[0];
+//        //update display if point NO is desired
+//        if(weldPointNOFromPLC==this->ui->spinBox_PointNO_pointPara->value())
+//        {
+//            this->ui->CV_weldPointEnable->setValue(dataLoad[3]);
+//            this->ui->CV_thrusterNO_WPC->setValue(dataLoad[1]);
+//            this->ui->CV_stepNO_WPC->setValue(dataLoad[2]);
+//            if(this->uploadingWholeSettingFromPLCInProcess)
+//            {
+//                this->ui->spinBox_weldPointEnable->setValue(dataLoad[3]);
+//                this->ui->spinBox_thrusterNOWPC->setValue(dataLoad[1]);
+//                this->ui->spinBox_stepNO_WPC->setValue(dataLoad[2]);
+//            }
+//        }
+//        //store any received point info into tooling info on background
+//        this->tooling_current->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].enable=dataLoad[3];
+//        this->tooling_current->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].ThrusterNO=dataLoad[1];
+//        this->tooling_current->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].stepNO=dataLoad[2];
+//        if(this->uploadingWholeSettingFromPLCInProcess)
+//        {
+//            this->tempTooling_editting->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].enable=dataLoad[3];
+//            this->tempTooling_editting->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].ThrusterNO=dataLoad[1];
+//            this->tempTooling_editting->plcToolingInfo.weldPoint_List[weldPointNOFromPLC].stepNO=dataLoad[2];
+//        }
+//        break;
+//    }
     case 8://get step/group station info from PLC, then update the display value
     {
        quint8 stepNOFromPLC;
@@ -1654,6 +2000,9 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
            wp2.ultrasonicPara.Freq_Lower_Limit=BigLittleSwap32(wp2.ultrasonicPara.Freq_Lower_Limit);//B58~B61
            wp2.ultrasonicPara.Trigger_Power=BigLittleSwap16(wp2.ultrasonicPara.Trigger_Power);//B66-B67
            wp2.ultrasonicPara.Trigger_Timeout=BigLittleSwap16(wp2.ultrasonicPara.Trigger_Timeout);//B68-B69
+           //wp2.thrusterPressure_down=BigLittleSwap16(wp2.thrusterPressure_down);
+           wp2.thrusterPressure_down=(wp2.thrusterPressure_down-228)*500/(3868-228);
+
            //update display if point NO is desired
            if(pointNOFromPLC==this->ui->spinBox_PointNO_pointPara->value())
            {
@@ -1929,6 +2278,54 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         this->tooling_current->plcToolingInfo.toolingNO=this->toolID_PLC;
         break;
     }
+    case 16://received point bypass  info from PLC
+    {
+        qDebug()<<"received point bypass info from PLC";
+        this->ui->CV_PointBypass_retain->setChecked(dataLoad[1]?true:false);
+        bytebits bb1;
+        bb1.byteChar=dataLoad[2];
+        this->ui->CV_PointBypass_point_1->setChecked(bb1.bits.b0);
+        this->ui->CV_PointBypass_point_2->setChecked(bb1.bits.b1);
+        this->ui->CV_PointBypass_point_3->setChecked(bb1.bits.b2);
+        this->ui->CV_PointBypass_point_4->setChecked(bb1.bits.b3);
+        this->ui->CV_PointBypass_point_5->setChecked(bb1.bits.b4);
+        this->ui->CV_PointBypass_point_6->setChecked(bb1.bits.b5);
+        this->ui->CV_PointBypass_point_7->setChecked(bb1.bits.b6);
+        this->ui->CV_PointBypass_point_8->setChecked(bb1.bits.b7);
+        bb1.byteChar=dataLoad[3];
+        this->ui->CV_PointBypass_point_9->setChecked(bb1.bits.b0);
+        this->ui->CV_PointBypass_point_10->setChecked(bb1.bits.b1);
+        this->ui->CV_PointBypass_point_11->setChecked(bb1.bits.b2);
+        this->ui->CV_PointBypass_point_12->setChecked(bb1.bits.b3);
+        this->ui->CV_PointBypass_point_13->setChecked(bb1.bits.b4);
+        this->ui->CV_PointBypass_point_14->setChecked(bb1.bits.b5);
+        this->ui->CV_PointBypass_point_15->setChecked(bb1.bits.b6);
+        this->ui->CV_PointBypass_point_16->setChecked(bb1.bits.b7);
+        break;
+    }
+    case 20://received cycle data from PLC
+    {
+
+        pointCycleData data1;
+        data1.pointNO=dataLoad[0];
+        data1.weldResult=dataLoad[1];
+        data1.weldTime=((quint8)dataLoad[2])*256+dataLoad[3];
+        data1.weldTime=data1.weldTime>5000?(65536-data1.weldTime):data1.weldTime;
+        data1.peakPower=((quint8)dataLoad[4])*256+dataLoad[5];
+        data1.peakPower=data1.peakPower>5000?(65536-data1.peakPower):data1.peakPower;
+        data1.weldEnergy=((quint8)dataLoad[6])*256+dataLoad[7];
+        data1.weldEnergy=data1.weldEnergy>5000?(65536-data1.weldEnergy):data1.weldEnergy;
+        data1.thrusterDownPressure=((quint8)dataLoad[8])*256+dataLoad[9];
+        data1.thrusterDownPressure=(data1.thrusterDownPressure-228)*500/(3868-228);
+        //(wp2.thrusterPressure_down-228)*500/(3868-228);
+        data1.genNO=dataLoad[10];
+        data1.channelCode=dataLoad[11];
+        qDebug()<<tr("received point cycle data,pointNO:%1,time:%2,power:%3,energy:%4").arg(data1.pointNO)
+                  .arg(data1.weldTime).arg(data1.peakPower).arg(data1.weldEnergy);
+        emit receivedPointCycleData(data1);
+        break;
+    }
+
     case 23://received filmfeeder Para from PLC
     {
         this->tooling_current->plcToolingInfo.feeder.enable=dataLoad[0]?1:0;
@@ -2023,6 +2420,7 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->btn_undoGenEnable->setVisible(true);
         this->ui->btn_getGenEnableStatus->setVisible(true);
         this->ui->PLC_Value_Label->setVisible(true);
+        this->ui->PLC_Value_Label_trigByPower->setVisible(true);
         this->ui->btn_QueryThrusterConfig_2->setVisible(true);
         this->ui->PLC_Value_Label_2->setVisible(true);
         this->ui->btn_setThrusterConfig->setVisible(true);
@@ -2064,7 +2462,7 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->CV_pointPara_afterburst_duration->setVisible(true);
         this->ui->CV_pointPara_afterburstDelay->setVisible(true);
         this->ui->CV_pointPara_downPressure->setVisible(true);
-        this->ui->CV_pointPara_upPressure->setVisible(true);
+        //this->ui->CV_pointPara_upPressure->setVisible(true);
         this->ui->groupBox_PLC_Value_limits->setVisible(true);
         //enable/disable servo  operarion
         this->ui->tab_stepStation->setTabEnabled(0,true);
@@ -2083,6 +2481,7 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->CV_stationPara_MediumSpeed->setVisible(true);
         this->ui->CV_stationPara_lowSpeed->setVisible(true);
         this->ui->CV_stationPara_defaultSpeed->setVisible(true);
+        this->ui->btn_QueryServoPara->setVisible(true);
 
         this->ui->CV_servoPara_CWCCW->setVisible(true);
         this->ui->btn_QueryStepStation->setVisible(true);
@@ -2090,6 +2489,7 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->btn_setStationToStep->setVisible(true);
         this->ui->PLC_Value_Label_9->setVisible(true);
         this->ui->CV_stationNO->setVisible(true);
+
 
         this->ui->btn_QueryValveConfig->setVisible(true);
         this->ui->btn_setValveConfig->setVisible(true);
@@ -2180,7 +2580,7 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->CV_pointPara_afterburst_duration->setVisible(false);
         this->ui->CV_pointPara_afterburstDelay->setVisible(false);
         this->ui->CV_pointPara_downPressure->setVisible(false);
-        this->ui->CV_pointPara_upPressure->setVisible(false);
+        //this->ui->CV_pointPara_upPressure->setVisible(false);
         this->ui->groupBox_PLC_Value_limits->setVisible(false);
         //enable/disable servo  operarion
         this->ui->tab_stepStation->setTabEnabled(0,false);
@@ -2188,6 +2588,7 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->stationConfig_servo_GOTO->setVisible(false);
         this->ui->btn_setStationPara->setVisible(false);
         this->ui->btn_undoStationPara->setVisible(false);
+        this->ui->btn_QueryServoPara->setVisible(false);
 
         this->ui->PLC_Value_Label_7->setVisible(false);
         this->ui->CV_stationPara_upperLimit->setVisible(false);
@@ -2210,7 +2611,7 @@ void MainWindow::setPLCValueVisible(bool flag)
         this->ui->btn_QueryValveConfig->setVisible(false);
         this->ui->btn_setValveConfig->setVisible(false);
         this->ui->btn_undoValveConfig->setVisible(false);
-
+        this->ui->PLC_Value_Label_trigByPower->setVisible(false);
         this->ui->PLC_Value_Label_10->setVisible(false);
         this->ui->CV_valveEnableBypass->setVisible(false);
         this->ui->comboBox_ValveType->setVisible(false);
@@ -2267,7 +2668,7 @@ void MainWindow::updateWeldPoitDisplay_Editting(const weldPoint& wp2)
     this->ui->spinBox_pointPara_trigByPower->setValue(wp2.ultrasonicPara.B64_enableTrigByPower.bits.b0?1:0);
     this->ui->spinBox_pointPara_trigPower->setValue(wp2.ultrasonicPara.Trigger_Power);
     this->ui->spinBox_pointPara_trigTimeout->setValue(wp2.ultrasonicPara.Trigger_Timeout);
-    this->ui->spinBox_pointPara_upPressure->setValue(wp2.thrusterPressure_up);
+    //this->ui->spinBox_pointPara_upPressure->setValue(wp2.thrusterPressure_up);
     this->ui->spinBox_pointPara_weldEnergy->setValue(wp2.ultrasonicPara.Energy0to65535);
     this->ui->spinBox_pointPara_weldTime->setValue(wp2.ultrasonicPara.Weld_Time0to30000);
     this->ui->spinBox_timeLowerLimit_BAD->setValue(wp2.ultrasonicPara.Badpart_MinTime_Limits);
@@ -2307,7 +2708,7 @@ void MainWindow::updateWeldPoitDisplay_Current(const weldPoint& wp2)
    this->ui->CV_pointPara_trigBypower->setValue(wp2.ultrasonicPara.B64_enableTrigByPower.bits.b0?1:0);
    this->ui->CV_pointPara_trigPower->setValue(wp2.ultrasonicPara.Trigger_Power);
    this->ui->CV_pointPara_trigTimeout->setValue(wp2.ultrasonicPara.Trigger_Timeout);
-   this->ui->CV_pointPara_upPressure->setValue(wp2.thrusterPressure_up);
+   //this->ui->CV_pointPara_upPressure->setValue(wp2.thrusterPressure_up);
    this->ui->CV_pointPara_weldEnergy->setValue(wp2.ultrasonicPara.Energy0to65535);
    this->ui->CV_pointPara_weldTime->setValue(wp2.ultrasonicPara.Weld_Time0to30000);
    this->ui->CV_timeLowerLimit_BAD->setValue(wp2.ultrasonicPara.Badpart_MinTime_Limits);
@@ -2666,8 +3067,8 @@ void MainWindow::on_btn_setPointPara_clicked()//include point config and us/para
     {
         wp1=new weldPoint;
         wp1->pointNO=this->ui->spinBox_PointNO_pointPara->value();
-        wp1->thrusterPressure_down=this->ui->spinBox_pointPara_downPressure->value();
-        wp1->thrusterPressure_up=this->ui->spinBox_pointPara_upPressure->value();
+        wp1->thrusterPressure_down=this->ui->spinBox_pointPara_downPressure->value()*(3868-228)/500+228;
+        //wp1->thrusterPressure_up=this->ui->spinBox_pointPara_upPressure->value();
         wp1->enable=this->ui->spinBox_weldPointEnable->value();
         wp1->GenNO=this->tempTooling_editting->plcToolingInfo.weldPoint_List
                 [this->ui->spinBox_PointNO_pointPara->value()].GenNO;
@@ -2830,8 +3231,12 @@ void MainWindow::on_btn_setServoPara_clicked()
     dataToTcpCommObj[22]=this->ui->servoPara_CWCCW->currentIndex();
     //qDebug()<<"homming dir, current index"<<dataToTcpCommObj[22];
     dataToTcpCommObj[23]=0x00;
+    //set servo para
     if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
         emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    //query station&&servo para
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(this->tempTooling_editting->prepareCommand_getstationParaFromPLC());
 }
 
 void MainWindow::on_btn_setStationPara_clicked()
@@ -2894,11 +3299,7 @@ void MainWindow::on_actionautoRun_triggered()
     this->changePage(4);
     //this->ui->stackedWidget_mainProgram->setCurrentIndex(4);
 }
-void MainWindow::on_actionWeld_By_Manual_triggered()
-{
-    this->changePage(1);
-    //this->ui->stackedWidget_mainProgram->setCurrentIndex(1);
-}
+
 void MainWindow::on_pushButton_weldByManual_checkAlarm_clicked()
 {
     this->changePage(3);
@@ -3375,7 +3776,7 @@ void MainWindow::on_toolID_Editting_valueChanged(int arg1)
           qDebug()<<"load done,file name:"<<fileName;
           this->updateDisplay_All_EdittingValue();
           this->ui->toolName_lineEdit->setText(this->tempTooling_editting->toolingName);
-          this->ui->toolImageUrl->setText(this->tempTooling_editting->toolingImageSource);
+          //this->ui->toolImageUrl->setText(this->tempTooling_editting->toolingImageSource);
           if(!this->tempTooling_editting->toolingImageSource.isEmpty())
 
               this->ui->toolingPicLabel->setPixmap(QPixmap(this->tempTooling_editting->toolingImageSource));
@@ -3393,7 +3794,7 @@ void MainWindow::on_toolID_Editting_valueChanged(int arg1)
     }
 
     //set PLC components and value visible or not
-    if((this->toolID_editing!=this->toolID_PLC)||(!this->tcpConnectionStatus_receive)||(!this->tcpConnectionStatus_send))
+    if((!this->tcpConnectionStatus_receive)||(!this->tcpConnectionStatus_send)||this->toolID_editing!=this->toolID_PLC)
     {
 
         this->setPLCValueVisible(false);
@@ -3428,7 +3829,7 @@ void MainWindow::on_btn_selectToolingImage_clicked()
                                                     tr("Images (*.png *.xpm *.jpg)"));
     if(!fileName.isEmpty())
     {
-        this->ui->toolImageUrl->setText(fileName);
+        //this->ui->toolImageUrl->setText(fileName);
         this->tempTooling_editting->toolingImageSource=fileName;
         this->ui->toolingPicLabel->setPixmap(QPixmap(fileName));
     }
@@ -3437,13 +3838,7 @@ void MainWindow::on_btn_selectToolingImage_clicked()
 void MainWindow::on_btn_saveToDisk_clicked()
 {
 
-   //To DO
     QString fileName="toolingConfig/toolingConfig_"+QString::number(this->ui->toolID_Editting->value())+".dc";
-    if(!QFile::exists(fileName))
-    {
-       QDir dir1(fileName);
-       dir1.mkdir("./toolingConfig");
-    }
     this->tempTooling_editting->saveToDisk(fileName);
     this->tempTooling_editting->saveToDisk("toolingConfig/currentTooling.dc");
 }
@@ -3454,6 +3849,8 @@ void MainWindow::on_toolID_fromPLC_valueChanged(int arg1)
 {
     if(this->toolID_PLC!=arg1)
         this->toolID_PLC=arg1;
+    if(this->toolID_PLC==this->toolID_editing&&(this->tcpConnectionStatus_receive)&&(this->tcpConnectionStatus_send))
+        this->setPLCValueVisible(true);
 }
 
 void MainWindow::on_checkBox_GenEnable_1_stateChanged(int arg1)
@@ -3593,11 +3990,6 @@ void MainWindow::on_spinBox_pointPara_afterburstDelay_valueChanged(int arg1)
 void MainWindow::on_spinBox_pointPara_downPressure_valueChanged(int arg1)
 {
     this->tempTooling_editting->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()].thrusterPressure_down=arg1;
-}
-
-void MainWindow::on_spinBox_pointPara_upPressure_valueChanged(int arg1)
-{
-    this->tempTooling_editting->plcToolingInfo.weldPoint_List[this->ui->spinBox_PointNO_pointPara->value()].thrusterPressure_up=arg1;
 }
 
 void MainWindow::on_spinBox_timeLowerLimit_BAD_valueChanged(int arg1)
@@ -3897,7 +4289,7 @@ void MainWindow::on_btn_setToAllPoints_clicked()
             continue;
         this->tempTooling_editting->plcToolingInfo.weldPoint_List[i].ultrasonicPara=wp1->ultrasonicPara;
         this->tempTooling_editting->plcToolingInfo.weldPoint_List[i].thrusterPressure_down=wp1->thrusterPressure_down;
-        this->tempTooling_editting->plcToolingInfo.weldPoint_List[i].thrusterPressure_up=wp1->thrusterPressure_up;
+        //this->tempTooling_editting->plcToolingInfo.weldPoint_List[i].thrusterPressure_up=wp1->thrusterPressure_up;
     }
 }
 
@@ -3936,7 +4328,7 @@ void MainWindow::on_btn_downLoadToPLC_clicked()
        emit this->sendDataToTCPCommObj(arl1.at(i));
        this->ui->btn_downLoadToPLC->setText("downloading,Item:"+QString::number(i));
        QEventLoop eventloop;
-       QTimer::singleShot(100, &eventloop, SLOT(quit()));
+       QTimer::singleShot(200, &eventloop, SLOT(quit()));
        eventloop.exec();
 
     }
@@ -4384,6 +4776,7 @@ void MainWindow::on_btn_PLC2Edit_FilmFeeder_clicked()
 }
 
 
+
 void MainWindow::on_ToolingChange_valveNO_valueChanged(int arg1)
 {
     this->ui->comboBox_ValveType_toolingChange->setCurrentIndex
@@ -4483,8 +4876,26 @@ void MainWindow::on_btn_Edit2PLC_PartSensor_clicked()
     dataToTcpCommObj[10]=bb1.byteChar;//sensors enable status in Byte
     dataToTcpCommObj[11]=0x00;//reserve
 
+    //query part sensor status
+    dataToTcpCommObj[12]=0x00;//length high byte
+    dataToTcpCommObj[13]=0x0C;//length low byte
+    dataToTcpCommObj[14]=0x00;//commandNO high byte
+    dataToTcpCommObj[15]=0x70;//commandNO low byte,112
+    dataToTcpCommObj[16]=0x00;//reserve byte
+    dataToTcpCommObj[17]=0x00;//reserve byte
+    dataToTcpCommObj[18]=0x02;//0x01=set,0x02=get
+    dataToTcpCommObj[19]=0x01;//0x01=part sensor,0x02=valve sensor
+    dataToTcpCommObj[20]=0x00;//valve NO
+
+    dataToTcpCommObj[21]=0x00;//sensors enable status in Byte
+
+    dataToTcpCommObj[22]=0x00;//sensors enable status in Byte
+    dataToTcpCommObj[23]=0x00;//reserve
+
+
     if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
         emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+
 }
 
 void MainWindow::on_btn_refresh_PartSensor_clicked()
@@ -4633,6 +5044,19 @@ void MainWindow::on_btn_Edit2PLC_valveSensor_clicked()
     bb1.bits.b6=this->ui->checkBox_ValveRetractSensorBypass_6->isChecked();
     dataToTcpCommObj[10]=bb1.byteChar;//sensors enable status in Byte
     dataToTcpCommObj[11]=0x00;//reserve
+    //query valve sensor bypass status
+    dataToTcpCommObj[12]=0x00;//length high byte
+    dataToTcpCommObj[13]=0x0C;//length low byte
+    dataToTcpCommObj[14]=0x00;//commandNO high byte
+    dataToTcpCommObj[15]=0x70;//commandNO low byte,112
+    dataToTcpCommObj[16]=0x00;//reserve byte
+    dataToTcpCommObj[17]=0x00;//reserve byte
+    dataToTcpCommObj[18]=0x02;//0x01=set,0x02=get
+    dataToTcpCommObj[19]=0x02;//0x01=part sensor,0x02=valve sensor
+    dataToTcpCommObj[20]=this->ui->sensorBypass_valveNO->value();//valve NO
+    dataToTcpCommObj[21]=0x00;//sensors enable status in Byte
+    dataToTcpCommObj[22]=0x00;//sensors enable status in Byte
+    dataToTcpCommObj[23]=0x00;//reserve
 
     if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
         emit this->sendDataToTCPCommObj(dataToTcpCommObj);
@@ -4732,4 +5156,442 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
     qDebug()<<"page changed,current page:"<<this->pageInfo1.currentPage_Index_mainStackWidget;
 
 
+}
+
+void MainWindow::on_btn_filmfeeder_JOG1_weldByManual_toggled(bool checked)
+{
+    if(checked)
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x0D;//13 Jog1
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+    else
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x00;//stop
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+}
+void MainWindow::on_btn_filmfeeder_JOG2_weldByManual_toggled(bool checked)
+{
+    if(checked)
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x0E;//14 Jog2
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+    else
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x00;//stop
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+}
+void MainWindow::on_btn_filmfeeder_RunSpeed__weldByManual_toggled(bool checked)
+{
+    if(checked)
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x0B;//11 run speed
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+    else
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x00;//stop
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+}
+void MainWindow::on_btn_filmfeeder_RunRelative__weldByManual_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0A;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x0C;//12 run relative_1
+    dataToTcpCommObj[7]=0x00;//reserve
+    dataToTcpCommObj[8]=0x00;//reserve
+    dataToTcpCommObj[9]=0x00;//reserve
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+void MainWindow::on_btn_filmfeeder_RunRelative__weldByManual_2_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0A;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x0F;//15 run relative_2
+    dataToTcpCommObj[7]=0x00;//reserve
+    dataToTcpCommObj[8]=0x00;//reserve
+    dataToTcpCommObj[9]=0x00;//reserve
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+void MainWindow::on_btn_filmfeeder_JOG1_toggled(bool checked)
+{
+    if(checked)
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x0D;//13 Jog1
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+    else
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x00;//stop
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+}
+void MainWindow::on_btn_filmfeeder_JOG2_toggled(bool checked)
+{
+    if(checked)
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x0E;//14 Jog2
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+    else
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x00;//stop
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+}
+void MainWindow::on_btn_filmfeeder_RunSpeed_toggled(bool checked)
+{
+    if(checked)
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x0B;//11 run speed
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+    else
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x00;//stop
+        dataToTcpCommObj[7]=0x00;//reserve
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+}
+void MainWindow::on_btn_filmfeeder_RunRelative_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0A;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x0C;//12 run relative_1
+    dataToTcpCommObj[7]=0x00;//reserve
+    dataToTcpCommObj[8]=0x00;//reserve
+    dataToTcpCommObj[9]=0x00;//reserve
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+void MainWindow::on_btn_filmfeeder_RunRelative_2_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0A;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7D;//commandNO low byte,125
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x0F;//15 run relative_2
+    dataToTcpCommObj[7]=0x00;//reserve
+    dataToTcpCommObj[8]=0x00;//reserve
+    dataToTcpCommObj[9]=0x00;//reserve
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_actionWeldByManual_triggered()
+{
+    this->changePage(1);
+}
+void MainWindow::on_actionWeld_By_Manual_triggered()
+{
+
+
+}
+void MainWindow::on_actionToolingChange_triggered()
+{
+    this->changePage(7);
+}
+
+void MainWindow::on_btn_QueryServoPara_clicked()
+{
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(this->tempTooling_editting->prepareCommand_getstationParaFromPLC());
+}
+
+void MainWindow::on_btn_toLoadPos_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0A;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x79;//commandNO low byte,121
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x0F;//15 MDI
+    dataToTcpCommObj[7]=0x01;//MDI station NO
+    dataToTcpCommObj[8]=0x00;//reserve
+    dataToTcpCommObj[9]=0x00;//reserve
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_CheckAlarm_clicked()
+{
+    this->changePage(3);
+
+}
+
+void MainWindow::on_btn_leave_toolingConfig_clicked()
+{
+    this->changePage(1);
+}
+
+void MainWindow::on_btn_toToolingChange_clicked()
+{
+    this->changePage(7);
+}
+
+void MainWindow::on_btn_toToolingGonfig_clicked()
+{
+    this->changePage(0);
+}
+
+void MainWindow::on_btn_leave_toolingChange_clicked()
+{
+    this->changePage(1);
+}
+
+void MainWindow::on_btn_pointBypass_toPLC_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7F;//commandNO low byte,127
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x01;//01==set,02==get
+    dataToTcpCommObj[7]=this->ui->checkBox_PointBypass_retain->isChecked()?1:0;//retain flag
+    bytebits bb1;
+    bb1.bits.b0=this->ui->checkBox_PointBypass_point_1->isChecked()?true:false;
+    bb1.bits.b1=this->ui->checkBox_PointBypass_point_2->isChecked()?true:false;
+    bb1.bits.b2=this->ui->checkBox_PointBypass_point_3->isChecked()?true:false;
+    bb1.bits.b3=this->ui->checkBox_PointBypass_point_4->isChecked()?true:false;
+    bb1.bits.b4=this->ui->checkBox_PointBypass_point_5->isChecked()?true:false;
+    bb1.bits.b5=this->ui->checkBox_PointBypass_point_6->isChecked()?true:false;
+    bb1.bits.b6=this->ui->checkBox_PointBypass_point_7->isChecked()?true:false;
+    bb1.bits.b7=this->ui->checkBox_PointBypass_point_8->isChecked()?true:false;
+    dataToTcpCommObj[8]=bb1.byteChar;//point 1~8
+    bb1.bits.b0=this->ui->checkBox_PointBypass_point_9->isChecked()?true:false;
+    bb1.bits.b1=this->ui->checkBox_PointBypass_point_10->isChecked()?true:false;
+    bb1.bits.b2=this->ui->checkBox_PointBypass_point_11->isChecked()?true:false;
+    bb1.bits.b3=this->ui->checkBox_PointBypass_point_12->isChecked()?true:false;
+    bb1.bits.b4=this->ui->checkBox_PointBypass_point_13->isChecked()?true:false;
+    bb1.bits.b5=this->ui->checkBox_PointBypass_point_14->isChecked()?true:false;
+    bb1.bits.b6=this->ui->checkBox_PointBypass_point_15->isChecked()?true:false;
+    bb1.bits.b7=this->ui->checkBox_PointBypass_point_16->isChecked()?true:false;
+    dataToTcpCommObj[9]=bb1.byteChar;//point 9~16
+    dataToTcpCommObj[10]=0x00;//reserve
+    dataToTcpCommObj[11]=0x00;//reserve
+    //query bypass status after sent set command
+    dataToTcpCommObj[12]=0x00;//length high byte
+    dataToTcpCommObj[13]=0x0C;//length low byte
+    dataToTcpCommObj[14]=0x00;//commandNO high byte
+    dataToTcpCommObj[15]=0x7F;//commandNO low byte,127
+    dataToTcpCommObj[16]=0x00;//reserve byte
+    dataToTcpCommObj[17]=0x00;//reserve byte
+    dataToTcpCommObj[18]=0x02;//01==set,02==get
+    dataToTcpCommObj[19]=0x00;//retain flag
+    dataToTcpCommObj[20]=0x00;//point 1~8
+    dataToTcpCommObj[21]=0x00;//point 9~16
+    dataToTcpCommObj[22]=0x00;//reserve
+    dataToTcpCommObj[23]=0x00;//reserve
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_pointBypass_fromPLC_clicked()
+{
+    this->ui->checkBox_PointBypass_retain->setChecked(this->ui->CV_PointBypass_retain->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_1->setChecked(this->ui->CV_PointBypass_point_1->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_2->setChecked(this->ui->CV_PointBypass_point_2->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_3->setChecked(this->ui->CV_PointBypass_point_3->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_4->setChecked(this->ui->CV_PointBypass_point_4->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_5->setChecked(this->ui->CV_PointBypass_point_5->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_6->setChecked(this->ui->CV_PointBypass_point_6->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_7->setChecked(this->ui->CV_PointBypass_point_7->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_8->setChecked(this->ui->CV_PointBypass_point_8->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_9->setChecked(this->ui->CV_PointBypass_point_9->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_10->setChecked(this->ui->CV_PointBypass_point_10->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_11->setChecked(this->ui->CV_PointBypass_point_11->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_12->setChecked(this->ui->CV_PointBypass_point_12->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_13->setChecked(this->ui->CV_PointBypass_point_13->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_14->setChecked(this->ui->CV_PointBypass_point_14->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_15->setChecked(this->ui->CV_PointBypass_point_15->isChecked()?true:false);
+    this->ui->checkBox_PointBypass_point_16->setChecked(this->ui->CV_PointBypass_point_16->isChecked()?true:false);
+
+}
+
+void MainWindow::on_btn_pointBypass_refresh_clicked()
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0C;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x7F;//commandNO low byte,127
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=0x02;//01==set,02==get
+    dataToTcpCommObj[7]=0x00;//retain flag
+    dataToTcpCommObj[8]=0x00;//point 1~8
+    dataToTcpCommObj[9]=0x00;//point 9~16
+    dataToTcpCommObj[10]=0x00;//reserve
+    dataToTcpCommObj[11]=0x00;//reserve
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+void MainWindow::on_btn_pointBypass_clicked()
+{
+    this->ui->stackedWidget_run->setCurrentIndex(1);
+}
+
+void MainWindow::on_btn_run_monitor_clicked()
+{
+    this->ui->stackedWidget_run->setCurrentIndex(0);
 }

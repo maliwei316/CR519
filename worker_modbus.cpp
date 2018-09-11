@@ -9,8 +9,14 @@
 #include "myevent.h"
 #include <QVariant>
 #include <bitsoperation.h>
+
+extern bool loggingEnable;
+extern quint8 loggingLevel;
+
 worker_modbus::worker_modbus(QObject *parent): QObject(parent)
-{}
+{
+
+}
 
 void worker_modbus::onInit(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count)
 {
@@ -26,6 +32,9 @@ void worker_modbus::onInit(QString IPAddr, int port, int DI_Var_count, int DO_Va
     this->timerEnableFlag=true;
     this->timer=new QTimer;
     this->setVarCounts(DI_Var_count,DO_Var_count,HoldRegister_Var_count);
+    this->maModbusTcpClient=new QModbusTcpClient();
+    this->maModbusTcpClient->setConnectionParameter(QModbusDevice::NetworkAddressParameter,this->IPAddr);
+    this->maModbusTcpClient->setConnectionParameter(QModbusDevice::NetworkPortParameter,this->port);
     this->connectPLC();
 }
 void worker_modbus::setVarCounts(int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count)
@@ -42,10 +51,8 @@ void worker_modbus::setVarCounts(int DI_Var_count,int DO_Var_count,int HoldRegis
 bool worker_modbus::connectPLC()
 {
 
-    this->maModbusTcpClient=new QModbusTcpClient();
     bool connectedStatus=false;
-    this->maModbusTcpClient->setConnectionParameter(QModbusDevice::NetworkAddressParameter,this->IPAddr);
-    this->maModbusTcpClient->setConnectionParameter(QModbusDevice::NetworkPortParameter,this->port);
+
     if(this->maModbusTcpClient->connectDevice())
     {
         connectedStatus= true;
@@ -58,29 +65,56 @@ bool worker_modbus::connectPLC()
     else
     {
       connectedStatus=false;
-      qDebug() << this->maModbusTcpClient->errorString();
+      qDebug() << tr("failed to connected PLC via modbus,port:%1,error info:%2").arg(this->port)
+                  .arg(this->maModbusTcpClient->errorString());
+      if(loggingEnable&&loggingLevel>0)
+      emit this->logRequest(this->maModbusTcpClient->errorString(),5,0);
     }
 
     if(connectedStatus)
     {
-        qDebug()<<QTime::currentTime()<<"connectting to PLC at "<<this->IPAddr<<":"<<this->port;
-        //qDebug()<<"this.thread"<<this->thread();
-        //qDebug()<<"timer.thread(before moving)"<<timer->thread();
-        //timer.moveToThread(this->thread());
-        //qDebug()<<"timer.thread(after moving)"<<timer->thread();
-        qDebug()<<"this->maModbusTcpClient.thread"<<this->maModbusTcpClient->thread();
+
+        if(loggingEnable&&loggingLevel>0)
+        {
+            QString logcontents=tr("Time:%1,connectting to PLC at %2 :%3 ")
+                    .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz")).arg(this->IPAddr).arg(this->port);
+            emit this->logRequest(logcontents,10,0);
+        }
 
     }
     else
     {
       qDebug()<<QTime::currentTime()<<"failed to connect to PLC"<<this->IPAddr<<":"<<this->port;
       qDebug()<<"QModbusTcpClient State:"<<this->maModbusTcpClient->state();
+      if(loggingEnable&&loggingLevel>0)
+      {
+          QString logcontents=tr("Time:%1,failed to connect to PLC at %2 :%3 ")
+                  .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz")).arg(this->IPAddr).arg(this->port);
+          emit this->logRequest(logcontents,15,0);
+      }
     }
     return connectedStatus;
 }
 void worker_modbus::onStateChanged(QModbusDevice::State state)
 {
-  qDebug()<<QTime::currentTime()<<"state changed:"<<state;
+  //qDebug()<<QTime::currentTime()<<"state changed:"<<state;
+    QString strState;
+    switch (state) {
+    case QModbusDevice::ConnectedState:
+        strState=tr("connected,IP:%1:%2").arg(this->IPAddr).arg(this->port);
+        break;
+
+    default:
+        strState=tr("disconnected,IP:%1:%2").arg(this->IPAddr).arg(this->port);
+        break;
+    }
+  if(loggingEnable&&loggingLevel>0)
+  {
+      QString logcontents=tr("Time:%1,state changed:%2")
+              .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz")).arg(strState);
+      emit this->logRequest(logcontents,20,0);
+  }
+
   if(state==QModbusDevice::ConnectedState)
       this->connectedFlag=true;
   else
@@ -101,14 +135,23 @@ void worker_modbus::onStateChanged(QModbusDevice::State state)
   }
   else
   {
-     QObject::disconnect(timer, &QTimer::timeout, this, &worker_modbus::readPLCByInterval);
-     timer->stop();
+
+      QObject::disconnect(timer, &QTimer::timeout, this, &worker_modbus::readPLCByInterval);
+      timer->stop();
   }
 
 }
 void worker_modbus::onErrorOccurred(QModbusDevice::Error error)
 {
-  qDebug()<<"error occured:"<<error<<this->maModbusTcpClient->errorString();
+
+  if(loggingEnable&&loggingLevel>0)
+  {
+      QString logcontents=tr("Time:%1,modbus error:%2")
+              .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz")).arg(this->maModbusTcpClient->errorString());
+      emit this->logRequest(logcontents,25,0);
+  }
+
+
 }
 void worker_modbus::readPLCByInterval()
 {
@@ -120,7 +163,13 @@ void worker_modbus::readPLCByInterval()
 
     if(this->connectedFlag)
    {
-      //qDebug()<<QTime::currentTime()<<"readPLCtoRealtimeDB executed,thread"<<QThread::currentThread();
+//        if(loggingEnable&&loggingLevel>0)
+//        {
+//            QString logcontents=tr("Time:%1,read PLC by interval executed,IP:%2:%3")
+//                    .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz")).arg(this->IPAddr).arg(this->port);
+//            emit this->logRequest(logcontents,30,0);
+//        }
+
        if(this->DO_enable)
        {
            //qDebug()<<QTime::currentTime()<<"DO reading started";
@@ -155,7 +204,13 @@ void worker_modbus::readPLCByInterval()
    }
     else
     {
-       qDebug()<<"timer is running while modbus is not connected";
+       //qDebug()<<"timer is running while modbus is not connected";
+       if(loggingEnable&&loggingLevel>0)
+       {
+           QString logcontents=tr("Time:%1,timer is running while modbus is not connected,IP:%2:%3")
+                   .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz")).arg(this->IPAddr).arg(this->port);
+           emit this->logRequest(logcontents,30,0);
+       }
     }
     //reset checking status
     this->checkingConnectionStatus=false;
@@ -421,6 +476,13 @@ void worker_modbus:: readReady2()
             qint16 length=unit.valueCount();
             //qDebug()<<QTime::currentTime()<<tr("PLC reply data count:%1,tableName:%2,area:%3")
                    //.arg(length).arg(tableName).arg(area);
+//            if(loggingEnable&&loggingLevel>0)
+//            {
+//                QString logcontents=tr("Time:%1,PLC reply data count:%2,tableName:%3,area:%4")
+//                        .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+//                        .arg(length).arg(tableName).arg(area);
+//                emit this->logRequest(logcontents,35,0);
+//            }
 
            QVariantList addressList,valueList;
 
@@ -445,14 +507,29 @@ void worker_modbus:: readReady2()
         }
         else if (reply->error() == QModbusDevice::ProtocolError)
         {
-                      qDebug()<<tr("Read response error: %1 (Mobus exception: 0x%2)").
-                      arg(reply->errorString()).
-                      arg(reply->rawResult().exceptionCode(), -1, 16);
+                      //qDebug()<<tr("Read response error: %1 (Mobus exception: 0x%2)").
+                      //arg(reply->errorString()).
+                      //arg(reply->rawResult().exceptionCode(), -1, 16);
+                      if(loggingEnable&&loggingLevel>0)
+                      {
+                          QString logcontents=tr("Time:%1,Read response error: %2 (Mobus exception: 0x%3)")
+                                  .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                                  .arg(reply->errorString()).arg(reply->rawResult().exceptionCode(), -1, 16);
+                          emit this->logRequest(logcontents,35,0);
+                      }
+
         }
         else {
-            qDebug()<<tr("Read response error: %1 (code: 0x%2)").
-                                        arg(reply->errorString()).
-                                        arg(reply->error(), -1, 16);
+            //qDebug()<<tr("Read response error: %1 (code: 0x%2)").
+                                        //arg(reply->errorString()).
+                                        //arg(reply->error(), -1, 16);
+            if(loggingEnable&&loggingLevel>0)
+            {
+                QString logcontents=tr("Time:%1,Read response error: %2 (Mobus exception: 0x%3)")
+                        .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                        .arg(reply->errorString()).arg(reply->error(), -1, 16);
+                emit this->logRequest(logcontents,35,0);
+            }
         }
 
         reply->deleteLater();
@@ -566,28 +643,37 @@ void worker_modbus::writePLCCommand(quint16 functionCode, quint16 Address, const
 }
 void worker_modbus::onCheckConnectionStatus()
 {
-    qDebug()<<QTime::currentTime()<<"checking modbus connection on going";
+    //qDebug()<<QTime::currentTime()<<"checking modbus connection on going";
+    QString connectStatusInfo;
     this->checkingConnectionStatus=true;
     switch (this->maModbusTcpClient->state()) {
 
     case QModbusDevice::UnconnectedState:
 
-        qDebug("The device is disconnected");
+        connectStatusInfo="The device is disconnected";
+        //this->connectPLC();
 
         break;
     case QModbusDevice::ConnectingState:
-        qDebug("The device is being connected.");
+        connectStatusInfo="The device is being connected.";
         break;
     case QModbusDevice::ConnectedState:
-        qDebug("The device is connected to the Modbus network");
+        connectStatusInfo="The device is connected to the Modbus network";
         break;
     case QModbusDevice::ClosingState:
-        qDebug("The device is being closed.");
+        connectStatusInfo="The device is being closed.";
         break;
 
     default:
         break;
     }
+//    if(loggingEnable&&loggingLevel>0)
+//    {
+//        QString logcontents=tr("Time:%1,status: %2,IP:%3:%4")
+//                .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+//                .arg(connectStatusInfo).arg(this->IPAddr).arg(this->port);
+//        emit this->logRequest(logcontents,35,0);
+//    }
 }
 worker_modbus::~worker_modbus()
 {
@@ -651,9 +737,15 @@ void worker_modbus:: resetPLCCoilsTest()
                 });
             }
             else {
-               qDebug()<<"broadcast replies return immediately210";
+                if(loggingEnable&&loggingLevel>0)
+                {
+                    QString logcontents=tr("Time:%1,broadcast replies return immediately,IP:%2:%3")
+                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                            .arg(this->IPAddr).arg(this->port);
+                    emit this->logRequest(logcontents,35,0);
+                }
+                //qDebug()<<"broadcast replies return immediately210";
                 reply->deleteLater();
-
             }
         }
     else {

@@ -296,7 +296,7 @@ typedef struct _weldPoint
 
     iQSettings ultrasonicPara;
     Word thrusterPressure_down;
-    Word thrusterPressure_up;
+    Word thrusterPressure_up_reserve;
     Byte enable;
     Byte reservedByte2;
 
@@ -384,6 +384,18 @@ typedef struct servoRealtimeData
     qint32 realTimePos;
 }servoRealTimeData;
 
+typedef struct _pointCylceData
+{
+    quint8 pointNO;
+    quint8 genNO;
+    quint8 weldResult;//0=unwelded,1=good,2=suspect,3=bad
+    quint8 channelCode;
+    quint16 weldTime;
+    quint16 peakPower;
+    quint16 weldEnergy;
+    quint16 thrusterDownPressure;
+}pointCycleData;
+
 typedef struct _plcItem
 {
 
@@ -441,6 +453,7 @@ typedef struct _plcItem
         this->currentValue.wordVar=(this->currentValue.wordVar & ~(1U<<(bitPosInWord-1)));
     }
 }plcItem;
+
 Q_DECLARE_METATYPE(plcItem)
 
 typedef struct _alarmItem
@@ -451,6 +464,19 @@ typedef struct _alarmItem
     QString leaveTime;
 
     }alarmItem;
+typedef struct _plcVarTable
+{
+    quint8 work_Mode;//2==manual mode,3==auto mode
+    quint8 toolID_sensor_detected=0;
+    quint8 toolID_current_inPLC=0;
+    bool anyFault=false;
+    bool somePointWelded;
+    quint8 currentStepNO=0;
+    quint8 currentPointNO_gen1=0;
+    quint8 currentPointNO_gen2=0;
+    quint8 currentPointNO_gen3=0;
+    quint8 currentPointNO_gen4=0;
+    }plcVarTable;
 typedef struct _barcodeSetting
 {
     bool   enable=false;

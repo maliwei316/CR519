@@ -24,7 +24,7 @@ public:
     QByteArray prepareCommand_uploadWholeSettingFromPLC();
     QByteArrayList prepareCommand_downloadWholeSettingToPLC();
 signals:
-
+void logRequest(QString logContents,quint16 logID,quint8 logLevel);
 public slots:
 public:
     QString toolingName;

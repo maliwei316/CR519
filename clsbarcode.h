@@ -10,8 +10,7 @@ class clsBarcode : public QSerialPort
 public:
     explicit clsBarcode(QObject *parent = nullptr);
     QString autoGenerateBarcode(QString L_R="AUTO_");
-    QString getBarcode();
-    void hanldeError(QSerialPort::SerialPortError);
+
 
 signals:
 

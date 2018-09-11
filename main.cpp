@@ -13,7 +13,8 @@
 #include "tcp_comm.h"
 #include "mainwindow.h"
 #include <clsbarcode.h>
-
+bool loggingEnable=true;
+quint8 loggingLevel=99;
 
 int main(int argc, char *argv[])
 {
@@ -24,7 +25,6 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
 
     MainWindow w;
-    clsBarcode bar1;
 
     qRegisterMetaType<QModbusDevice::State>();
     qRegisterMetaType<QModbusDevice::Error>();
@@ -37,12 +37,10 @@ int main(int argc, char *argv[])
     QString filename="HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3";
     dbhc2.init("QSQLITE","HistoryDataDB",filename);
     mbc_controller mbcc1;
-    mbcc1.init("169.254.0.2",502,300,0,20);
+    mbcc1.init("10.168.1.2",502,300,0,20);
     mbc_controller mbcc2;
-    mbcc2.init("169.254.0.2",503,0,0,30);
-    tcp_comm tcpcomm1(2000,2001);
-
-    //QObject::connect(&tcpcomm1,&tcp_comm::writeBackReceivedData,&tcpcomm1,&tcp_comm::writeDataViaTCP);
+    mbcc2.init("10.168.1.2",503,0,0,30);
+    tcp_comm tcpcomm1;
 
     //qDebug()<<"mbcc1.thread:"<<mbcc1.thread();
 //    engine.rootContext()->setContextProperty("mbcc1",&mbcc1);
@@ -67,6 +65,15 @@ int main(int argc, char *argv[])
    QObject::connect(&tcpcomm1,&tcp_comm::sendDataToWindow,&w,&MainWindow::receiveDataFromTCPCommObj);
    QObject::connect(&tcpcomm1,&tcp_comm::tcpCommConnectionStateChanged,&w,&MainWindow::OnTcpCommConnectionStateChanged);
    QObject::connect(&w,&MainWindow::checkTcpConnectionStatus,&tcpcomm1,&tcp_comm::reportConnectionStatus);
+   //logging
+   QObject::connect(&mbcc1,&mbc_controller::logRequest,&w,&MainWindow::execLogging);
+   QObject::connect(&mbcc1,&mbc_controller::logRequest,&w,&MainWindow::execLogging);
+   QObject::connect(&tcpcomm1,&tcp_comm::logRequest,&w,&MainWindow::execLogging);
+   QObject::connect(&dbhc1,&dbh_controller::logRequest,&w,&MainWindow::execLogging);
+   QObject::connect(&dbhc2,&dbh_controller::logRequest,&w,&MainWindow::execLogging);
+
+
+
    w.show();
     return a.exec();
 

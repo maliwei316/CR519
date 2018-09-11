@@ -12,7 +12,7 @@ class tcp_comm : public QObject
 
 
 public:
-    explicit tcp_comm(int portReceive, int portSend,QObject *parent = nullptr);
+    explicit tcp_comm(QString remoteIP="10.168.1.2", int portReceive_local=2000, int portSend_local=2001, int portReceive_remote=2001, int portSend_remote=2000, QObject *parent = nullptr);
     ~tcp_comm();
     int writeDataViaTCP(QByteArray dataToWrite);
     void parseDataFromPLC(const QByteArray& dataToParse);
@@ -20,6 +20,7 @@ signals:
 
     void sendDataToWindow(QByteArray dataToWindow);
     void tcpCommConnectionStateChanged(QAbstractSocket::SocketState state,quint8 ConnectionID);
+    void logRequest(QString logContents,quint16 logID,quint8 logLevel);
 
 public slots:
 
@@ -32,13 +33,12 @@ public slots:
     void reportConnectionStatus();
 public:
     QTcpServer *tcpServer = nullptr;
-    //QVector<QString> fortunes;
-    //QNetworkSession *networkSession = nullptr;
+
     QTcpSocket *clientConnection_receive=nullptr;
     QTcpSocket *clientConnection_send=nullptr;
     int port=0;
     QByteArray receivedDataFromPLC;
-    //QQueue<QByteArray> dataToSend;
+
     QByteArray dataToSend;
 
 

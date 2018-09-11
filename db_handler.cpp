@@ -2,6 +2,10 @@
 #include <QEvent>
 #include "myevent.h"
 #include <QtSql>
+
+extern bool loggingEnable;
+extern quint8 loggingLevel;
+
 DB_Handler::DB_Handler(QObject *parent): QObject(parent)
 {}
 void DB_Handler::onInit(QString dbDriverName, QString dbConnectionName, QString databaseName)

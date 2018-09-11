@@ -1,5 +1,8 @@
 #include "clstooling.h"
 #include <QDebug>
+#include <QDir>
+extern bool loggingEnable;
+extern quint8 loggingLevel;
 
 clsTooling::clsTooling(QObject *parent) : QObject(parent)
 {
@@ -328,10 +331,10 @@ void clsTooling::readJason(const QJsonObject &json)
                         {
                             this->plcToolingInfo.weldPoint_List[i].thrusterPressure_down=qjobj1["thrusterPressure_down"].toInt();
                         }
-                        if(qjobj1.contains("thrusterPressure_up"))
-                        {
-                            this->plcToolingInfo.weldPoint_List[i].thrusterPressure_up=qjobj1["thrusterPressure_up"].toInt();
-                        }
+//                        if(qjobj1.contains("thrusterPressure_up"))
+//                        {
+//                            this->plcToolingInfo.weldPoint_List[i].thrusterPressure_up=qjobj1["thrusterPressure_up"].toInt();
+//                        }
                         if(qjobj1.contains("ultrasonicPara")&&qjobj1["ultrasonicPara"].isObject())
                         {
                             ;
@@ -532,7 +535,7 @@ void clsTooling::readJason(const QJsonObject &json)
 void clsTooling::writeJason(QJsonObject &json)
 {
 
-          qDebug()<<"start to write Json";
+          //qDebug()<<"start to write Json";
           json["toolingName"] =this->toolingName;
           json["toolingImageSource"]=this->toolingImageSource;
           json["pointNameMapping"]=QJsonArray::fromStringList(this->pointNameMapping);
@@ -573,7 +576,7 @@ void clsTooling::writeJason(QJsonObject &json)
           plcToolingInfo["servoSpeed_medium"]=this->plcToolingInfo.servoSpeed_medium;
           plcToolingInfo["servoSpeed_low"]=this->plcToolingInfo.servoSpeed_low;
           plcToolingInfo["toolingNO"]=this->plcToolingInfo.toolingNO;
-          qDebug()<<"write Json,555";
+          //qDebug()<<"write Json,555";
           QStringList  generator_enable_list;
           for(int i=0;i<8;i++)
           {
@@ -664,7 +667,7 @@ void clsTooling::writeJason(QJsonObject &json)
             weldPointItem["stepNO"]=this->plcToolingInfo.weldPoint_List[i].stepNO;
             weldPointItem["ThrusterNO"]=this->plcToolingInfo.weldPoint_List[i].ThrusterNO;
             weldPointItem["thrusterPressure_down"]=this->plcToolingInfo.weldPoint_List[i].thrusterPressure_down;
-            weldPointItem["thrusterPressure_up"]=this->plcToolingInfo.weldPoint_List[i].thrusterPressure_up;
+            //weldPointItem["thrusterPressure_up"]=this->plcToolingInfo.weldPoint_List[i].thrusterPressure_up;
             if(true)
             {
                 QJsonObject US_Para;
@@ -714,7 +717,7 @@ void clsTooling::writeJason(QJsonObject &json)
             weldPointItem.remove("stepNO");
             weldPointItem.remove("ThrusterNO");
             weldPointItem.remove("thrusterPressure_down");
-            weldPointItem.remove("thrusterPressure_up");
+            //weldPointItem.remove("thrusterPressure_up");
             weldPointItem.remove("ultrasonicPara");
 
           }
@@ -766,13 +769,9 @@ void clsTooling::writeJason(QJsonObject &json)
 bool clsTooling::saveToDisk(QString fileName)
 {
          QFile saveFile(fileName);
-         if(!QFile::exists(fileName))
-         {
-
-         }
-
          if (!saveFile.open(QIODevice::WriteOnly)) {
-             qWarning("Couldn't open save file.");
+             qWarning()<<tr("Couldn't open save file,fileName:%1").arg(fileName);
+             //qWarning("Couldn't open save file.");
              return false;
          }
          else
@@ -794,7 +793,8 @@ bool clsTooling::loadFromDisk(QString fileName)
     QFile loadFile(fileName);
 
          if (!loadFile.open(QIODevice::ReadOnly)) {
-             qWarning("Couldn't open save file.");
+             qWarning()<<tr("Couldn't open save file,fileName:%1").arg(fileName);
+             //qWarning("Couldn't open save file.");
              return false;
          }
 
@@ -1051,6 +1051,8 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
             wp2.ThrusterNO=this->plcToolingInfo.weldPoint_List[i].ThrusterNO;//thrusterNO
             wp2.stepNO=this->plcToolingInfo.weldPoint_List[i].stepNO;//stepNO;
             wp2.enable=this->plcToolingInfo.weldPoint_List[i].enable?1:0;//enable/disable
+            wp2.thrusterPressure_down=this->plcToolingInfo.weldPoint_List[i].thrusterPressure_down*(3868-228)/500+228;
+            //wp2.thrusterPressure_down=BigLittleSwap16(wp2.thrusterPressure_down);
             //swap high and low bytes to adapt Siemens PLC's store method
             wp2.ultrasonicPara.Ramp_up_Time20to1250=BigLittleSwap16(wp2.ultrasonicPara.Ramp_up_Time20to1250);//B4-B5
             wp2.ultrasonicPara.Ramp_Down_TIme0to250=BigLittleSwap16(wp2.ultrasonicPara.Ramp_Down_TIme0to250);//B6-B7

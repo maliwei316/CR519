@@ -18,7 +18,7 @@ public:
     void init(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count);
 
 signals:
-
+    void logRequest(QString logContents,quint16 logID,quint8 logLevel);
     void needInit(QString IPAddr, int port, int DI_Var_count, int DO_Var_count, int HoldRegister_Var_count);
     void needWriteDatabase(QString sqlquery);
     void needbatchWriteDatabase(QString prepareStr,QVariantList addressList,QVariantList valueList);

@@ -38,6 +38,7 @@ signals:
     void modbusStateChanged(QModbusDevice::State state);
     void modbusErrorOccured(QModbusDevice::Error error);
     void plcItemsChanged(QVariantList changedItems);
+    void logRequest(QString logContents,quint16 logID,quint8 logLevel);
 public slots:
     void onInit(QString IPAddr,int port,int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count);
     void readReady2();

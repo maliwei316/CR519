@@ -25,6 +25,7 @@ public:
     //void readRealtimeDataFromDatabase(quint16 requesterObjID,QString tableName,quint16 address);
 signals:
     dataReadyDB2GUI(quint16 reqesterID,quint16 address, quint16 value);
+    void logRequest(QString logContents,quint16 logID,quint8 logLevel);
 public slots:
     void onInit(QString dbDriverName, QString dbConnectionName,QString databaseName);
     void onAddTaskToEventQueue_writeDB(QString sqlquery);

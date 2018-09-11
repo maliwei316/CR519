@@ -5,77 +5,111 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QTime>
+
+extern bool loggingEnable;
+extern quint8 loggingLevel;
+
 #pragma pack(1)
 
-tcp_comm::tcp_comm(int portReceive, int portSend,QObject *parent) : QObject(parent)
+tcp_comm::tcp_comm(QString remoteIP,int portReceive_local, int portSend_local,int portReceive_remote, int portSend_remote, QObject *parent) : QObject(parent)
 {
 
-     this->tcpServer=new QTcpServer(this);
+     //this->tcpServer=new QTcpServer(this);
      this->clientConnection_receive=new QTcpSocket(this);
      this->clientConnection_send=new QTcpSocket(this);
-     //receive socket
-      if(tcpServer->isListening())
-         tcpServer->close();
-      if (!tcpServer->listen(QHostAddress::AnyIPv4,portReceive))
-      {
-          qDebug()<<tr("Unable to start the server: %1.")
-                    .arg(tcpServer->errorString());
+    if(this->clientConnection_send->bind(portSend_local))
+    {
+        qDebug()<<"bind to port successful,portSend_local:"<<portSend_local;
+        this->clientConnection_send->connectToHost(remoteIP,portReceive_remote);
+        if(this->clientConnection_send->waitForConnected(5000))
+        {
+            //this->clientConnection_send = tcpServer->nextPendingConnection();
+            qDebug()<<"new connection detected,will send data via this port,peer port"<<this->clientConnection_send->peerPort();
+            connect(clientConnection_send,&QTcpSocket::stateChanged,this,&tcp_comm::onStateChanged);
+            connect(clientConnection_send, &QAbstractSocket::disconnected,clientConnection_send, &QObject::deleteLater);
 
-      }
-      else
-      {
-          if(tcpServer->waitForNewConnection(10000))
-          {
-              this->clientConnection_receive = tcpServer->nextPendingConnection();
-              qDebug()<<"new connection detected,will receive data from this port,peer port"<<this->clientConnection_receive->peerPort();
-              connect(clientConnection_receive,&QTcpSocket::stateChanged,this,&tcp_comm::onStateChanged);
-              connect(clientConnection_receive, &QAbstractSocket::disconnected,clientConnection_receive, &QObject::deleteLater);
-              //clientConnection->write(block);
-              //clientConnection->disconnectFromHost();
-              connect(clientConnection_receive,&QAbstractSocket::readyRead,this,&tcp_comm::onReadyRead);
-              //emit state to Window
-              //emit tcpCommConnectionStateChanged(this->clientConnection_receive->state(),2);
-          }
-          else
-          {
-             qDebug()<<"wait for connection from PLC timeout, will have no ability to received specified data from PLC";
-          }
+        }
+        else
+        {
+           qDebug()<<"wait for connection from PLC timeout, will have no ability to send specified data to PLC";
+        }
+    }
+    else
+    {
+       qDebug()<<"bind to port fail,port:"<<portSend_local;
+    }
+    if(this->clientConnection_receive->bind(portReceive_local))
+    {
+        qDebug()<<"bind to port successful,receivePort:"<<portReceive_local;
+        this->clientConnection_receive->connectToHost(remoteIP,portSend_remote);
+        if(this->clientConnection_receive->waitForConnected(5000))
+        {
+            //this->clientConnection_receive = tcpServer->nextPendingConnection();
+            qDebug()<<"new connection detected,will receive data from this port,peer port"<<this->clientConnection_receive->peerPort();
+            connect(clientConnection_receive,&QTcpSocket::stateChanged,this,&tcp_comm::onStateChanged);
+            connect(clientConnection_receive, &QAbstractSocket::disconnected,clientConnection_receive, &QObject::deleteLater);
 
+            connect(clientConnection_receive,&QAbstractSocket::readyRead,this,&tcp_comm::onReadyRead);
 
+        }
+        else
+        {
+           qDebug()<<"wait for connection from PLC timeout, will have no ability to received specified data from PLC";
+        }
 
-      }
+    }
+    else
+    {
+       qDebug()<<"bind to port fail,receive_port:"<<portReceive_local;
+    }
+
+//     //receive socket
+//      if(tcpServer->isListening())
+//         tcpServer->close();
+//      if (!tcpServer->listen(QHostAddress::AnyIPv4,portReceive))
+//      {
+//          //qDebug()<<tr("Unable to start the server: %1.")
+//                    //.arg(tcpServer->errorString());
+//          if(loggingEnable&&loggingLevel>0)
+//          {
+//              QString logcontents=tr("Time:%1,Unable to start the server: %2")
+//                      .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+//                      .arg(tcpServer->errorString());
+//              emit this->logRequest(logcontents,100,0);
+//          }
+
+//      }
+//      else
+
       //send socket
-      if(tcpServer->isListening())
-          tcpServer->close();
-      if (!tcpServer->listen(QHostAddress::AnyIPv4,portSend))
-      {
-          qDebug()<<tr("Unable to start the server: %1.")
-                    .arg(tcpServer->errorString());
+      //if(tcpServer->isListening())
+          //tcpServer->close();
+//      if (!tcpServer->listen(QHostAddress::AnyIPv4,portSend))
+//      {
+//          qDebug()<<tr("Unable to start the server: %1.")
+//                    .arg(tcpServer->errorString());
 
-      }
-      else
-      {
-          if(tcpServer->waitForNewConnection(10000))
-          {
-              this->clientConnection_send = tcpServer->nextPendingConnection();
-              qDebug()<<"new connection detected,will send data via this port,peer port"<<this->clientConnection_send->peerPort();
-              connect(clientConnection_send,&QTcpSocket::stateChanged,this,&tcp_comm::onStateChanged);
-              connect(clientConnection_send, &QAbstractSocket::disconnected,clientConnection_send, &QObject::deleteLater);
+//      }
+//      else
 
-          }
-          else
-          {
-             qDebug()<<"wait for connection from PLC timeout, will have no ability to send specified data to PLC";
-          }
-      }
       //report current connection status to mainWindow
       this->reportConnectionStatus();
 
 }
 void tcp_comm::reportConnectionStatus()
 {
-    qDebug()<<"tcp comm state_send, current state:"<<this->clientConnection_send->state();
-    qDebug()<<"tcp comm state_send, current state:"<<this->clientConnection_receive->state();
+    //QString connectStatusInfo_send=this->clientConnection_send->state()==QAbstractSocket::ConnectedState?"Connected":"Disconnected";
+    //QString connectStatusInfo_receive=this->clientConnection_receive->state()==QAbstractSocket::ConnectedState?"Connected":"Disconnected";
+
+//    if(loggingEnable&&loggingLevel>0)
+//    {
+//        QString logcontents=tr("Time:%1,tcp comm state_send, current state: %2,tcp comm state_receive,current state:%3")
+//                .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+//                .arg(connectStatusInfo_send).arg(connectStatusInfo_receive);
+//        emit this->logRequest(logcontents,105,0);
+//    }
+    //qDebug()<<"tcp comm state_send, current state:"<<this->clientConnection_send->state();
+    //qDebug()<<"tcp comm state_send, current state:"<<this->clientConnection_receive->state();
     emit tcpCommConnectionStateChanged(this->clientConnection_send->state(),1);
     emit tcpCommConnectionStateChanged(this->clientConnection_receive->state(),2);
 }
@@ -211,6 +245,12 @@ void tcp_comm::parseDataFromPLC(const QByteArray& dataToParse)
     case 15:
         emit sendDataToWindow(dataToParse);
         break;
+    case 16:
+        emit sendDataToWindow(dataToParse);
+        break;
+    case 20:
+        emit sendDataToWindow(dataToParse);
+        break;
     case 23:
         emit sendDataToWindow(dataToParse);
         break;
@@ -275,6 +315,7 @@ void tcp_comm::onStateChanged(QAbstractSocket::SocketState state)
    qDebug()<<"QTcpSocket state changed, current state:"<<state;
 
    this->reportConnectionStatus();
+
 
 }
 tcp_comm::~tcp_comm()

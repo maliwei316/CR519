@@ -39,25 +39,28 @@ public:
     void getBarcode_right();
     void changePage(quint16 targetPageIndex);
     void handleBarcodeError(QSerialPort::SerialPortError error);
+    void moveCycleDataToHistory();
     ~MainWindow();
 signals:
-
+    void logRequest(QString logContents,quint16 logID,quint8 logLevel);
     void sendDataToTCPCommObj(QByteArray dataToTCPCommObj);
     void checkTcpConnectionStatus();
     void checkModbusConnectionStatus();
     void updateAlarmText(QString &alarmText);
     void moveAlarmToHistory(alarmItem item_alarm);
+    void receivedPointCycleData(pointCycleData);
 public slots:
   void receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj);
   void OnUploadWholeSettingsTimeout();
   void OnLogInTimeout();
   void onMoveAlarmToHistory(alarmItem alarm);
-
+  void onReceivedPointCycleData(pointCycleData data1);
   void OnDownloadWholeSettingsTimeout();
   void OnTcpCommConnectionStateChanged(QAbstractSocket::SocketState state,quint8 ConnectionID);
   void OnTimer_mainWindow_Timeout();
   void OnPLCItemsChanged_Modbus(QVariantList changedItems);
-  void onUpdateAlarmText(QString text);
+  void onUpdateAlarmText(QString text);  
+  void execLogging(QString logContents,quint16 logID,quint8 logLevel);
 private slots:
 
 
@@ -210,7 +213,7 @@ private slots:
 
     void on_spinBox_pointPara_downPressure_valueChanged(int arg1);
 
-    void on_spinBox_pointPara_upPressure_valueChanged(int arg1);
+    //void on_spinBox_pointPara_upPressure_valueChanged(int arg1);
 
     void on_spinBox_timeLowerLimit_BAD_valueChanged(int arg1);
 
@@ -442,10 +445,47 @@ private slots:
     void on_pushButton_logIN_leave_clicked();
 
     void on_pushButton_logIN_GO_clicked();
-
-
-
     void on_stackedWidget_mainProgram_currentChanged(int arg1);
+    void on_btn_filmfeeder_RunRelative_clicked();
+    void on_btn_filmfeeder_RunRelative__weldByManual_clicked();
+    void on_btn_filmfeeder_JOG1_weldByManual_toggled(bool checked);
+    void on_btn_filmfeeder_JOG2_weldByManual_toggled(bool checked);
+    void on_btn_filmfeeder_RunSpeed__weldByManual_toggled(bool checked);
+    void on_btn_filmfeeder_JOG1_toggled(bool checked);
+    void on_btn_filmfeeder_JOG2_toggled(bool checked);
+    void on_btn_filmfeeder_RunSpeed_toggled(bool checked);
+
+    void on_actionWeldByManual_triggered();
+
+    void on_actionToolingChange_triggered();
+
+    void on_btn_QueryServoPara_clicked();
+
+    void on_btn_toLoadPos_clicked();
+
+    void on_btn_CheckAlarm_clicked();
+
+    void on_btn_filmfeeder_RunRelative_2_clicked();
+
+    void on_btn_filmfeeder_RunRelative__weldByManual_2_clicked();
+
+    void on_btn_leave_toolingConfig_clicked();
+
+    void on_btn_toToolingChange_clicked();
+
+    void on_btn_toToolingGonfig_clicked();
+
+    void on_btn_leave_toolingChange_clicked();
+
+    void on_btn_pointBypass_toPLC_clicked();
+
+    void on_btn_pointBypass_fromPLC_clicked();
+
+    void on_btn_pointBypass_refresh_clicked();
+
+    void on_btn_pointBypass_clicked();
+
+    void on_btn_run_monitor_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -483,7 +523,8 @@ public:
     QString barcode_in_use_right;
     QString barcode_to_use_right;
     bool logInStatus;
-
+    QStringList recentRunningLogs;
+    plcVarTable plcVars;
 
 
 

@@ -23,6 +23,7 @@ signals:
     void addTaskToEventQueue_writeDB(QString sqlquery);
     void addTaskToEventQueue_batchWriteDB(QString prepareStr,QVariantList addressList,QVariantList valueList);
     void addTaskToEventQueue_readDB(quint16 requesterObjID,QString tableName,quint16 address);
+    void logRequest(QString logContents,quint16 logID,quint8 logLevel);
 
 public slots:
     void getValuefromDataBase(quint16 requesterObjID,QString tableName,quint16 address);
