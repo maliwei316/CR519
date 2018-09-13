@@ -27,14 +27,33 @@ MainWindow::MainWindow(QWidget *parent) :
     this->tooling_current=new clsTooling(this);
     this->toolID_editing=1;
     this->tempTooling_editting->plcToolingInfo.toolingNO=1;
-    this->logInStatus=false;
-    const auto serialPortInfos = QSerialPortInfo::availablePorts();
-    for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
+    this->machineInfoReady=false;
+    if(QFile::exists("machineInfo.txt"))
     {
-       //qDebug()<< "serial Port: " << serialPortInfo.portName();
-       this->ui->comboBox_BarcodePort_Left->addItem(serialPortInfo.portName());
-       this->ui->comboBox__BarcodePort_Right->addItem(serialPortInfo.portName());
+        qDebug()<<"found machineInfo.txt";
+        QFile loadFile("machineInfo.txt");
+        if(loadFile.open(QIODevice::ReadOnly))
+        {
+             qDebug()<<"success to open machineInfo.txt";
+            QDataStream in1(&loadFile);
+           in1>>machineInfo1.machineName>>machineInfo1.PLC_IPAddress
+                   >>machineInfo1.frequencyLimit_upper>>machineInfo1.frequencyLimit_lower;
+           this->machineInfoReady=true;
+           this->ui->spinbox_pointPara_freeRunFreq->setMinimum(machineInfo1.frequencyLimit_lower);
+           this->ui->spinbox_pointPara_freeRunFreq->setMaximum(machineInfo1.frequencyLimit_upper);
+           this->ui->spinbox_pointPara_freq_u_limit->setMinimum(machineInfo1.frequencyLimit_lower);
+           this->ui->spinbox_pointPara_freq_u_limit->setMaximum(machineInfo1.frequencyLimit_upper);
+           this->ui->spinbox_pointPara_freq_l_limit->setMinimum(machineInfo1.frequencyLimit_lower);
+           this->ui->spinbox_pointPara_freq_l_limit->setMaximum(machineInfo1.frequencyLimit_upper);
+            qDebug()<<tr("machineName:%1,PLC IP:%2,Frq_upper:%3,Frq_lower:%4,machineInfoReady:%5").arg(machineInfo1.machineName)
+                      .arg(machineInfo1.PLC_IPAddress).arg(machineInfo1.frequencyLimit_upper)
+                      .arg(machineInfo1.frequencyLimit_lower).arg(this->machineInfoReady);
+        loadFile.close();
+        }
     }
+
+    this->logInStatus=false;
+
     if(QFile::exists("toolingConfig/currentTooling.dc"))
     {
         this->tempTooling_editting->loadFromDisk("toolingConfig/currentTooling.dc");
@@ -42,82 +61,7 @@ MainWindow::MainWindow(QWidget *parent) :
         this->ui->toolID_Editting->setValue(this->toolID_editing);
         if(this->tempTooling_editting->leftBarcodeSettings.enable)
         {
-
-            this->clsBarcode_left->setPortName(this->tempTooling_editting->leftBarcodeSettings.portName);
-            QString baudstr=this->tempTooling_editting->leftBarcodeSettings.baud;
-            quint32 baud_quint32;
-            if(baudstr=="4800")
-            {
-               baud_quint32=4800;
-            }
-            else if(baudstr=="19200")
-            {
-                baud_quint32=19200;
-            }
-            else if(baudstr=="38400")
-            {
-                baud_quint32=38400;
-            }
-            else if(baudstr=="57600")
-            {
-                baud_quint32=57600;
-            }
-            else if (baudstr=="115200")
-            {
-                baud_quint32=115200;
-            }
-            else
-            {
-               baud_quint32=9600;
-            }
-            this->clsBarcode_left->setBaudRate(baud_quint32);
-            this->clsBarcode_left->setDataBits((QSerialPort::DataBits)this->tempTooling_editting->leftBarcodeSettings.dataBits);
-            this->clsBarcode_left->setStopBits((QSerialPort::StopBits)this->tempTooling_editting->leftBarcodeSettings.stopBits);
-            QString parity_str=this->tempTooling_editting->leftBarcodeSettings.parity.toUpper();
-            quint8  parity_uint8;
-            if(parity_str=="EVEN")
-            {
-               parity_uint8=2;
-            }
-            else if (parity_str=="ODD")
-            {
-                parity_uint8=3;
-            }
-            else
-            {
-                parity_uint8=0;
-            }
-            this->clsBarcode_left->setParity((QSerialPort::Parity)parity_uint8);
-            if(!this->clsBarcode_left->open(QIODevice::ReadOnly))
-            {
-                qWarning()<<tr("failed to open serial port for left barcode,portName:%1,error:%2")
-                            .arg(this->tempTooling_editting->leftBarcodeSettings.portName)
-                            .arg(this->clsBarcode_left->errorString());
-                if(loggingEnable&&loggingLevel>0)
-                {
-                    QString logcontents=tr("Time:%1,failed to open serial port for left barcode,portName:%2,error:%3")
-                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
-                            .arg(this->tempTooling_editting->leftBarcodeSettings.portName)
-                            .arg(this->clsBarcode_left->errorString());
-                    emit this->logRequest(logcontents,200,0);
-                }
-            }
-            else
-            {
-                qDebug()<<tr("Success to open serial port for left barcode,portName:%1")
-                          .arg(this->tempTooling_editting->leftBarcodeSettings.portName);
-                if(loggingEnable&&loggingLevel>0)
-                {
-                    QString logcontents=tr("Time:%1,Success to open serial port for left barcode,portName:%2")
-                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
-                            .arg(this->tempTooling_editting->leftBarcodeSettings.portName);
-
-                    emit this->logRequest(logcontents,205,0);
-                }
-                connect(this->clsBarcode_left,&QSerialPort::readyRead,this,&MainWindow::getBarcode_left);
-                connect(this->clsBarcode_left,&QSerialPort::errorOccurred,this,&MainWindow::handleBarcodeError);
-
-            }
+            this->barcodeInit(this->clsBarcode_left,this->tempTooling_editting->leftBarcodeSettings);
         }
         else
         {
@@ -130,82 +74,7 @@ MainWindow::MainWindow(QWidget *parent) :
         }
         if(this->tempTooling_editting->rightBarcodeSettings.enable)
         {
-
-            this->clsBarcode_right->setPortName(this->tempTooling_editting->rightBarcodeSettings.portName);
-            QString baudstr=this->tempTooling_editting->rightBarcodeSettings.baud;
-            quint32 baud_quint32;
-            if(baudstr=="4800")
-            {
-               baud_quint32=4800;
-            }
-            else if(baudstr=="19200")
-            {
-                baud_quint32=19200;
-            }
-            else if(baudstr=="38400")
-            {
-                baud_quint32=38400;
-            }
-            else if(baudstr=="57600")
-            {
-                baud_quint32=57600;
-            }
-            else if(baudstr=="115200")
-            {
-                baud_quint32=115200;
-            }
-            else
-            {
-               baud_quint32=9600;
-            }
-            this->clsBarcode_right->setBaudRate(baud_quint32);
-            this->clsBarcode_right->setDataBits((QSerialPort::DataBits)this->tempTooling_editting->rightBarcodeSettings.dataBits);
-            this->clsBarcode_right->setStopBits((QSerialPort::StopBits)this->tempTooling_editting->rightBarcodeSettings.stopBits);
-            QString parity_str=this->tempTooling_editting->rightBarcodeSettings.parity.toUpper();
-            quint8  parity_uint8;
-            if(parity_str=="EVEN")
-            {
-               parity_uint8=2;
-            }
-            else if (parity_str=="ODD")
-            {
-                parity_uint8=3;
-            }
-            else
-            {
-                parity_uint8=0;
-            }
-            this->clsBarcode_right->setParity((QSerialPort::Parity)parity_uint8);
-            if(!this->clsBarcode_right->open(QIODevice::ReadOnly))
-            {
-                qWarning()<<tr("failed to open serial port for right barcode,portName:%1,error:%2")
-                            .arg(this->tempTooling_editting->rightBarcodeSettings.portName)
-                            .arg(this->clsBarcode_right->errorString());
-                if(loggingEnable&&loggingLevel>0)
-                {
-                    QString logcontents=tr("Time:%1,failed to open serial port for right barcode,portName:%2,error:%3")
-                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
-                            .arg(this->tempTooling_editting->rightBarcodeSettings.portName)
-                            .arg(this->clsBarcode_right->errorString());
-
-                    emit this->logRequest(logcontents,210,0);
-                }
-            }
-            else
-            {
-                qDebug()<<tr("Success to open serial port for right barcode,portName:%1")
-                          .arg(this->tempTooling_editting->rightBarcodeSettings.portName);
-                if(loggingEnable&&loggingLevel>0)
-                {
-                    QString logcontents=tr("Time:%1,Success to open serial port for right barcode,portName:%2")
-                            .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
-                            .arg(this->tempTooling_editting->rightBarcodeSettings.portName);
-                    emit this->logRequest(logcontents,215,0);
-                }
-                connect(this->clsBarcode_right,&QSerialPort::readyRead,this,&MainWindow::getBarcode_right);
-                connect(this->clsBarcode_right,&QSerialPort::errorOccurred,this,&MainWindow::handleBarcodeError);
-
-            }
+            this->barcodeInit(this->clsBarcode_right,this->tempTooling_editting->rightBarcodeSettings);
         }
         else
         {
@@ -238,6 +107,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this,&MainWindow::logRequest,this,&MainWindow::execLogging);
     connect(this,&MainWindow::receivedPointCycleData,this,&MainWindow::onReceivedPointCycleData);
 
+    connect(this->clsBarcode_left,&clsBarcode::readyRead,this,&MainWindow::getBarcode_left);
+    connect(this->clsBarcode_left,&clsBarcode::errorOccurred,this,&MainWindow::handleBarcodeError);
+    connect(this->clsBarcode_right,&clsBarcode::readyRead,this,&MainWindow::getBarcode_right);
+    connect(this->clsBarcode_right,&clsBarcode::errorOccurred,this,&MainWindow::handleBarcodeError);
+
     if(QFile::exists("sysRegText.txt"))
     {
         QFile loadFile("sysRegText.txt");
@@ -262,6 +136,83 @@ MainWindow::~MainWindow()
     delete wp1;
     //tempTooling_editting->deleteLater();
     //tooling_current->deleteLater();
+
+}
+bool MainWindow::barcodeInit(clsBarcode* clsbarcode,const barcodeSetting& barcode_settings)
+{
+    clsbarcode->setPortName(barcode_settings.portName);
+    QString baudstr=barcode_settings.baud;
+    quint32 baud_quint32;
+    if(baudstr=="4800")
+    {
+       baud_quint32=4800;
+    }
+    else if(baudstr=="19200")
+    {
+        baud_quint32=19200;
+    }
+    else if(baudstr=="38400")
+    {
+        baud_quint32=38400;
+    }
+    else if(baudstr=="57600")
+    {
+        baud_quint32=57600;
+    }
+    else if (baudstr=="115200")
+    {
+        baud_quint32=115200;
+    }
+    else
+    {
+       baud_quint32=9600;
+    }
+    clsbarcode->setBaudRate(baud_quint32);
+    clsbarcode->setDataBits((QSerialPort::DataBits)this->tempTooling_editting->leftBarcodeSettings.dataBits);
+    clsbarcode->setStopBits((QSerialPort::StopBits)this->tempTooling_editting->leftBarcodeSettings.stopBits);
+    QString parity_str=barcode_settings.parity.toUpper();
+    quint8  parity_uint8;
+    if(parity_str=="EVEN")
+    {
+       parity_uint8=2;
+    }
+    else if (parity_str=="ODD")
+    {
+        parity_uint8=3;
+    }
+    else
+    {
+        parity_uint8=0;
+    }
+    clsbarcode->setParity((QSerialPort::Parity)parity_uint8);
+    if(!clsbarcode->open(QIODevice::ReadOnly))
+    {
+        qWarning()<<tr("failed to open serial port for barcode,portName:%1,error:%2")
+                    .arg(barcode_settings.portName)
+                    .arg(clsbarcode->errorString());
+        if(loggingEnable&&loggingLevel>0)
+        {
+            QString logcontents=tr("Time:%1,failed to open serial port for barcode,portName:%2,error:%3")
+                    .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                    .arg(barcode_settings.portName)
+                    .arg(clsbarcode->errorString());
+            emit this->logRequest(logcontents,200,0);
+        }
+        return false;
+    }
+    else
+    {
+        qDebug()<<tr("Success to open serial port for barcode,portName:%1")
+                  .arg(barcode_settings.portName);
+        if(loggingEnable&&loggingLevel>0)
+        {
+            QString logcontents=tr("Time:%1,Success to open serial port for barcode,portName:%2")
+                    .arg(QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz"))
+                    .arg(barcode_settings.portName);
+            emit this->logRequest(logcontents,205,0);
+        }
+        return true;
+    }
 
 }
 void MainWindow::execLogging(QString logContents,quint16 logID,quint8 logLevel)
@@ -327,6 +278,10 @@ void MainWindow::changePage(quint16 targetPageIndex)
     if(targetPageIndex==255)
     {
 
+        if(this->pageInfo1.previousPage_Index_mainStackWidget>10 || this->pageInfo1.previousPage_Index_mainStackWidget<0)
+        {
+            this->pageInfo1.previousPage_Index_mainStackWidget=(this->plcVars.work_Mode==2)?1:4;
+        }
         this->pageInfo1.targetPage_Index_mainStackWidget=this->pageInfo1.previousPage_Index_mainStackWidget;
     }
     else
@@ -1007,16 +962,42 @@ void MainWindow::updatePLCItem(plcItem item)
     {
         quint16 indicatingMsg;
         indicatingMsg=(quint16)item.currentValue.wordVar;
-        //qDebug()<<"got indicating MSG:"<<indicatingMsg;
+        qDebug()<<"got indicating MSG:"<<indicatingMsg;
 
-        //qDebug()<<"got indicating MSG:"<<this->systemRegisteredTextList.value(1000+indicatingMsg);
+        qDebug()<<"got indicating MSG:"<<this->systemRegisteredTextList.value(1000+indicatingMsg);
         this->ui->label_IndicatingMSG->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
         //this->ui->label_IndicatingMSG_2->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
+
+        if(this->ui->LED_indicatingMsg->isVisible())
+        {
+            this->ui->LED_indicatingMsg->setVisible(false);
+        }
+        else
+        {
+          this->ui->LED_indicatingMsg->setVisible(true);
+        }
         break;
     }
     //MW20
     case 536576160://MW20,ultrasonic status
     {
+        if(item.currentValue.bitsVar.b2)
+        {
+            if(item.currentValue.bitsVar.b2!=this->plcVars.systemReady)
+            {
+                //the up edge of system ready
+                this->plcVars.systemReady=true;
+            }
+        }
+        else
+        {
+            if(item.currentValue.bitsVar.b2!=this->plcVars.systemReady)
+            {
+                //the down edge of system ready
+                this->plcVars.systemReady=false;
+            }
+        }
+        this->switchItemOnOff(this->ui->LED_RDY_NEW_CYCLE,item.currentValue.bitsVar.b6?true:false);
         this->switchItemOnOff(this->ui->LED_US_Gen1,item.currentValue.bitsVar.b8?true:false);
         this->switchItemOnOff(this->ui->LED_US_Gen2,item.currentValue.bitsVar.b9?true:false);
         this->switchItemOnOff(this->ui->LED_US_Gen3,item.currentValue.bitsVar.b10?true:false);
@@ -1578,10 +1559,17 @@ void MainWindow::onReceivedPointCycleData(pointCycleData data1)
 }
 void MainWindow::OnTimer_mainWindow_Timeout()
 {
+    qDebug()<<tr("OnTimer_mainWindow_Timeout() executed,machineInfoReady:%1").arg(this->machineInfoReady);
+    if(!this->machineInfoReady)
+    {
+        this->changePage(8);
+    }
+
     qDebug()<<tr("checking tcp comm connection status,current status:%1").
               arg(this->checking_tcpConnectionStatus?"OFFLINE":"ONLINE");
     //if checking is true, mean there's no response from partner within specfied time, so need set connection status
     //to false;if partner reply within specified time, then the checking flag will be reset by the reply
+
     if(this->checking_tcpConnectionStatus)
     {
         this->tcpConnectionStatus_receive=false;
@@ -2309,13 +2297,13 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         pointCycleData data1;
         data1.pointNO=dataLoad[0];
         data1.weldResult=dataLoad[1];
-        data1.weldTime=((quint8)dataLoad[2])*256+dataLoad[3];
-        data1.weldTime=data1.weldTime>5000?(65536-data1.weldTime):data1.weldTime;
-        data1.peakPower=((quint8)dataLoad[4])*256+dataLoad[5];
-        data1.peakPower=data1.peakPower>5000?(65536-data1.peakPower):data1.peakPower;
-        data1.weldEnergy=((quint8)dataLoad[6])*256+dataLoad[7];
-        data1.weldEnergy=data1.weldEnergy>5000?(65536-data1.weldEnergy):data1.weldEnergy;
-        data1.thrusterDownPressure=((quint8)dataLoad[8])*256+dataLoad[9];
+        data1.weldTime=((quint8)dataLoad[2])*256+((quint8)dataLoad[3]);
+        //data1.weldTime=data1.weldTime>5000?(65536-data1.weldTime):data1.weldTime;
+        data1.peakPower=((quint8)dataLoad[4])*256+((quint8)dataLoad[5]);
+        //data1.peakPower=data1.peakPower>5000?(65536-data1.peakPower):data1.peakPower;
+        data1.weldEnergy=((quint8)dataLoad[6])*256+((quint8)dataLoad[7]);
+        //data1.weldEnergy=data1.weldEnergy>5000?(65536-data1.weldEnergy):data1.weldEnergy;
+        data1.thrusterDownPressure=((quint8)dataLoad[8])*256+((quint8)dataLoad[9]);
         data1.thrusterDownPressure=(data1.thrusterDownPressure-228)*500/(3868-228);
         //(wp2.thrusterPressure_down-228)*500/(3868-228);
         data1.genNO=dataLoad[10];
@@ -5154,6 +5142,34 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
     this->pageInfo1.currentPage_Index_mainStackWidget=arg1;
     qDebug()<<"page changed,previous page:"<<this->pageInfo1.previousPage_Index_mainStackWidget;
     qDebug()<<"page changed,current page:"<<this->pageInfo1.currentPage_Index_mainStackWidget;
+    switch (arg1)
+    {
+    case 0:
+    {
+        const auto serialPortInfos = QSerialPortInfo::availablePorts();
+        for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
+        {
+           //qDebug()<< "serial Port: " << serialPortInfo.portName();
+           this->ui->comboBox_BarcodePort_Left->addItem(serialPortInfo.portName());
+           this->ui->comboBox__BarcodePort_Right->addItem(serialPortInfo.portName());
+        }
+    }
+    case 8:
+    {
+        if(this->machineInfoReady)
+        {
+            this->ui->lineEdit_machineName->setText(this->machineInfo1.machineName);
+            this->ui->lineEdit_PLC_IPAddress->setText(this->machineInfo1.PLC_IPAddress);
+            this->ui->spinBox_machineInfo_frq_upper->setValue(this->machineInfo1.frequencyLimit_upper);
+            this->ui->spinBox_machineInfo_frq_lower->setValue(this->machineInfo1.frequencyLimit_lower);
+        }
+
+        break;
+    }
+
+    default:
+        break;
+    }
 
 
 }
@@ -5594,4 +5610,39 @@ void MainWindow::on_btn_pointBypass_clicked()
 void MainWindow::on_btn_run_monitor_clicked()
 {
     this->ui->stackedWidget_run->setCurrentIndex(0);
+}
+
+void MainWindow::on_pushButton_leaveMachineInfo_clicked()
+{
+    this->changePage(255);
+}
+
+void MainWindow::on_pushButton_saveMachineInfo_clicked()
+{
+    this->machineInfo1.machineName=this->ui->lineEdit_machineName->text();
+    this->machineInfo1.PLC_IPAddress=this->ui->lineEdit_PLC_IPAddress->text();
+    this->machineInfo1.frequencyLimit_upper=this->ui->spinBox_machineInfo_frq_upper->value();
+    this->machineInfo1.frequencyLimit_lower=this->ui->spinBox_machineInfo_frq_lower->value();
+    QFile loadFile("machineInfo.txt");
+
+         if (!loadFile.open(QIODevice::WriteOnly)) {
+             qWarning("Couldn't open  file when try to save machine info");
+             return;
+         }
+         else
+         {
+             qDebug()<<"file opened,file.size:"<<loadFile.size();
+             QDataStream Out1(&loadFile);
+             Out1<<this->machineInfo1.machineName<<this->machineInfo1.PLC_IPAddress
+                <<this->machineInfo1.frequencyLimit_upper<<this->machineInfo1.frequencyLimit_lower;
+             this->machineInfoReady=true;
+             qDebug()<<"machine info save to file executed, file.size()"<<loadFile.size();
+             loadFile.close();
+         }
+
+}
+
+void MainWindow::on_actionMachine_Infomation_triggered()
+{
+    this->changePage(8);
 }

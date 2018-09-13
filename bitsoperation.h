@@ -471,6 +471,8 @@ typedef struct _plcVarTable
     quint8 toolID_current_inPLC=0;
     bool anyFault=false;
     bool somePointWelded;
+    bool systemReady;
+    bool readyForNewCycle;
     quint8 currentStepNO=0;
     quint8 currentPointNO_gen1=0;
     quint8 currentPointNO_gen2=0;
@@ -494,33 +496,18 @@ typedef struct _barcodeSetting
 
 typedef struct _userRegInfo
 {
-        QString Name;
-        QString Password;
-        quint32 logOffTime;
+        QString userName;
+        QString password;
 
 }userRegInfo;
+typedef struct _machineInfo
+{
+        QString machineName;
+        QString PLC_IPAddress;
+        quint16 frequencyLimit_upper;
+        quint16 frequencyLimit_lower;
 
-//typedef struct tcpCommStruct
-//{
-//        Byte initiator;
-//        Byte commandNO;
-//        Byte HMIPageNO;
-//        Byte toolID;
-//        Byte selectedPointNO;
-//        Byte selectedGenNO;
-//        genRealTimeData realTimeData_Gen1;
-//        genRealTimeData realTimeData_Gen2;
-//        genRealTimeData realTimeData_Gen3;
-//        genRealTimeData realTimeData_Gen4;
-//        servoRealTimeData realTimeData_Servo1;
-
-//        Byte byteArray[10];
-//        wordBits wordBits1;
-//        iQSettings iQSettings1;
-
-//}tcpCommVars;
-
-
+}machineInfo;
 
 //void worker_modbus:: readReady1()
 //{

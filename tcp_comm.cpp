@@ -249,8 +249,16 @@ void tcp_comm::parseDataFromPLC(const QByteArray& dataToParse)
         emit sendDataToWindow(dataToParse);
         break;
     case 20:
+    {
+
+        for(int i=0;i<dataToPase_size;i++)
+        {
+            qDebug()<<tr("tcpcomm,point cycle data from PLC,data at[%1]:%2").arg(i).arg(dataToParse.at(i));
+        }
         emit sendDataToWindow(dataToParse);
         break;
+    }
+
     case 23:
         emit sendDataToWindow(dataToParse);
         break;

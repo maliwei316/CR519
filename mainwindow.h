@@ -40,6 +40,7 @@ public:
     void changePage(quint16 targetPageIndex);
     void handleBarcodeError(QSerialPort::SerialPortError error);
     void moveCycleDataToHistory();
+    bool barcodeInit(clsBarcode* clsbarcode, const barcodeSetting& barcode_settings);
     ~MainWindow();
 signals:
     void logRequest(QString logContents,quint16 logID,quint8 logLevel);
@@ -487,6 +488,12 @@ private slots:
 
     void on_btn_run_monitor_clicked();
 
+    void on_pushButton_leaveMachineInfo_clicked();
+
+    void on_pushButton_saveMachineInfo_clicked();
+
+    void on_actionMachine_Infomation_triggered();
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
@@ -494,6 +501,7 @@ private:
     void updatePLCItem(plcItem item);
     void switchItemOnOff(QLabel *targetLabel, bool onOff);
 public:
+    machineInfo machineInfo1;
     weldPoint* wp1;
     quint8 toolID_PLC;
     quint8 toolID_editing;
@@ -507,6 +515,7 @@ public:
     bool modbusConnectionStatus_504;
     bool uploadingWholeSettingFromPLCInProcess;
     QTimer timer_mainWindow;
+    bool machineInfoReady;
     bool checking_tcpConnectionStatus;
     bool checking_modbusConnectionStatus;
     QMap<quint32,alarmItem> currentAlarms;
