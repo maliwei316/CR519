@@ -97,3 +97,5 @@ HEADERS += \
 
 FORMS += \
     mainwindow.ui
+TRANSLATIONS += CR519_CN.ts
+TRANSLATIONS += CR519_EN.ts

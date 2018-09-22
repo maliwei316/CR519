@@ -10,6 +10,7 @@
 #include "myevent.h"
 #include <QSerialPortInfo>
 #include <QMessageBox>
+#include <QTranslator>
 
 extern bool loggingEnable;
 extern quint8 loggingLevel;
@@ -19,7 +20,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-
+    //welcome/startup page
+    this->ui->stackedWidget_mainProgram->setCurrentIndex(9);
     this->clsBarcode_left=new clsBarcode(this);
     this->clsBarcode_right=new clsBarcode(this);
     this->wp1=nullptr;
@@ -106,6 +108,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this,&MainWindow::moveAlarmToHistory,this,&MainWindow::onMoveAlarmToHistory);
     connect(this,&MainWindow::logRequest,this,&MainWindow::execLogging);
     connect(this,&MainWindow::receivedPointCycleData,this,&MainWindow::onReceivedPointCycleData);
+    connect(this,&MainWindow::parameterEditableStausChanged,this,&MainWindow::onParameterEditableStausChanged);
 
     connect(this->clsBarcode_left,&clsBarcode::readyRead,this,&MainWindow::getBarcode_left);
     connect(this->clsBarcode_left,&clsBarcode::errorOccurred,this,&MainWindow::handleBarcodeError);
@@ -124,6 +127,30 @@ MainWindow::MainWindow(QWidget *parent) :
             {
                in1>>textLoaded>>this->systemRegisteredTextList;
             }
+
+            if(this->systemRegisteredTextList.value(quint32(1001)).contains("home"))
+                this->LanguageFlag=1;
+            else
+                this->LanguageFlag=0;
+            QTranslator translator;
+            bool loadLangFileResult;
+            if(LanguageFlag ==0)
+                   loadLangFileResult=translator.load("CR519_CN.qm");
+            else if(LanguageFlag ==1)
+                   loadLangFileResult=translator.load("CR519_EN.qm");
+            qDebug()<<tr("load file result:%1,fileName:%2").arg(loadLangFileResult?"OK":"failed").arg(LanguageFlag==0?"CR519_CN.qm":"CR519_EN.qm");
+            if(loadLangFileResult)
+            {
+                bool installTranslatorResult;
+                installTranslatorResult=qApp->installTranslator(&translator);
+                qDebug()<<tr("install translator result result:%1").arg(installTranslatorResult?"OK":"failed");
+                if(installTranslatorResult)
+                {
+                    ui->retranslateUi(this);
+                }
+            }
+
+
         loadFile.close();
         }
     }
@@ -1053,8 +1080,12 @@ void MainWindow::updatePLCItem(plcItem item)
         Msg_count=(quint16)item.currentValue.wordVar;
         qDebug()<<"TRCV_MSG_Count:"<<Msg_count;
 
-        QString msg_str=tr("PLC received new Msg,MsgCount:%1").arg((quint16)Msg_count);
-        this->ui->textEdit_weldByManual->append(msg_str);
+        if(this->plcVars.work_Mode=2)
+        {
+            QString msg_str=tr("PLC received new Msg,MsgCount:%1").arg((quint16)Msg_count);
+            this->ui->textEdit_weldByManual->append(msg_str);
+        }
+
         break;
     }
     case 536576240://MW30,work mode
@@ -1065,10 +1096,13 @@ void MainWindow::updatePLCItem(plcItem item)
             currentWorkMode=2;
         else if(item.currentValue.bitsVar.b3)
             currentWorkMode=3;
-        if(this->plcVars.work_Mode!=currentWorkMode)
+        if(this->plcVars.work_Mode!=currentWorkMode||this->ui->stackedWidget_mainProgram->currentIndex()==9)
         {
             this->changePage(currentWorkMode==2?1:4);
             this->plcVars.work_Mode=currentWorkMode;
+            this->logInStatus=false;
+            this->parameterEditable=false;
+            emit parameterEditableStausChanged(false);
         }
         this->switchItemOnOff(this->ui->LED_ManualMode,item.currentValue.bitsVar.b2?true:false);
         //somePoint welded flag
@@ -1420,7 +1454,7 @@ void MainWindow::switchItemOnOff(QLabel* targetLabel,bool onOff)
 }
 void MainWindow::handleAlarm(plcItem item)
 {
-    //qDebug()<<tr("handling alarm,itemID:%1").arg(item.itemID());
+    qDebug()<<tr("handling alarm,itemID:%1").arg(item.itemID());
     quint32 alarmID_plcItem;
     for(int i=0;i<16;i++)
     {
@@ -1435,24 +1469,29 @@ void MainWindow::handleAlarm(plcItem item)
                 currentAlarms[alarmID_plcItem].comeTime=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss");
                 QString alarmText_temp=this->systemRegisteredTextList[alarmID_plcItem];
                 //if the alarm is generator related , then need display the current point of this generator
-                if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_1"))
+
+                if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_1")||this->systemRegisteredTextList[alarmID_plcItem].contains("发生器1#"))
                 {
-                    QString currentPointsInfo=tr("pointNO:%1").arg(this->plcVars.currentPointNO_gen3);
+                    QString pointNOstr=this->systemRegisteredTextList[alarmID_plcItem].contains("发生器")?"焊点编号":"PointNO";
+                    QString currentPointsInfo=tr("%1:%2").arg(pointNOstr).arg(this->plcVars.currentPointNO_gen1);
                     alarmText_temp.append(currentPointsInfo);
                 }
-                else if (this->systemRegisteredTextList[alarmID_plcItem].contains("gen_2"))
+                else if (this->systemRegisteredTextList[alarmID_plcItem].contains("gen_2")||this->systemRegisteredTextList[alarmID_plcItem].contains("发生器2#"))
                 {
-                    QString currentPointsInfo=tr("pointNO:%1").arg(this->plcVars.currentPointNO_gen2);
+                    QString pointNOstr=this->systemRegisteredTextList[alarmID_plcItem].contains("发生器")?"焊点编号":"PointNO";
+                    QString currentPointsInfo=tr("%1:%2").arg(pointNOstr).arg(this->plcVars.currentPointNO_gen2);
                     alarmText_temp.append(currentPointsInfo);
                 }
-                else if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_3"))
+                else if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_3")||this->systemRegisteredTextList[alarmID_plcItem].contains("发生器3#"))
                 {
-                    QString currentPointsInfo=tr("pointNO:%1").arg(this->plcVars.currentPointNO_gen3);
+                    QString pointNOstr=this->systemRegisteredTextList[alarmID_plcItem].contains("发生器")?"焊点编号":"PointNO";
+                    QString currentPointsInfo=tr("%1:%2").arg(pointNOstr).arg(this->plcVars.currentPointNO_gen3);
                     alarmText_temp.append(currentPointsInfo);
                 }
-                else if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_4"))
+                else if(this->systemRegisteredTextList[alarmID_plcItem].contains("gen_4")||this->systemRegisteredTextList[alarmID_plcItem].contains("发生器4#"))
                 {
-                    QString currentPointsInfo=tr("pointNO:%1").arg(this->plcVars.currentPointNO_gen4);
+                    QString pointNOstr=this->systemRegisteredTextList[alarmID_plcItem].contains("发生器")?"焊点编号":"PointNO";
+                    QString currentPointsInfo=tr("%1:%2").arg(pointNOstr).arg(this->plcVars.currentPointNO_gen4);
                     alarmText_temp.append(currentPointsInfo);
                 }
                 currentAlarms[alarmID_plcItem].alarmText=alarmText_temp;
@@ -3338,6 +3377,7 @@ void MainWindow::on_WeldByManual_PointNO_valueChanged(int arg1)
 {
     //this->ui->weldByManual_Down->setEnabled(false);
     //this->ui->weldByManual_runWeld->setEnabled(false);
+    //CMD109, prepare info for weld by manual
     QByteArray dataToTcpCommObj;
     dataToTcpCommObj[0]=0x00;//length high byte
     dataToTcpCommObj[1]=0x08;//length low byte
@@ -3732,6 +3772,8 @@ void MainWindow::on_btn_setGenEnable_clicked()
     dataToTcpCommObj[7]=0x00;//reserve
     if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
         emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(this->tempTooling_editting->prepareCommand_getGenEnableStatusFromPLC());
 }
 
 void MainWindow::on_btn_getGenEnableStatus_clicked()
@@ -4210,19 +4252,27 @@ void MainWindow::on_spinBox_valveNO_valueChanged(int arg1)
     else if (arg1==3)
     {
         this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType=2;
-        this->ui->comboBox_valveType->setEnabled(false);
-        this->ui->spinBox_valveActionConfirm->setEnabled(true);
-        this->ui->spinBox_valveStartStep->setEnabled(true);
-        this->ui->spinBox_valveEndStep->setEnabled(true);
-        this->ui->spinBox_valveEnable->setEnabled(true);
+        if(this->parameterEditable)
+        {
+            this->ui->comboBox_valveType->setEnabled(false);
+            this->ui->spinBox_valveActionConfirm->setEnabled(true);
+            this->ui->spinBox_valveStartStep->setEnabled(true);
+            this->ui->spinBox_valveEndStep->setEnabled(true);
+            this->ui->spinBox_valveEnable->setEnabled(true);
+        }
+
     }
     else
     {
-        this->ui->comboBox_valveType->setEnabled(true);
-        this->ui->spinBox_valveActionConfirm->setEnabled(true);
-        this->ui->spinBox_valveStartStep->setEnabled(true);
-        this->ui->spinBox_valveEndStep->setEnabled(true);
-        this->ui->spinBox_valveEnable->setEnabled(true);
+        if(this->parameterEditable)
+        {
+            this->ui->comboBox_valveType->setEnabled(true);
+            this->ui->spinBox_valveActionConfirm->setEnabled(true);
+            this->ui->spinBox_valveStartStep->setEnabled(true);
+            this->ui->spinBox_valveEndStep->setEnabled(true);
+            this->ui->spinBox_valveEnable->setEnabled(true);
+        }
+
     }
     this->ui->spinBox_valveEnable->setValue(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].enable);
     this->ui->comboBox_valveType->setCurrentIndex(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType);
@@ -4298,6 +4348,8 @@ void MainWindow::on_btn_uploadFromPLC_clicked()
  void MainWindow::OnLogInTimeout()
  {
      this->logInStatus=false;
+     this->parameterEditable=false;
+     emit parameterEditableStausChanged(false);
  }
 void MainWindow::OnUploadWholeSettingsTimeout()
 {
@@ -5086,7 +5138,8 @@ void MainWindow::on_pushButton_logIN_leave_clicked()
 
 void MainWindow::on_pushButton_logIN_GO_clicked()
 {
-    if(this->ui->lineEdit_password->text()!=this->systemRegisteredTextList.value(this->ui->UserID_spinbox->value()))
+    quint8 userID=this->ui->UserID_spinbox->value();
+    if(this->ui->lineEdit_password->text()!=this->systemRegisteredTextList.value(userID))
     {
        this->ui->label_password_wrong->setVisible(true);
     }
@@ -5094,6 +5147,15 @@ void MainWindow::on_pushButton_logIN_GO_clicked()
     {
         this->ui->lineEdit_password->clear();
         this->ui->label_password_wrong->setVisible(false);
+        if(userID>=1&&userID<=5)
+        {
+            this->parameterEditable=true;
+        }
+        else if (userID>=6&&userID<=10)
+        {
+           this->parameterEditable=false;
+        }
+        emit parameterEditableStausChanged(this->parameterEditable);
         this->ui->stackedWidget_mainProgram->setCurrentIndex(this->pageInfo1.targetPage_Index_mainStackWidget);
         quint8 loginDuration;
         bool needLogOff=true;
@@ -5142,10 +5204,26 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
     this->pageInfo1.currentPage_Index_mainStackWidget=arg1;
     qDebug()<<"page changed,previous page:"<<this->pageInfo1.previousPage_Index_mainStackWidget;
     qDebug()<<"page changed,current page:"<<this->pageInfo1.currentPage_Index_mainStackWidget;
+    //hide "check"
+    if(arg1==9)
+    {
+        this->ui->btn_CheckAlarm->setVisible(false);
+        this->ui->pushButton_language->setVisible(false);
+    }
+    else
+    {
+        if(!this->ui->btn_CheckAlarm->isVisible())
+          this->ui->btn_CheckAlarm->setVisible(true);
+        if(!this->ui->pushButton_language->isVisible())
+            this->ui->pushButton_language->setVisible(true);
+
+    }
     switch (arg1)
     {
     case 0:
     {
+        this->ui->comboBox_BarcodePort_Left->clear();
+        this->ui->comboBox__BarcodePort_Right->clear();
         const auto serialPortInfos = QSerialPortInfo::availablePorts();
         for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
         {
@@ -5153,6 +5231,23 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
            this->ui->comboBox_BarcodePort_Left->addItem(serialPortInfo.portName());
            this->ui->comboBox__BarcodePort_Right->addItem(serialPortInfo.portName());
         }
+    }
+    case 1:
+    {
+        //CMD109, prepare info for weld by manual
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x08;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x6D;//commandNO low byte,109
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        //set pointNO to 1
+        this->ui->WeldByManual_PointNO->setValue(1);
+        dataToTcpCommObj[6]=0x01;//PointNO
+        dataToTcpCommObj[7]=0x00;//reserved
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
     }
     case 8:
     {
@@ -5641,8 +5736,367 @@ void MainWindow::on_pushButton_saveMachineInfo_clicked()
          }
 
 }
-
 void MainWindow::on_actionMachine_Infomation_triggered()
 {
     this->changePage(8);
+}
+
+
+void MainWindow::on_pushButton_registText_import_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
+                                                    "/home",
+                                                    tr("CSV file (*.csv *.CSV)"));
+    if(!fileName.isEmpty())
+    {
+        QFile loadFile(fileName);
+
+             if (!loadFile.open(QIODevice::ReadOnly)) {
+                 qWarning("Couldn't open  file when try to import reg_text");
+                 return;
+             }
+             else
+             {
+                 qDebug()<<"import reg_text, file opened,file.size:"<<loadFile.size();
+
+                 QTextStream In1(&loadFile);
+                 if(!In1.readLine().contains("predefined"))
+                 {
+                    qWarning()<<"import reg_text ,bad file format";
+                    QMessageBox::information(this, tr("bad file format"), tr("bad file format."));
+                    return;
+                 }
+
+                 QString line,key,content;
+
+                 quint16 lineCount=0;
+                 QStringList lineToList;
+
+                 //backup user info before clear the text list for later restore
+                 QMap<quint32,QString>userInfo;
+                 for(int i=1;i<=10;i++)
+                 {
+                    userInfo[i]=this->systemRegisteredTextList[i];
+                 }
+                 this->systemRegisteredTextList.clear();
+                 //restore user info
+                 for(int i=1;i<=10;i++)
+                 {
+                    this->systemRegisteredTextList[i]=userInfo[i];
+                 }
+                 while (!In1.atEnd())//逐行读取文本，并去除每行的回车
+                 {
+                     qDebug()<<"reading file,line NO"<<lineCount;
+                     line = In1.readLine();
+                     qDebug()<<"line:"<<line;
+                     line.remove('\n');
+                     lineToList=line.split(';');
+                     if(lineToList.size()<2)
+                     {
+                         continue;
+                     }
+                     key=lineToList.at(0);
+                     content=lineToList.at(1);
+                     qDebug()<<tr("reading file, key:%1,content:%2,key.toInt():%3")
+                               .arg(key).arg(content).arg(key.toInt());
+                     if(!content.isEmpty())
+                     {
+
+                         this->systemRegisteredTextList[key.toInt()]=content;
+                     }
+
+                     lineCount++;
+
+                 }
+                 loadFile.close();
+                 //save new reg_text to file
+                 QFile file1("sysRegText.txt");
+                  if (!file1.open(QIODevice::WriteOnly)) {
+                      qWarning("Couldn't open  file when try to save new imported Registed text");
+
+                  }
+                  else
+                  {
+                      qDebug()<<"file opened,file.size:"<<file1.size();
+                      QDataStream Out1(&file1);
+                      Out1<<QString("predefined text list")<<(this->systemRegisteredTextList);
+                      qDebug()<<"save to file execed, file.size()"<<file1.size();
+                      file1.close();
+                  }
+                 qDebug()<<QTime::currentTime()<<"file reading done,line count"<<lineCount;
+                 //display the new imported reg_text
+                 QString itemText;
+                 QString allRegistedText;
+                 QList<quint32> keys=this->systemRegisteredTextList.keys();
+                 for(int i=0;i<keys.size();i++)
+                 {
+                    itemText=tr("ID:%1,Text:%2 \n").arg(keys.at(i)).arg(this->systemRegisteredTextList[keys.at(i)]);
+                    allRegistedText.append(itemText);
+                 }
+                 this->ui->textEdit_sysRegistedText->setText(allRegistedText);
+
+             }
+    }
+}
+void MainWindow::on_pushButton_registText_export_clicked()
+{
+    QString fileName=QFileDialog::getSaveFileName(this,tr("Save File"),"/home",tr("CSV file(*.csv *.CSV)"));
+    QFile loadFile(fileName);
+
+         if (!loadFile.open(QIODevice::WriteOnly)) {
+             qWarning("Couldn't open  file when try to export reg_text");
+             return;
+         }
+         else
+         {
+             qDebug()<<"export reg_text, file opened,file.size:"<<loadFile.size();
+
+             QTextStream Out1(&loadFile);
+             Out1.seek(0);
+             Out1<<"predefined text list \n";
+             QString itemText;
+             QList<quint32> keys=this->systemRegisteredTextList.keys();
+             for(int i=0;i<keys.size();i++)
+             {
+                itemText=tr("%1;%2\n").arg(keys.at(i)).arg(this->systemRegisteredTextList[keys.at(i)]);
+                Out1<<itemText;
+             }
+             loadFile.close();
+         }
+
+}
+void MainWindow::onParameterEditableStausChanged(bool editable)
+{
+
+    this->ui->toolName_lineEdit->setEnabled(editable);
+    this->ui->btn_saveToDisk->setEnabled(editable);
+    this->ui->btn_selectToolingImage->setEnabled(editable);
+    this->ui->btn_uploadFromPLC->setEnabled(editable);
+    this->ui->btn_downLoadToPLC->setEnabled(editable);
+
+    this->ui->checkBox_GenEnable_1->setEnabled(editable);
+    this->ui->checkBox_GenEnable_2->setEnabled(editable);
+    this->ui->checkBox_GenEnable_3->setEnabled(editable);
+    this->ui->checkBox_GenEnable_4->setEnabled(editable);
+    this->ui->btn_setGenEnable->setEnabled(editable);
+    this->ui->btn_undoGenEnable->setEnabled(editable);
+
+    this->ui->spinBox_thrusterEnable->setEnabled(editable);
+    this->ui->spinBox_GenNO->setEnabled(editable);
+    this->ui->spinBox_channel->setEnabled(editable);
+    this->ui->btn_setThrusterConfig->setEnabled(editable);
+    this->ui->btn_undoThrusterConfig->setEnabled(editable);
+
+    this->ui->PointName_display->setEnabled(editable);
+    this->ui->btn_setToAllPoints->setEnabled(editable);
+    this->ui->btn_setPointPara->setEnabled(editable);
+    this->ui->btn_PLC2Editting_WeldPoint->setEnabled(editable);
+    this->ui->spinBox_weldPointEnable->setEnabled(editable);
+    this->ui->spinBox_thrusterNOWPC->setEnabled(editable);
+    this->ui->spinBox_stepNO_WPC->setEnabled(editable);
+    this->ui->comboBox_barcode_assignment->setEnabled(editable);
+    this->ui->spinBox_pointPara_amp->setEnabled(editable);
+    this->ui->spinBox_pointPara_weldTime->setEnabled(editable);
+    this->ui->spinBox_pointPara_weldEnergy->setEnabled(editable);
+    this->ui->spinBox_pointPara_peakPower->setEnabled(editable);
+    this->ui->spinBox_pointPara_holdTime->setEnabled(editable);
+    this->ui->spinBox_pointPara_trigAmp->setEnabled(editable);
+    this->ui->spinBox_pointPara_trigPower->setEnabled(editable);
+    this->ui->spinBox_pointPara_trigTimeout->setEnabled(editable);
+    this->ui->spinBox_pointPara_trigByPower->setEnabled(editable);
+    this->ui->spinbox_pointPara_freeRunFreq->setEnabled(editable);
+    this->ui->spinbox_pointPara_freq_u_limit->setEnabled(editable);
+    this->ui->spinbox_pointPara_freq_l_limit->setEnabled(editable);
+    this->ui->spinBox_pointPara_rampupTime->setEnabled(editable);
+    this->ui->spinBox_pointPara_rampdownTime->setEnabled(editable);
+    this->ui->spinBox_pointPara_afterburst_duration->setEnabled(editable);
+    this->ui->spinBox_pointPara_afterburstDelay->setEnabled(editable);
+    this->ui->spinBox_pointPara_downPressure->setEnabled(editable);
+
+    this->ui->checkBox_LimitsEnable_BAD->setEnabled(editable);
+    this->ui->checkBox_LimitsEnable_SUSPECT->setEnabled(editable);
+    this->ui->spinBox_timeLowerLimit_BAD->setEnabled(editable);
+    this->ui->spinBox_timeLowerLimit_Suspect->setEnabled(editable);
+    this->ui->spinBox_timeUpperLimit_Suspect->setEnabled(editable);
+    this->ui->spinBox_timeUpperLimit_BAD->setEnabled(editable);
+    this->ui->spinBox_powerLowerLimit_BAD->setEnabled(editable);
+    this->ui->spinBox_powerLowerLimit_Suspect->setEnabled(editable);
+    this->ui->spinBox_powerUpperLimit_Suspect_2->setEnabled(editable);
+    this->ui->spinBox_powerUpperLimit_BAD->setEnabled(editable);
+    this->ui->spinBox_energyLowerLimit_BAD->setEnabled(editable);
+    this->ui->spinBox_energyLowerLimit_Suspect->setEnabled(editable);
+    this->ui->spinBox_energyUpperLimit_Suspect_2->setEnabled(editable);
+    this->ui->spinBox_energyUpperLimit_BAD->setEnabled(editable);
+
+    this->ui->stationPara_HighSpeed->setEnabled(editable);
+    this->ui->stationPara_MediumSpeed->setEnabled(editable);
+    this->ui->stationPara_LowSpeed->setEnabled(editable);
+    this->ui->servoPara_CWCCW->setEnabled(editable);
+    this->ui->btn_setServoPara->setEnabled(editable);
+    this->ui->btn_undoServoSetting->setEnabled(editable);
+
+
+    this->ui->stationPara_upperLimit->setEnabled(editable);
+    this->ui->stationPara_lowerLimit->setEnabled(editable);
+    this->ui->stationPara_setPoint->setEnabled(editable);
+    this->ui->stationPara_speedType->setEnabled(editable);
+    this->ui->btn_setStationPara->setEnabled(editable);
+    this->ui->btn_undoStationPara->setEnabled(editable);
+
+
+    this->ui->spinBox_stationNO->setEnabled(editable);
+    this->ui->btn_undoStepsStationEdit->setEnabled(editable);
+    this->ui->btn_setStationToStep->setEnabled(editable);
+
+    this->ui->valveName_lineEdit->setEnabled(editable);
+    this->ui->spinBox_valveEnable->setEnabled(editable);
+    this->ui->comboBox_valveType->setEnabled(editable);
+    this->ui->spinBox_valveActionConfirm->setEnabled(editable);
+    this->ui->spinBox_valveStartStep->setEnabled(editable);
+    this->ui->spinBox_valveEndStep->setEnabled(editable);
+    this->ui->btn_setValveConfig->setEnabled(editable);
+    this->ui->btn_undoValveConfig->setEnabled(editable);
+
+    this->ui->groupBox_barcodeSetting->setEnabled(editable);
+
+    this->ui->spinBox_filmFeeder_enable->setEnabled(editable);
+    this->ui->spinBox_filmFeeder_speed->setEnabled(editable);
+    this->ui->spinBox_filmFeeder_distance->setEnabled(editable);
+    this->ui->spinBox_filmFeeder_distance_2->setEnabled(editable);
+    this->ui->spinBox_filmFeeder_Interval->setEnabled(editable);
+    this->ui->comboBox_filmFeeder_Dir->setEnabled(editable);
+    this->ui->btn_Edit2PLC_FilmFeeder->setEnabled(editable);
+    this->ui->btn_PLC2Edit_FilmFeeder->setEnabled(editable);
+
+
+    this->ui->groupBox_partSensorBypass->setEnabled(editable);
+    this->ui->btn_Edit2PLC_PartSensor->setEnabled(editable);
+    this->ui->btn_PLC2Edit_PartSensor->setEnabled(editable);
+
+    this->ui->groupBox_valveSensorBypass->setEnabled(editable);
+    this->ui->btn_Edit2PLC_valveSensor->setEnabled(editable);
+    this->ui->btn_PLC2Edit_valveSensor->setEnabled(editable);
+}
+
+void MainWindow::on_pushButton_language_clicked()
+{
+
+   this->LanguageFlag+=1;
+   this->LanguageFlag%=2;
+   qDebug()<<"language flag:"<<this->LanguageFlag;
+   QTranslator translator;
+   bool loadLangFileResult;
+   if(LanguageFlag ==0)
+          loadLangFileResult=translator.load("CR519_CN.qm");
+   else if(LanguageFlag ==1)
+          loadLangFileResult=translator.load("CR519_EN.qm");
+   qDebug()<<tr("load file result:%1,fileName:%2").arg(loadLangFileResult?"OK":"failed").arg(LanguageFlag==0?"CR519_CN.qm":"CR519_EN.qm");
+   bool installTranslatorResult;
+   installTranslatorResult=qApp->installTranslator(&translator);
+   qDebug()<<tr("install translator result result:%1").arg(installTranslatorResult?"OK":"failed");
+   if(installTranslatorResult)
+   {
+
+       //if succeed to install new translater, then update "sysRegText.txt" with "sysRegText_CN.txt"
+       // or "sysRegText_EN.txt",then next startup software will use the correct language
+       ui->retranslateUi(this);
+       if(LanguageFlag ==0)
+       {
+           this->ui->pushButton_language->setText("语言");
+           if(QFile::exists("sysRegText_CN.txt"))
+           {
+               QFile loadFile("sysRegText_CN.txt");
+               QString textLoaded;
+               if(loadFile.open(QIODevice::ReadOnly))
+               {
+                   //load chinese text to systemRegisteredTextList then update text list on HMI
+                   QDataStream in1(&loadFile);
+
+                   if(loadFile.size()>0)
+                   {
+                       this->systemRegisteredTextList.clear();
+                       in1>>textLoaded>>this->systemRegisteredTextList;
+                       QList<quint32> keys=this->systemRegisteredTextList.keys();
+                       QString itemText;
+                       QString allRegistedText;
+                       for(int i=0;i<keys.size();i++)
+                       {
+                          itemText=tr("ID:%1,Text:%2 \n").arg(keys.at(i)).arg(this->systemRegisteredTextList[keys.at(i)]);
+                          allRegistedText.append(itemText);
+                       }
+                       this->ui->textEdit_sysRegistedText->setText(allRegistedText);
+                   }
+                   //reflush "sysRegText.txt" with "sysRegText_CN.txt"'s contents
+                   if(QFile::exists("sysRegText.txt"))
+                   {
+                       QFile loadFile2("sysRegText.txt");
+                       if(loadFile2.open(QIODevice::WriteOnly))
+                       {
+                           QDataStream out1(&loadFile2);
+                           out1<<textLoaded<<this->systemRegisteredTextList;
+                           loadFile2.close();
+                       }
+                   }
+               loadFile.close();
+               }
+
+           }
+       }
+       else if (LanguageFlag ==1)
+       {
+           this->ui->pushButton_language->setText("Language");
+           if(QFile::exists("sysRegText_EN.txt"))
+           {
+               QFile loadFile("sysRegText_EN.txt");
+               QString textLoaded;
+               if(loadFile.open(QIODevice::ReadOnly))
+               {
+                   //load English text to systemRegisteredTextList, then update display on HMI
+                   QDataStream in1(&loadFile);
+
+                   if(loadFile.size()>0)
+                   {
+                       this->systemRegisteredTextList.clear();
+                       in1>>textLoaded>>this->systemRegisteredTextList;
+                       QList<quint32> keys=this->systemRegisteredTextList.keys();
+                       QString itemText;
+                       QString allRegistedText;
+                       for(int i=0;i<keys.size();i++)
+                       {
+                          itemText=tr("ID:%1,Text:%2 \n").arg(keys.at(i)).arg(this->systemRegisteredTextList[keys.at(i)]);
+                          allRegistedText.append(itemText);
+                       }
+                       this->ui->textEdit_sysRegistedText->setText(allRegistedText);
+                   }
+                   //reflush "sysRegText.txt" with "sysRegText_EN.txt"'s contents
+                   if(QFile::exists("sysRegText.txt"))
+                   {
+                       QFile loadFile2("sysRegText.txt");
+                       if(loadFile2.open(QIODevice::WriteOnly))
+                       {
+                           QDataStream out1(&loadFile2);
+                           out1<<textLoaded<<this->systemRegisteredTextList;
+                           loadFile2.close();
+                       }
+                   }
+               loadFile.close();
+               }
+
+           }
+
+       }
+
+   }
+
+
+}
+
+void MainWindow::on_pushButton_3_clicked()
+{
+    this->ui->textEdit_weldByManual->clear();
+}
+
+void MainWindow::on_pushButton_clearHistoryAlarm_clicked()
+{
+    this->ui->textEdit_historyAlarm->clear();
 }

@@ -36,8 +36,8 @@
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <layout class="QVBoxLayout" name="verticalLayout_13">
-    <item>
+   <layout class="QGridLayout" name="gridLayout_52">
+    <item row="0" column="0">
      <widget class="QStackedWidget" name="stackedWidget_mainProgram">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -46,7 +46,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>8</number>
       </property>
       <widget class="QWidget" name="toolingConfig">
        <layout class="QGridLayout" name="gridLayout_15" rowstretch="0" columnstretch="1,10" columnminimumwidth="1,4">
@@ -307,7 +307,7 @@
            </font>
           </property>
           <property name="currentIndex">
-           <number>3</number>
+           <number>8</number>
           </property>
           <widget class="QWidget" name="Overview">
            <attribute name="title">
@@ -988,7 +988,7 @@
                  </font>
                 </property>
                 <property name="currentIndex">
-                 <number>3</number>
+                 <number>5</number>
                 </property>
                 <widget class="QWidget" name="tab_pointConfig">
                  <attribute name="title">
@@ -3784,7 +3784,7 @@
                </font>
               </property>
               <property name="currentIndex">
-               <number>0</number>
+               <number>3</number>
               </property>
               <widget class="QWidget" name="ServoOperation">
                <attribute name="title">
@@ -3792,7 +3792,7 @@
                </attribute>
                <layout class="QGridLayout" name="gridLayout_31" columnstretch="1,3">
                 <item row="0" column="0">
-                 <widget class="QGroupBox" name="groupBox_5">
+                 <widget class="QGroupBox" name="groupBox_ServoOperate">
                   <property name="title">
                    <string>Servo Operation</string>
                   </property>
@@ -5549,7 +5549,7 @@
            </attribute>
            <layout class="QGridLayout" name="gridLayout_38">
             <item row="0" column="0">
-             <widget class="QGroupBox" name="groupBox_10">
+             <widget class="QGroupBox" name="groupBox_barcodeSetting">
               <property name="font">
                <font>
                 <pointsize>12</pointsize>
@@ -5859,7 +5859,7 @@
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_23" stretch="5,1,1,1,1">
                    <item>
-                    <widget class="QGroupBox" name="groupBox_13">
+                    <widget class="QGroupBox" name="groupBox_barcodeAutoGen">
                      <property name="font">
                       <font>
                        <pointsize>12</pointsize>
@@ -6549,7 +6549,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#1</string>
+                        <string>Bypass Part  Sensor#R1</string>
                        </property>
                       </widget>
                      </item>
@@ -6561,7 +6561,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#2</string>
+                        <string>Bypass Part  Sensor#R2</string>
                        </property>
                       </widget>
                      </item>
@@ -6573,7 +6573,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#3</string>
+                        <string>Bypass Part  Sensor#R3</string>
                        </property>
                       </widget>
                      </item>
@@ -6585,7 +6585,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#4</string>
+                        <string>Bypass Part  Sensor#R4</string>
                        </property>
                       </widget>
                      </item>
@@ -6597,7 +6597,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#5</string>
+                        <string>Bypass Part  Sensor#R5</string>
                        </property>
                       </widget>
                      </item>
@@ -6609,7 +6609,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#6</string>
+                        <string>Bypass Part  Sensor#R6</string>
                        </property>
                       </widget>
                      </item>
@@ -6625,7 +6625,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#7</string>
+                        <string>Bypass Part  Sensor#L1</string>
                        </property>
                       </widget>
                      </item>
@@ -6637,7 +6637,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#8</string>
+                        <string>Bypass Part  Sensor#L2</string>
                        </property>
                       </widget>
                      </item>
@@ -6649,7 +6649,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#9</string>
+                        <string>Bypass Part  Sensor#L3</string>
                        </property>
                       </widget>
                      </item>
@@ -6661,7 +6661,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#10</string>
+                        <string>Bypass Part  Sensor#L4</string>
                        </property>
                       </widget>
                      </item>
@@ -6673,7 +6673,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#11</string>
+                        <string>Bypass Part  Sensor#L5</string>
                        </property>
                       </widget>
                      </item>
@@ -6685,7 +6685,7 @@
                         </font>
                        </property>
                        <property name="text">
-                        <string>Bypass Part  Sensor#12</string>
+                        <string>Bypass Part  Sensor#L6</string>
                        </property>
                       </widget>
                      </item>
@@ -6962,7 +6962,7 @@
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout_17" stretch="1,1">
                 <item>
-                 <widget class="QGroupBox" name="groupBox_partSensorBypass_2">
+                 <widget class="QGroupBox" name="groupBox_valveSensorBypass">
                   <property name="font">
                    <font>
                     <pointsize>12</pointsize>
@@ -14293,7 +14293,7 @@
            </font>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="Alarm_Current">
            <attribute name="title">
@@ -14408,7 +14408,7 @@
            <attribute name="title">
             <string>RunningLog</string>
            </attribute>
-           <layout class="QVBoxLayout" name="verticalLayout_41" stretch="10,1">
+           <layout class="QVBoxLayout" name="verticalLayout_41" stretch="10">
             <item>
              <widget class="QTextEdit" name="textEdit_runningLog">
               <property name="verticalScrollBarPolicy">
@@ -14418,49 +14418,6 @@
                <bool>true</bool>
               </property>
              </widget>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="horizontalLayout_143">
-              <item>
-               <spacer name="horizontalSpacer_9">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushButton_loadRunningLog_2">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Load</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="pushButton_clearRunningLog">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Clear</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
             </item>
            </layout>
           </widget>
@@ -14637,7 +14594,7 @@
               <property name="title">
                <string>Navigator</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,0,0,0,0,5,0,0">
+              <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,0,0,0,0,1,0,0">
                <item>
                 <widget class="QPushButton" name="btn_run_monitor">
                  <property name="sizePolicy">
@@ -15990,7 +15947,7 @@
          <number>1</number>
         </property>
         <property name="maximum">
-         <number>5</number>
+         <number>10</number>
         </property>
        </widget>
        <widget class="QPushButton" name="pushButton_logIN_leave">
@@ -16092,15 +16049,15 @@
        </widget>
       </widget>
       <widget class="QWidget" name="TextRegiste">
-       <layout class="QGridLayout" name="gridLayout_64">
-        <item row="0" column="0">
-         <layout class="QVBoxLayout" name="verticalLayout_45">
+       <layout class="QVBoxLayout" name="verticalLayout_13">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_169" stretch="1,2">
           <item>
            <widget class="QGroupBox" name="groupBox_2">
             <property name="title">
              <string>Alarm And Indicating MSG</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_44" stretch="1,3">
+            <layout class="QVBoxLayout" name="verticalLayout_44" stretch="1,6">
              <item>
               <layout class="QGridLayout" name="gridLayout_62" rowstretch="1,2">
                <item row="0" column="0">
@@ -16245,7 +16202,7 @@
               </layout>
              </item>
              <item>
-              <layout class="QGridLayout" name="gridLayout_63" rowstretch="1,3" columnstretch="0,1,3,0,0">
+              <layout class="QGridLayout" name="gridLayout_63" rowstretch="1,8" columnstretch="0,1,3,0,0">
                <item row="0" column="0" colspan="2">
                 <widget class="QLabel" name="label_5">
                  <property name="font">
@@ -16274,6 +16231,9 @@
                  </property>
                  <property name="buttonSymbols">
                   <enum>QAbstractSpinBox::NoButtons</enum>
+                 </property>
+                 <property name="minimum">
+                  <number>2</number>
                  </property>
                  <property name="maximum">
                   <number>999999999</number>
@@ -16327,26 +16287,47 @@
            </widget>
           </item>
           <item>
-           <spacer name="verticalSpacer_5">
-            <property name="orientation">
-             <enum>Qt::Vertical</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>20</width>
-              <height>40</height>
-             </size>
-            </property>
-           </spacer>
+           <layout class="QVBoxLayout" name="verticalLayout_42" stretch="8,1">
+            <item>
+             <widget class="QTextEdit" name="textEdit_sysRegistedText">
+              <property name="readOnly">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_167">
+              <item>
+               <widget class="QPushButton" name="pushButton_registText_import">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Import from File</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="pushButton_registText_export">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Export to File</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
           </item>
          </layout>
-        </item>
-        <item row="0" column="1">
-         <widget class="QTextEdit" name="textEdit_sysRegistedText">
-          <property name="readOnly">
-           <bool>true</bool>
-          </property>
-         </widget>
         </item>
        </layout>
       </widget>
@@ -17574,7 +17555,7 @@
         <property name="geometry">
          <rect>
           <x>260</x>
-          <y>150</y>
+          <y>190</y>
           <width>251</width>
           <height>31</height>
          </rect>
@@ -17611,7 +17592,7 @@
         <property name="geometry">
          <rect>
           <x>70</x>
-          <y>140</y>
+          <y>180</y>
           <width>181</width>
           <height>41</height>
          </rect>
@@ -17654,9 +17635,9 @@
        <widget class="QLabel" name="label_158">
         <property name="geometry">
          <rect>
-          <x>70</x>
+          <x>60</x>
           <y>70</y>
-          <width>111</width>
+          <width>121</width>
           <height>41</height>
          </rect>
         </property>
@@ -17673,7 +17654,7 @@
         <property name="geometry">
          <rect>
           <x>70</x>
-          <y>180</y>
+          <y>220</y>
           <width>181</width>
           <height>41</height>
          </rect>
@@ -17691,7 +17672,7 @@
         <property name="geometry">
          <rect>
           <x>260</x>
-          <y>190</y>
+          <y>230</y>
           <width>251</width>
           <height>31</height>
          </rect>
@@ -17707,10 +17688,224 @@
         </property>
        </widget>
       </widget>
+      <widget class="QWidget" name="Welcome">
+       <layout class="QGridLayout" name="gridLayout_64">
+        <property name="topMargin">
+         <number>30</number>
+        </property>
+        <property name="verticalSpacing">
+         <number>20</number>
+        </property>
+        <item row="0" column="0">
+         <layout class="QVBoxLayout" name="verticalLayout_43">
+          <property name="spacing">
+           <number>20</number>
+          </property>
+          <property name="topMargin">
+           <number>30</number>
+          </property>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_173">
+            <item>
+             <spacer name="horizontalSpacer_19">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_166">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <pointsize>30</pointsize>
+                <italic>true</italic>
+               </font>
+              </property>
+              <property name="text">
+               <string>DUKANE ULTRASONIC WORK UNIT</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_20">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_143">
+            <item>
+             <spacer name="horizontalSpacer_9">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_167">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <pointsize>30</pointsize>
+                <italic>false</italic>
+               </font>
+              </property>
+              <property name="text">
+               <string>杜肯超声焊接单元</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_15">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_171">
+            <item>
+             <spacer name="horizontalSpacer_17">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_169">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <pointsize>30</pointsize>
+                <italic>true</italic>
+               </font>
+              </property>
+              <property name="text">
+               <string>Built By Dukane I.A.S. China,Ltd</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_172">
+            <item>
+             <spacer name="horizontalSpacer_18">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_168">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <pointsize>30</pointsize>
+                <italic>false</italic>
+               </font>
+              </property>
+              <property name="text">
+               <string>杜肯超声波（常州）有限公司 制造</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_170">
+            <item>
+             <spacer name="horizontalSpacer_16">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLabel" name="label_170">
+              <property name="font">
+               <font>
+                <family>Arial</family>
+                <pointsize>30</pointsize>
+                <italic>true</italic>
+               </font>
+              </property>
+              <property name="text">
+               <string>www.dukane.com</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,10,1">
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,10,1,0">
       <item>
        <widget class="QLabel" name="LED_indicatingMsg">
         <property name="sizePolicy">
@@ -17735,7 +17930,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Indicating MSG</string>
+         <string>Startup in process/正在启动</string>
         </property>
        </widget>
       </item>
@@ -17754,6 +17949,24 @@
         </property>
         <property name="text">
          <string>CheckAlarm</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="pushButton_language">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>12</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Language</string>
         </property>
        </widget>
       </item>

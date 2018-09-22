@@ -50,6 +50,7 @@ signals:
     void updateAlarmText(QString &alarmText);
     void moveAlarmToHistory(alarmItem item_alarm);
     void receivedPointCycleData(pointCycleData);
+    void parameterEditableStausChanged(bool editable);
 public slots:
   void receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj);
   void OnUploadWholeSettingsTimeout();
@@ -62,6 +63,7 @@ public slots:
   void OnPLCItemsChanged_Modbus(QVariantList changedItems);
   void onUpdateAlarmText(QString text);  
   void execLogging(QString logContents,quint16 logID,quint8 logLevel);
+  void onParameterEditableStausChanged(bool editable);
 private slots:
 
 
@@ -494,6 +496,17 @@ private slots:
 
     void on_actionMachine_Infomation_triggered();
 
+
+    void on_pushButton_registText_import_clicked();
+
+    void on_pushButton_registText_export_clicked();
+
+    void on_pushButton_language_clicked();
+
+    void on_pushButton_3_clicked();
+
+    void on_pushButton_clearHistoryAlarm_clicked();
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
@@ -532,10 +545,10 @@ public:
     QString barcode_in_use_right;
     QString barcode_to_use_right;
     bool logInStatus;
+    bool parameterEditable;
     QStringList recentRunningLogs;
     plcVarTable plcVars;
-
-
+    quint8 LanguageFlag;
 
 };
 
