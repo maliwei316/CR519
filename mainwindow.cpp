@@ -30,6 +30,14 @@ MainWindow::MainWindow(QWidget *parent) :
     this->toolID_editing=1;
     this->tempTooling_editting->plcToolingInfo.toolingNO=1;
     this->machineInfoReady=false;
+    //barcode port combbox init
+    const auto serialPortInfos = QSerialPortInfo::availablePorts();
+    for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
+    {
+       this->ui->comboBox_BarcodePort_Left->addItem(serialPortInfo.portName());
+       this->ui->comboBox__BarcodePort_Right->addItem(serialPortInfo.portName());
+    }
+    //load machine info
     if(QFile::exists("machineInfo.txt"))
     {
         qDebug()<<"found machineInfo.txt";
@@ -55,7 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     this->logInStatus=false;
-
+    //load tooling settings
     if(QFile::exists("toolingConfig/currentTooling.dc"))
     {
         this->tempTooling_editting->loadFromDisk("toolingConfig/currentTooling.dc");
@@ -238,6 +246,8 @@ bool MainWindow::barcodeInit(clsBarcode* clsbarcode,const barcodeSetting& barcod
                     .arg(barcode_settings.portName);
             emit this->logRequest(logcontents,205,0);
         }
+        clsbarcode->setDataTerminalReady(true);
+
         return true;
     }
 
@@ -352,34 +362,61 @@ void MainWindow::changePage(quint16 targetPageIndex)
 void MainWindow::getBarcode_left()
 {
     qDebug()<<"getBarcoede_Left executed";
-    if(this->clsBarcode_left->bytesAvailable()>=this->tempTooling_editting->leftBarcodeSettings.minLength)
+    QEventLoop eventloop;
+    QTimer::singleShot(20, &eventloop, SLOT(quit()));
+    eventloop.exec();
+    if(clsBarcode_left->error())
     {
-        QEventLoop eventloop;
-        QTimer::singleShot(20, &eventloop, SLOT(quit()));
-        eventloop.exec();
-        this->barcode_to_use_left=QString(this->clsBarcode_left->readAll());
-        qDebug()<<tr("left barcode, port:%1,new got barcode:%2")
-               .arg(this->clsBarcode_left->portName())
-               .arg(this->barcode_to_use_left);
-        this->ui->lineEdit_scannedBarcode_left->setText(this->barcode_to_use_left);
-        this->ui->lineEdit_barcode_left->setText(this->barcode_to_use_left);
-
+        QMessageBox::information(this, tr("barcode scann error"), tr("error occured on serial port"));
+        return;
     }
+    this->barcode_to_use_left=QString(this->clsBarcode_left->readAll());
+    if(this->barcode_to_use_left.size()<this->tempTooling_editting->leftBarcodeSettings.minLength)
+    {
+        if(this->barcode_to_use_left.size()>0)
+        {
+            QMessageBox::information(this, tr("barcode too short,portName:%1").arg(this->clsBarcode_left->portName()),
+                                     tr("length of scanned barcode is less than specified minimum length:%1,length:%2,barcode:%3")
+                                     .arg(this->tempTooling_editting->leftBarcodeSettings.minLength).arg(this->barcode_to_use_left.size()).arg(this->barcode_to_use_left));
+            this->barcode_to_use_left.clear();
+        }
+        return;
+    }
+    qDebug()<<tr("left barcode, port:%1,new got barcode:%2")
+           .arg(this->clsBarcode_left->portName())
+           .arg(this->barcode_to_use_left);
+    this->ui->lineEdit_scannedBarcode_left->setText(this->barcode_to_use_left);
+    this->ui->lineEdit_barcode_left->setText(this->barcode_to_use_left);
 }
 void MainWindow::getBarcode_right()
 {
-    if(this->clsBarcode_right->bytesAvailable()>=this->tempTooling_editting->leftBarcodeSettings.minLength)
+
+    QEventLoop eventloop;
+    QTimer::singleShot(20, &eventloop, SLOT(quit()));
+    eventloop.exec();
+    if(clsBarcode_right->error())
     {
-        QEventLoop eventloop;
-        QTimer::singleShot(20, &eventloop, SLOT(quit()));
-        eventloop.exec();
-        this->barcode_to_use_right=QString(this->clsBarcode_right->readAll());
-        qDebug()<<tr("right barcode, port:%1,new got barcode:%2")
-               .arg(this->clsBarcode_right->portName())
-               .arg(this->barcode_to_use_right);
-        this->ui->lineEdit_scannedBarcode_right->setText(this->barcode_to_use_right);
-        this->ui->lineEdit_barcode_right->setText(this->barcode_to_use_right);
+        QMessageBox::information(this, tr("barcode scann error"), tr("error occured on serial port"));
+        return;
     }
+    this->barcode_to_use_right=QString(this->clsBarcode_right->readAll());
+    if(this->barcode_to_use_right.size()<this->tempTooling_editting->leftBarcodeSettings.minLength)
+    {
+        if(this->barcode_to_use_right.size()>0)
+        {
+            QMessageBox::information(this, tr("barcode too short_right,portName:%1").arg(this->clsBarcode_right->portName()),
+                                     tr("length of scanned barcode is less than specified minimum length:%1,barcode length:%2,barcode:%3")
+                                     .arg(this->tempTooling_editting->leftBarcodeSettings.minLength).arg(this->barcode_to_use_right.size()).arg(this->barcode_to_use_right));
+            this->barcode_to_use_right.clear();
+        }
+
+        return;
+    }
+    qDebug()<<tr("right barcode, port:%1,new got barcode:%2")
+           .arg(this->clsBarcode_right->portName())
+           .arg(this->barcode_to_use_right);
+    this->ui->lineEdit_scannedBarcode_right->setText(this->barcode_to_use_right);
+    this->ui->lineEdit_barcode_right->setText(this->barcode_to_use_right);
 }
 void MainWindow::handleBarcodeError(QSerialPort::SerialPortError error)
  {
@@ -1068,7 +1105,7 @@ void MainWindow::updatePLCItem(plcItem item)
         }
 
         this->ui->spinBox_run_liveStepNO->setValue(this->plcVars.currentStepNO);
-        this->ui->progressBar->setValue(this->plcVars.currentStepNO);
+
 
         break;
     }
@@ -1080,7 +1117,7 @@ void MainWindow::updatePLCItem(plcItem item)
         Msg_count=(quint16)item.currentValue.wordVar;
         qDebug()<<"TRCV_MSG_Count:"<<Msg_count;
 
-        if(this->plcVars.work_Mode=2)
+        if(this->plcVars.work_Mode==2)
         {
             QString msg_str=tr("PLC received new Msg,MsgCount:%1").arg((quint16)Msg_count);
             this->ui->textEdit_weldByManual->append(msg_str);
@@ -1098,6 +1135,8 @@ void MainWindow::updatePLCItem(plcItem item)
             currentWorkMode=3;
         if(this->plcVars.work_Mode!=currentWorkMode||this->ui->stackedWidget_mainProgram->currentIndex()==9)
         {
+            qDebug()<<tr("received PLC workMode:%1,PC stored workMode:%2,current Page Index:%3")
+                      .arg(currentWorkMode).arg((this->plcVars.work_Mode)).arg(this->ui->stackedWidget_mainProgram->currentIndex());
             this->changePage(currentWorkMode==2?1:4);
             this->plcVars.work_Mode=currentWorkMode;
             this->logInStatus=false;
@@ -3592,57 +3631,40 @@ void MainWindow::on_servo_disable_btn_clicked()
         emit this->sendDataToTCPCommObj(dataToTcpCommObj);
 }
 
-void MainWindow::on_servo_Jog1_btn_pressed()
+void MainWindow::on_servo_Jog2_btn_toggled(bool checked)
 {
-
-}
-
-void MainWindow::on_servo_Jog1_btn_released()
-{
-
-}
-
-void MainWindow::on_servo_Jog2_btn_pressed()
-{
-    QByteArray dataToTcpCommObj;
-    dataToTcpCommObj[0]=0x00;//length high byte
-    dataToTcpCommObj[1]=0x0A;//length low byte
-    dataToTcpCommObj[2]=0x00;//commandNO high byte
-    dataToTcpCommObj[3]=0x79;//commandNO low byte,121
-    dataToTcpCommObj[4]=0x00;//reserve byte
-    dataToTcpCommObj[5]=0x00;//reserve byte
-    dataToTcpCommObj[6]=0x0E;//14 JOG2
-    dataToTcpCommObj[7]=0x00;//MDI station NO
-    dataToTcpCommObj[8]=0x00;//reserve
-    dataToTcpCommObj[9]=0x00;//reserve
-    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
-        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
-}
-
-void MainWindow::on_servo_Jog2_btn_released()
-{
-    QByteArray dataToTcpCommObj;
-    dataToTcpCommObj[0]=0x00;//length high byte
-    dataToTcpCommObj[1]=0x0A;//length low byte
-    dataToTcpCommObj[2]=0x00;//commandNO high byte
-    dataToTcpCommObj[3]=0x79;//commandNO low byte,121
-    dataToTcpCommObj[4]=0x00;//reserve byte
-    dataToTcpCommObj[5]=0x00;//reserve byte
-    dataToTcpCommObj[6]=0x00;//stop servo while keep enable
-    dataToTcpCommObj[7]=0x00;//MDI station NO
-    dataToTcpCommObj[8]=0x00;//reserve
-    dataToTcpCommObj[9]=0x00;//reserve
-    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
-        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
-}
-
-void MainWindow::on_servo_home_btn_pressed()
-{
-
-}
-
-void MainWindow::on_servo_home_btn_released()
-{
+    if(checked)
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x79;//commandNO low byte,121
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x0E;//14 JOG2
+        dataToTcpCommObj[7]=0x00;//MDI station NO
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+            emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
+    else
+    {
+        QByteArray dataToTcpCommObj;
+        dataToTcpCommObj[0]=0x00;//length high byte
+        dataToTcpCommObj[1]=0x0A;//length low byte
+        dataToTcpCommObj[2]=0x00;//commandNO high byte
+        dataToTcpCommObj[3]=0x79;//commandNO low byte,121
+        dataToTcpCommObj[4]=0x00;//reserve byte
+        dataToTcpCommObj[5]=0x00;//reserve byte
+        dataToTcpCommObj[6]=0x00;//stop servo while keep enable
+        dataToTcpCommObj[7]=0x00;//MDI station NO
+        dataToTcpCommObj[8]=0x00;//reserve
+        dataToTcpCommObj[9]=0x00;//reserve
+        if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+         emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+    }
 
 }
 
@@ -4477,6 +4499,7 @@ void MainWindow::on_comboBox_BarcodePort_Left_currentIndexChanged(const QString 
 {
     qDebug()<<"on_comboBox_BarcodePort_Left_currentIndexChanged,arg1:"<<arg1;
     this->tempTooling_editting->leftBarcodeSettings.portName=arg1;
+
 }
 
 void MainWindow::on_comboBox__BarcodePort_Right_currentIndexChanged(const QString &arg1)
@@ -5222,15 +5245,7 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
     {
     case 0:
     {
-        this->ui->comboBox_BarcodePort_Left->clear();
-        this->ui->comboBox__BarcodePort_Right->clear();
-        const auto serialPortInfos = QSerialPortInfo::availablePorts();
-        for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
-        {
-           //qDebug()<< "serial Port: " << serialPortInfo.portName();
-           this->ui->comboBox_BarcodePort_Left->addItem(serialPortInfo.portName());
-           this->ui->comboBox__BarcodePort_Right->addItem(serialPortInfo.portName());
-        }
+        break;
     }
     case 1:
     {
@@ -5248,6 +5263,7 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
         dataToTcpCommObj[7]=0x00;//reserved
         if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
             emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+        break;
     }
     case 8:
     {
@@ -6100,3 +6116,47 @@ void MainWindow::on_pushButton_clearHistoryAlarm_clicked()
 {
     this->ui->textEdit_historyAlarm->clear();
 }
+
+void MainWindow::on_btn_partCounterReset_clicked()
+{
+    //clear part counters
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x06;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x80;//commandNO low byte,128
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
+
+
+void MainWindow::on_tab_stepStation_currentChanged(int index)
+{
+    if(index!=0)
+    {
+        if(this->ui->servo_Jog1_btn->isChecked()||this->ui->servo_Jog2_btn->isChecked()||this->ui->servo_home_btn->isChecked())
+        {
+            this->ui->tab_stepStation->setCurrentIndex(0);
+        }
+    }
+}
+
+void MainWindow::on_tab_toolingConfig_currentChanged(int index)
+{
+    switch (index) {
+    case 6:
+    {
+        //this->clsBarcode_left->isOpen()
+        this->switchItemOnOff(this->ui->LED_serialPort_left,this->clsBarcode_left->isOpen());
+        this->switchItemOnOff(this->ui->LED_serialPort_right,this->clsBarcode_right->isOpen());
+        break;
+    }
+
+    default:
+        break;
+    }
+}
+

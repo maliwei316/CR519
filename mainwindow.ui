@@ -46,7 +46,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>8</number>
+       <number>9</number>
       </property>
       <widget class="QWidget" name="toolingConfig">
        <layout class="QGridLayout" name="gridLayout_15" rowstretch="0" columnstretch="1,10" columnminimumwidth="1,4">
@@ -187,6 +187,12 @@
             <layout class="QGridLayout" name="gridLayout_16">
              <item row="0" column="0">
               <widget class="QPushButton" name="btn_saveToDisk">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="font">
                 <font>
                  <pointsize>12</pointsize>
@@ -199,6 +205,12 @@
              </item>
              <item row="0" column="1">
               <widget class="QPushButton" name="btn_selectToolingImage">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="font">
                 <font>
                  <pointsize>12</pointsize>
@@ -211,6 +223,12 @@
              </item>
              <item row="1" column="0">
               <widget class="QPushButton" name="btn_uploadFromPLC">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="font">
                 <font>
                  <pointsize>12</pointsize>
@@ -223,6 +241,12 @@
              </item>
              <item row="1" column="1">
               <widget class="QPushButton" name="btn_downLoadToPLC">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
                <property name="font">
                 <font>
                  <pointsize>12</pointsize>
@@ -307,7 +331,7 @@
            </font>
           </property>
           <property name="currentIndex">
-           <number>8</number>
+           <number>6</number>
           </property>
           <widget class="QWidget" name="Overview">
            <attribute name="title">
@@ -3784,7 +3808,7 @@
                </font>
               </property>
               <property name="currentIndex">
-               <number>3</number>
+               <number>0</number>
               </property>
               <widget class="QWidget" name="ServoOperation">
                <attribute name="title">
@@ -3851,6 +3875,9 @@
                        </property>
                        <property name="text">
                         <string>JOG_BackWord</string>
+                       </property>
+                       <property name="checkable">
+                        <bool>true</bool>
                        </property>
                       </widget>
                      </item>
@@ -5586,7 +5613,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="2" column="2">
+                      <item row="2" column="3">
                        <widget class="QComboBox" name="comboBox__BarcodePort_Right">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -5596,7 +5623,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="0" column="2">
+                      <item row="0" column="3">
                        <widget class="QComboBox" name="comboBox_BarcodePort_Left">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -5606,7 +5633,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="6" column="2">
+                      <item row="6" column="3">
                        <widget class="QComboBox" name="comboBox_parity">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -5631,7 +5658,7 @@
                         </item>
                        </widget>
                       </item>
-                      <item row="7" column="2">
+                      <item row="7" column="3">
                        <widget class="QSpinBox" name="spinBox_barcodeMaxLength">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -5716,7 +5743,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="8" column="2">
+                      <item row="8" column="3">
                        <widget class="QSpinBox" name="spinBox_BarcodeMinLength">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -5741,7 +5768,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="3" column="2">
+                      <item row="3" column="3">
                        <widget class="QComboBox" name="comboBox_Baud">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
@@ -5781,7 +5808,7 @@
                         </item>
                        </widget>
                       </item>
-                      <item row="0" column="1">
+                      <item row="0" column="2">
                        <widget class="QCheckBox" name="checkBox_barcode_left_enable">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -5800,7 +5827,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="2" column="1">
+                      <item row="2" column="2">
                        <widget class="QCheckBox" name="checkBox_barcode_right_enable">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -5819,7 +5846,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="4" column="2">
+                      <item row="4" column="3">
                        <widget class="QSpinBox" name="spinBox_barcodeDataBits">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -5835,7 +5862,7 @@
                         </property>
                        </widget>
                       </item>
-                      <item row="5" column="2">
+                      <item row="5" column="3">
                        <widget class="QSpinBox" name="spinBox_barcodeStopBits">
                         <property name="sizePolicy">
                          <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
@@ -5848,6 +5875,50 @@
                         </property>
                         <property name="maximum">
                          <number>2</number>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="1">
+                       <widget class="QLabel" name="LED_serialPort_left">
+                        <property name="minimumSize">
+                         <size>
+                          <width>25</width>
+                          <height>25</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>25</width>
+                          <height>25</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="pixmap">
+                         <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="1">
+                       <widget class="QLabel" name="LED_serialPort_right">
+                        <property name="minimumSize">
+                         <size>
+                          <width>25</width>
+                          <height>25</height>
+                         </size>
+                        </property>
+                        <property name="maximumSize">
+                         <size>
+                          <width>25</width>
+                          <height>25</height>
+                         </size>
+                        </property>
+                        <property name="text">
+                         <string/>
+                        </property>
+                        <property name="pixmap">
+                         <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
                         </property>
                        </widget>
                       </item>
@@ -5868,101 +5939,73 @@
                      <property name="title">
                       <string>Barcode Auto Generation</string>
                      </property>
-                     <widget class="QLabel" name="label_41">
-                      <property name="geometry">
-                       <rect>
-                        <x>10</x>
-                        <y>40</y>
-                        <width>54</width>
-                        <height>12</height>
-                       </rect>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>12</pointsize>
-                       </font>
-                      </property>
-                      <property name="text">
-                       <string>Prefix</string>
-                      </property>
-                     </widget>
-                     <widget class="QLabel" name="label_48">
-                      <property name="geometry">
-                       <rect>
-                        <x>10</x>
-                        <y>80</y>
-                        <width>54</width>
-                        <height>12</height>
-                       </rect>
-                      </property>
-                      <property name="font">
-                       <font>
-                        <pointsize>12</pointsize>
-                       </font>
-                      </property>
-                      <property name="text">
-                       <string>Sufix</string>
-                      </property>
-                     </widget>
-                     <widget class="QLineEdit" name="lineEdit_barcode_prefix">
-                      <property name="geometry">
-                       <rect>
-                        <x>60</x>
-                        <y>40</y>
-                        <width>41</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                     </widget>
-                     <widget class="QLineEdit" name="lineEdit_barcode_suffix">
-                      <property name="geometry">
-                       <rect>
-                        <x>60</x>
-                        <y>80</y>
-                        <width>41</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                     </widget>
-                     <widget class="QLabel" name="label_50">
-                      <property name="geometry">
-                       <rect>
-                        <x>10</x>
-                        <y>130</y>
-                        <width>211</width>
-                        <height>16</height>
-                       </rect>
-                      </property>
-                      <property name="text">
-                       <string>Sample:(Prefix+L/R+dateTime+suffix)</string>
-                      </property>
-                     </widget>
-                     <widget class="QLabel" name="label_72">
-                      <property name="geometry">
-                       <rect>
-                        <x>10</x>
-                        <y>160</y>
-                        <width>191</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text">
-                       <string>Auto Generated barcode Sample</string>
-                      </property>
-                     </widget>
-                     <widget class="QLabel" name="label_147">
-                      <property name="geometry">
-                       <rect>
-                        <x>10</x>
-                        <y>180</y>
-                        <width>181</width>
-                        <height>20</height>
-                       </rect>
-                      </property>
-                      <property name="text">
-                       <string>Auto Generated barcode Sample</string>
-                      </property>
-                     </widget>
+                     <layout class="QGridLayout" name="gridLayout_71">
+                      <item row="0" column="0">
+                       <widget class="QLabel" name="label_41">
+                        <property name="font">
+                         <font>
+                          <pointsize>12</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Prefix</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="1">
+                       <widget class="QLineEdit" name="lineEdit_barcode_prefix">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="0">
+                       <widget class="QLabel" name="label_48">
+                        <property name="font">
+                         <font>
+                          <pointsize>12</pointsize>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Sufix</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="1" column="1">
+                       <widget class="QLineEdit" name="lineEdit_barcode_suffix">
+                        <property name="sizePolicy">
+                         <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                          <horstretch>0</horstretch>
+                          <verstretch>0</verstretch>
+                         </sizepolicy>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="2" column="0" colspan="2">
+                       <widget class="QLabel" name="label_50">
+                        <property name="text">
+                         <string>Sample:(Prefix+L/R+dateTime+suffix)</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="3" column="0" colspan="2">
+                       <widget class="QLabel" name="label_72">
+                        <property name="text">
+                         <string>Auto Generated barcode Sample</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="4" column="0" colspan="2">
+                       <widget class="QLabel" name="label_147">
+                        <property name="text">
+                         <string>Auto Generated barcode Sample</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
                     </widget>
                    </item>
                    <item>
@@ -5980,7 +6023,7 @@
                    <item>
                     <widget class="QLineEdit" name="lineEdit_scannedBarcode_left">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -6013,7 +6056,7 @@
                    <item>
                     <widget class="QLineEdit" name="lineEdit_scannedBarcode_right">
                      <property name="sizePolicy">
-                      <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                      <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
                        <horstretch>0</horstretch>
                        <verstretch>0</verstretch>
                       </sizepolicy>
@@ -14594,7 +14637,7 @@
               <property name="title">
                <string>Navigator</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,0,0,0,0,1,0,0">
+              <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,1,1,1,1,3,1,1">
                <item>
                 <widget class="QPushButton" name="btn_run_monitor">
                  <property name="sizePolicy">
@@ -14707,7 +14750,14 @@
                 </layout>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_161" stretch="1,3">
+                <layout class="QHBoxLayout" name="horizontalLayout_161" stretch="0,1">
+                 <item>
+                  <widget class="QLabel" name="label_171">
+                   <property name="text">
+                    <string>CurrentStep</string>
+                   </property>
+                  </widget>
+                 </item>
                  <item>
                   <widget class="QSpinBox" name="spinBox_run_liveStepNO">
                    <property name="enabled">
@@ -14727,22 +14777,6 @@
                    </property>
                    <property name="buttonSymbols">
                     <enum>QAbstractSpinBox::NoButtons</enum>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QProgressBar" name="progressBar">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="maximum">
-                    <number>17</number>
-                   </property>
-                   <property name="value">
-                    <number>-1</number>
                    </property>
                   </widget>
                  </item>
@@ -14788,20 +14822,24 @@
                     <property name="title">
                      <string>Barcode</string>
                     </property>
-                    <layout class="QHBoxLayout" name="horizontalLayout_162">
-                     <item>
+                    <layout class="QGridLayout" name="gridLayout_72">
+                     <item row="0" column="0">
                       <layout class="QVBoxLayout" name="verticalLayout_20">
                        <item>
-                        <widget class="QLabel" name="label_80">
-                         <property name="font">
-                          <font>
-                           <pointsize>12</pointsize>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Barcode_Left</string>
-                         </property>
-                        </widget>
+                        <layout class="QHBoxLayout" name="horizontalLayout_162">
+                         <item>
+                          <widget class="QLabel" name="label_80">
+                           <property name="font">
+                            <font>
+                             <pointsize>12</pointsize>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>Left</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
                        </item>
                        <item>
                         <widget class="QLineEdit" name="lineEdit_barcode_left">
@@ -14825,21 +14863,73 @@
                         </widget>
                        </item>
                        <item>
-                        <widget class="QLabel" name="label_104">
+                        <widget class="QLineEdit" name="lineEdit_barcode_left_inuse">
+                         <property name="enabled">
+                          <bool>false</bool>
+                         </property>
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
                          <property name="font">
                           <font>
                            <pointsize>12</pointsize>
                           </font>
                          </property>
-                         <property name="text">
-                          <string>Barcode_Right</string>
+                         <property name="frame">
+                          <bool>true</bool>
+                         </property>
+                         <property name="readOnly">
+                          <bool>false</bool>
                          </property>
                         </widget>
+                       </item>
+                       <item>
+                        <layout class="QHBoxLayout" name="horizontalLayout_174">
+                         <item>
+                          <widget class="QLabel" name="label_104">
+                           <property name="font">
+                            <font>
+                             <pointsize>12</pointsize>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>Right</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
                        </item>
                        <item>
                         <widget class="QLineEdit" name="lineEdit_barcode_right">
                          <property name="enabled">
                           <bool>true</bool>
+                         </property>
+                         <property name="sizePolicy">
+                          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                           <horstretch>0</horstretch>
+                           <verstretch>0</verstretch>
+                          </sizepolicy>
+                         </property>
+                         <property name="font">
+                          <font>
+                           <pointsize>12</pointsize>
+                          </font>
+                         </property>
+                         <property name="frame">
+                          <bool>true</bool>
+                         </property>
+                         <property name="readOnly">
+                          <bool>false</bool>
+                         </property>
+                        </widget>
+                       </item>
+                       <item>
+                        <widget class="QLineEdit" name="lineEdit_barcode_right_inuse">
+                         <property name="enabled">
+                          <bool>false</bool>
                          </property>
                          <property name="sizePolicy">
                           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -15163,312 +15253,316 @@
                     </property>
                     <layout class="QGridLayout" name="gridLayout_67">
                      <item row="0" column="0">
-                      <widget class="QLabel" name="label_153">
-                       <property name="font">
-                        <font>
-                         <family>Arial</family>
-                         <pointsize>12</pointsize>
-                        </font>
-                       </property>
-                       <property name="text">
-                        <string>Realtime Speed(rpm)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="1" column="0">
-                      <widget class="QLineEdit" name="servo_realTimeSpeed_runScreen">
-                       <property name="frame">
-                        <bool>false</bool>
-                       </property>
-                       <property name="readOnly">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="2" column="0">
-                      <widget class="QLabel" name="label_155">
-                       <property name="font">
-                        <font>
-                         <family>Arial</family>
-                         <pointsize>12</pointsize>
-                        </font>
-                       </property>
-                       <property name="text">
-                        <string>Realtime Position(um)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="3" column="0">
-                      <widget class="QLineEdit" name="servo_realTimePos_runScreen">
-                       <property name="frame">
-                        <bool>false</bool>
-                       </property>
-                       <property name="readOnly">
-                        <bool>true</bool>
-                       </property>
-                      </widget>
-                     </item>
-                     <item row="4" column="0">
-                      <layout class="QGridLayout" name="gridLayout_66" columnstretch="1,1,2">
-                       <item row="0" column="2">
-                        <widget class="QLabel" name="label_161">
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>0</height>
-                          </size>
-                         </property>
+                      <layout class="QVBoxLayout" name="verticalLayout_45" stretch="1,1,1,1,5">
+                       <item>
+                        <widget class="QLabel" name="label_153">
                          <property name="font">
                           <font>
+                           <family>Arial</family>
                            <pointsize>12</pointsize>
                           </font>
                          </property>
                          <property name="text">
-                          <string>PointNO</string>
+                          <string>Realtime Speed(rpm)</string>
                          </property>
                         </widget>
                        </item>
-                       <item row="1" column="0">
-                        <widget class="QLabel" name="LED_US_Gen1">
-                         <property name="minimumSize">
-                          <size>
-                           <width>25</width>
-                           <height>25</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>25</width>
-                           <height>25</height>
-                          </size>
-                         </property>
-                         <property name="text">
-                          <string/>
-                         </property>
-                         <property name="pixmap">
-                          <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="1" column="1">
-                        <widget class="QLabel" name="label_162">
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <pointsize>12</pointsize>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>1</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="1" column="2">
-                        <widget class="QSpinBox" name="spinBox_currentPoint_Gen1">
-                         <property name="enabled">
-                          <bool>false</bool>
-                         </property>
+                       <item>
+                        <widget class="QLineEdit" name="servo_realTimeSpeed_runScreen">
                          <property name="frame">
-                          <bool>true</bool>
+                          <bool>false</bool>
                          </property>
                          <property name="readOnly">
                           <bool>true</bool>
                          </property>
-                         <property name="buttonSymbols">
-                          <enum>QAbstractSpinBox::NoButtons</enum>
-                         </property>
                         </widget>
                        </item>
-                       <item row="2" column="0">
-                        <widget class="QLabel" name="LED_US_Gen2">
-                         <property name="minimumSize">
-                          <size>
-                           <width>25</width>
-                           <height>25</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>25</width>
-                           <height>25</height>
-                          </size>
-                         </property>
-                         <property name="text">
-                          <string/>
-                         </property>
-                         <property name="pixmap">
-                          <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="2" column="1">
-                        <widget class="QLabel" name="label_163">
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>0</height>
-                          </size>
-                         </property>
+                       <item>
+                        <widget class="QLabel" name="label_155">
                          <property name="font">
                           <font>
+                           <family>Arial</family>
                            <pointsize>12</pointsize>
                           </font>
                          </property>
                          <property name="text">
-                          <string>2</string>
+                          <string>Realtime Position(um)</string>
                          </property>
                         </widget>
                        </item>
-                       <item row="2" column="2">
-                        <widget class="QSpinBox" name="spinBox_currentPoint_Gen2">
-                         <property name="enabled">
-                          <bool>false</bool>
-                         </property>
+                       <item>
+                        <widget class="QLineEdit" name="servo_realTimePos_runScreen">
                          <property name="frame">
-                          <bool>true</bool>
+                          <bool>false</bool>
                          </property>
                          <property name="readOnly">
                           <bool>true</bool>
                          </property>
-                         <property name="buttonSymbols">
-                          <enum>QAbstractSpinBox::NoButtons</enum>
-                         </property>
                         </widget>
                        </item>
-                       <item row="3" column="0">
-                        <widget class="QLabel" name="LED_US_Gen3">
-                         <property name="minimumSize">
-                          <size>
-                           <width>25</width>
-                           <height>25</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>25</width>
-                           <height>25</height>
-                          </size>
-                         </property>
-                         <property name="text">
-                          <string/>
-                         </property>
-                         <property name="pixmap">
-                          <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="3" column="1">
-                        <widget class="QLabel" name="label_164">
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <pointsize>12</pointsize>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>3</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="3" column="2">
-                        <widget class="QSpinBox" name="spinBox_currentPoint_Gen3">
-                         <property name="enabled">
-                          <bool>false</bool>
-                         </property>
-                         <property name="frame">
-                          <bool>true</bool>
-                         </property>
-                         <property name="readOnly">
-                          <bool>true</bool>
-                         </property>
-                         <property name="buttonSymbols">
-                          <enum>QAbstractSpinBox::NoButtons</enum>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="4" column="0">
-                        <widget class="QLabel" name="LED_US_Gen4">
-                         <property name="minimumSize">
-                          <size>
-                           <width>25</width>
-                           <height>25</height>
-                          </size>
-                         </property>
-                         <property name="maximumSize">
-                          <size>
-                           <width>25</width>
-                           <height>25</height>
-                          </size>
-                         </property>
-                         <property name="text">
-                          <string/>
-                         </property>
-                         <property name="pixmap">
-                          <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="4" column="1">
-                        <widget class="QLabel" name="label_165">
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <pointsize>12</pointsize>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>4</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="4" column="2">
-                        <widget class="QSpinBox" name="spinBox_currentPoint_Gen4">
-                         <property name="enabled">
-                          <bool>false</bool>
-                         </property>
-                         <property name="frame">
-                          <bool>true</bool>
-                         </property>
-                         <property name="readOnly">
-                          <bool>true</bool>
-                         </property>
-                         <property name="buttonSymbols">
-                          <enum>QAbstractSpinBox::NoButtons</enum>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="0" colspan="2">
-                        <widget class="QLabel" name="label_160">
-                         <property name="minimumSize">
-                          <size>
-                           <width>0</width>
-                           <height>0</height>
-                          </size>
-                         </property>
-                         <property name="font">
-                          <font>
-                           <pointsize>12</pointsize>
-                          </font>
-                         </property>
-                         <property name="text">
-                          <string>Gen_NO</string>
-                         </property>
-                        </widget>
+                       <item>
+                        <layout class="QGridLayout" name="gridLayout_66" columnstretch="1,1,2">
+                         <item row="0" column="2">
+                          <widget class="QLabel" name="label_161">
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <pointsize>12</pointsize>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>PointNO</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="1" column="0">
+                          <widget class="QLabel" name="LED_US_Gen1">
+                           <property name="minimumSize">
+                            <size>
+                             <width>25</width>
+                             <height>25</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>25</width>
+                             <height>25</height>
+                            </size>
+                           </property>
+                           <property name="text">
+                            <string/>
+                           </property>
+                           <property name="pixmap">
+                            <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="1" column="1">
+                          <widget class="QLabel" name="label_162">
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <pointsize>12</pointsize>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>1</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="1" column="2">
+                          <widget class="QSpinBox" name="spinBox_currentPoint_Gen1">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
+                           <property name="frame">
+                            <bool>true</bool>
+                           </property>
+                           <property name="readOnly">
+                            <bool>true</bool>
+                           </property>
+                           <property name="buttonSymbols">
+                            <enum>QAbstractSpinBox::NoButtons</enum>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="2" column="0">
+                          <widget class="QLabel" name="LED_US_Gen2">
+                           <property name="minimumSize">
+                            <size>
+                             <width>25</width>
+                             <height>25</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>25</width>
+                             <height>25</height>
+                            </size>
+                           </property>
+                           <property name="text">
+                            <string/>
+                           </property>
+                           <property name="pixmap">
+                            <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="2" column="1">
+                          <widget class="QLabel" name="label_163">
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <pointsize>12</pointsize>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>2</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="2" column="2">
+                          <widget class="QSpinBox" name="spinBox_currentPoint_Gen2">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
+                           <property name="frame">
+                            <bool>true</bool>
+                           </property>
+                           <property name="readOnly">
+                            <bool>true</bool>
+                           </property>
+                           <property name="buttonSymbols">
+                            <enum>QAbstractSpinBox::NoButtons</enum>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="3" column="0">
+                          <widget class="QLabel" name="LED_US_Gen3">
+                           <property name="minimumSize">
+                            <size>
+                             <width>25</width>
+                             <height>25</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>25</width>
+                             <height>25</height>
+                            </size>
+                           </property>
+                           <property name="text">
+                            <string/>
+                           </property>
+                           <property name="pixmap">
+                            <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="3" column="1">
+                          <widget class="QLabel" name="label_164">
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <pointsize>12</pointsize>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>3</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="3" column="2">
+                          <widget class="QSpinBox" name="spinBox_currentPoint_Gen3">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
+                           <property name="frame">
+                            <bool>true</bool>
+                           </property>
+                           <property name="readOnly">
+                            <bool>true</bool>
+                           </property>
+                           <property name="buttonSymbols">
+                            <enum>QAbstractSpinBox::NoButtons</enum>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="4" column="0">
+                          <widget class="QLabel" name="LED_US_Gen4">
+                           <property name="minimumSize">
+                            <size>
+                             <width>25</width>
+                             <height>25</height>
+                            </size>
+                           </property>
+                           <property name="maximumSize">
+                            <size>
+                             <width>25</width>
+                             <height>25</height>
+                            </size>
+                           </property>
+                           <property name="text">
+                            <string/>
+                           </property>
+                           <property name="pixmap">
+                            <pixmap resource="qml.qrc">:/img/ledoff.png</pixmap>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="4" column="1">
+                          <widget class="QLabel" name="label_165">
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <pointsize>12</pointsize>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>4</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="4" column="2">
+                          <widget class="QSpinBox" name="spinBox_currentPoint_Gen4">
+                           <property name="enabled">
+                            <bool>false</bool>
+                           </property>
+                           <property name="frame">
+                            <bool>true</bool>
+                           </property>
+                           <property name="readOnly">
+                            <bool>true</bool>
+                           </property>
+                           <property name="buttonSymbols">
+                            <enum>QAbstractSpinBox::NoButtons</enum>
+                           </property>
+                          </widget>
+                         </item>
+                         <item row="0" column="0" colspan="2">
+                          <widget class="QLabel" name="label_160">
+                           <property name="minimumSize">
+                            <size>
+                             <width>0</width>
+                             <height>0</height>
+                            </size>
+                           </property>
+                           <property name="font">
+                            <font>
+                             <pointsize>12</pointsize>
+                            </font>
+                           </property>
+                           <property name="text">
+                            <string>Gen_NO</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
                        </item>
                       </layout>
                      </item>
@@ -15882,170 +15976,173 @@
        </layout>
       </widget>
       <widget class="QWidget" name="LogON">
-       <widget class="QLabel" name="label_149">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>130</y>
-          <width>91</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>User ID:</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_150">
-        <property name="geometry">
-         <rect>
-          <x>140</x>
-          <y>180</y>
-          <width>91</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Password:</string>
-        </property>
-       </widget>
-       <widget class="QLineEdit" name="lineEdit_password">
-        <property name="geometry">
-         <rect>
-          <x>260</x>
-          <y>190</y>
-          <width>251</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="echoMode">
-         <enum>QLineEdit::Password</enum>
-        </property>
-       </widget>
-       <widget class="QSpinBox" name="UserID_spinbox">
-        <property name="geometry">
-         <rect>
-          <x>260</x>
-          <y>140</y>
-          <width>251</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="buttonSymbols">
-         <enum>QAbstractSpinBox::NoButtons</enum>
-        </property>
-        <property name="minimum">
-         <number>1</number>
-        </property>
-        <property name="maximum">
-         <number>10</number>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_logIN_leave">
-        <property name="geometry">
-         <rect>
-          <x>420</x>
-          <y>280</y>
-          <width>75</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Leave</string>
-        </property>
-       </widget>
-       <widget class="QPushButton" name="pushButton_logIN_GO">
-        <property name="geometry">
-         <rect>
-          <x>280</x>
-          <y>280</y>
-          <width>75</width>
-          <height>41</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>Go</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="label_password_wrong">
-        <property name="geometry">
-         <rect>
-          <x>520</x>
-          <y>190</y>
-          <width>171</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>password not correct</string>
-        </property>
-       </widget>
-       <widget class="QComboBox" name="comboBox_LogOffTime">
-        <property name="geometry">
-         <rect>
-          <x>260</x>
-          <y>230</y>
-          <width>251</width>
-          <height>31</height>
-         </rect>
-        </property>
-        <item>
-         <property name="text">
-          <string>Every Time</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>1 Minute</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>5 Minutes</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>10 Minutes</string>
-         </property>
-        </item>
-        <item>
-         <property name="text">
-          <string>Never</string>
-         </property>
-        </item>
-       </widget>
-       <widget class="QLabel" name="label_LogOffTime">
+       <widget class="QWidget" name="">
         <property name="geometry">
          <rect>
           <x>130</x>
-          <y>220</y>
-          <width>101</width>
-          <height>41</height>
+          <y>130</y>
+          <width>531</width>
+          <height>251</height>
          </rect>
         </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Logoff Time:</string>
-        </property>
+        <layout class="QGridLayout" name="gridLayout_73">
+         <item row="0" column="0">
+          <widget class="QLabel" name="label_149">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>User ID:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1" colspan="2">
+          <widget class="QSpinBox" name="UserID_spinbox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="buttonSymbols">
+            <enum>QAbstractSpinBox::NoButtons</enum>
+           </property>
+           <property name="minimum">
+            <number>1</number>
+           </property>
+           <property name="maximum">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_150">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Password:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1" colspan="2">
+          <widget class="QLineEdit" name="lineEdit_password">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="echoMode">
+            <enum>QLineEdit::Password</enum>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="3">
+          <widget class="QLabel" name="label_password_wrong">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>password not correct</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_LogOffTime">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>Logoff Time:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1" colspan="2">
+          <widget class="QComboBox" name="comboBox_LogOffTime">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>Every Time</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1 Minute</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>5 Minutes</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>10 Minutes</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Never</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QPushButton" name="pushButton_logIN_GO">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Go</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QPushButton" name="pushButton_logIN_leave">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="text">
+            <string>Leave</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
        </widget>
       </widget>
       <widget class="QWidget" name="TextRegiste">

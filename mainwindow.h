@@ -124,18 +124,6 @@ private slots:
 
     void on_servo_disable_btn_clicked();
 
-    void on_servo_Jog1_btn_pressed();
-
-    void on_servo_Jog1_btn_released();
-
-    void on_servo_Jog2_btn_pressed();
-
-    void on_servo_Jog2_btn_released();
-
-    void on_servo_home_btn_pressed();
-
-    void on_servo_home_btn_released();
-
     void on_servoACKbtn_clicked();
 
     void on_servo_Jog1_btn_toggled(bool checked);
@@ -506,6 +494,17 @@ private slots:
     void on_pushButton_3_clicked();
 
     void on_pushButton_clearHistoryAlarm_clicked();
+
+    void on_btn_partCounterReset_clicked();
+
+    void on_servo_Jog2_btn_toggled(bool checked);
+
+
+    void on_tab_stepStation_currentChanged(int index);
+
+    void on_tab_toolingConfig_currentChanged(int index);
+
+
 
 private:
     Ui::MainWindow *ui;
