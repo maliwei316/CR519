@@ -46,7 +46,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>9</number>
+       <number>4</number>
       </property>
       <widget class="QWidget" name="toolingConfig">
        <layout class="QGridLayout" name="gridLayout_15" rowstretch="0" columnstretch="1,10" columnminimumwidth="1,4">
@@ -15116,7 +15116,7 @@
                      <number>17</number>
                     </property>
                     <property name="columnCount">
-                     <number>8</number>
+                     <number>10</number>
                     </property>
                     <row>
                      <property name="text">
@@ -15211,6 +15211,16 @@
                     </column>
                     <column>
                      <property name="text">
+                      <string>Amplitude</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
+                      <string>Pressure</string>
+                     </property>
+                    </column>
+                    <column>
+                     <property name="text">
                       <string>WeldTime</string>
                      </property>
                     </column>
@@ -15226,12 +15236,12 @@
                     </column>
                     <column>
                      <property name="text">
-                      <string>Pressure</string>
+                      <string>HoldTime</string>
                      </property>
                     </column>
                     <column>
                      <property name="text">
-                      <string>DataTime</string>
+                      <string>DateTime</string>
                      </property>
                     </column>
                     <column>
@@ -15967,6 +15977,195 @@
                 </item>
                </layout>
               </widget>
+              <widget class="QWidget" name="HistoryData">
+               <layout class="QVBoxLayout" name="verticalLayout_55" stretch="0,1,5">
+                <item>
+                 <widget class="Line" name="line">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QHBoxLayout" name="horizontalLayout_178" stretch="2,1">
+                  <item>
+                   <widget class="QTabWidget" name="tabWidget_2">
+                    <property name="font">
+                     <font>
+                      <pointsize>12</pointsize>
+                     </font>
+                    </property>
+                    <property name="currentIndex">
+                     <number>1</number>
+                    </property>
+                    <widget class="QWidget" name="searchByBarcode">
+                     <attribute name="title">
+                      <string>HistoryData_Barcode</string>
+                     </attribute>
+                     <layout class="QVBoxLayout" name="verticalLayout_56">
+                      <item>
+                       <layout class="QHBoxLayout" name="horizontalLayout_175" stretch="1,3">
+                        <item>
+                         <widget class="QLabel" name="label_172">
+                          <property name="font">
+                           <font>
+                            <pointsize>12</pointsize>
+                           </font>
+                          </property>
+                          <property name="text">
+                           <string>Barcode</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QLineEdit" name="lineEdit">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <spacer name="verticalSpacer_10">
+                        <property name="orientation">
+                         <enum>Qt::Vertical</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>20</width>
+                          <height>53</height>
+                         </size>
+                        </property>
+                       </spacer>
+                      </item>
+                     </layout>
+                    </widget>
+                    <widget class="QWidget" name="searchByTime">
+                     <attribute name="title">
+                      <string>HistoryData_Time</string>
+                     </attribute>
+                     <layout class="QHBoxLayout" name="horizontalLayout_177">
+                      <item>
+                       <layout class="QGridLayout" name="gridLayout_74">
+                        <item row="0" column="0">
+                         <widget class="QPushButton" name="pushButton_search_startTime">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="text">
+                           <string>StartTime</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="0" column="1">
+                         <widget class="QLineEdit" name="lineEdit_2">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="0">
+                         <widget class="QPushButton" name="pushButton_search_endTime">
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                          <property name="text">
+                           <string>EndTime</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item row="1" column="1">
+                         <widget class="QLineEdit" name="lineEdit_3">
+                          <property name="enabled">
+                           <bool>false</bool>
+                          </property>
+                          <property name="sizePolicy">
+                           <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+                            <horstretch>0</horstretch>
+                            <verstretch>0</verstretch>
+                           </sizepolicy>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                     </layout>
+                    </widget>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QGridLayout" name="gridLayout_75">
+                    <item row="1" column="0" colspan="2">
+                     <widget class="QPushButton" name="pushButton_chooseDatabase">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>ChooseDataBase</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="1">
+                     <widget class="QPushButton" name="pushButton_historyCycleData_export">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Export</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="3" column="0">
+                     <widget class="QPushButton" name="pushButton_historyCycleData_search">
+                      <property name="sizePolicy">
+                       <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+                        <horstretch>0</horstretch>
+                        <verstretch>0</verstretch>
+                       </sizepolicy>
+                      </property>
+                      <property name="text">
+                       <string>Search</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="2" column="0" colspan="2">
+                     <widget class="QLineEdit" name="lineEdit_4">
+                      <property name="enabled">
+                       <bool>false</bool>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+                <item>
+                 <widget class="QTableView" name="tableView"/>
+                </item>
+               </layout>
+              </widget>
              </widget>
             </item>
            </layout>
@@ -15976,7 +16175,7 @@
        </layout>
       </widget>
       <widget class="QWidget" name="LogON">
-       <widget class="QWidget" name="">
+       <widget class="QWidget" name="layoutWidget">
         <property name="geometry">
          <rect>
           <x>130</x>

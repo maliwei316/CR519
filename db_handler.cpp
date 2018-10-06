@@ -5,7 +5,7 @@
 
 extern bool loggingEnable;
 extern quint8 loggingLevel;
-
+//AddTaskToEventQueue-->customEvent-->customEventHandler-->read/write database
 DB_Handler::DB_Handler(QObject *parent): QObject(parent)
 {}
 void DB_Handler::onInit(QString dbDriverName, QString dbConnectionName, QString databaseName)
@@ -54,29 +54,26 @@ void DB_Handler::onInit(QString dbDriverName, QString dbConnectionName, QString 
 
             QString execStatement;
             //QString execStatement="CREATE TABLE IF NOT EXISTS history_USW_cycle_data(id integer primary key autoincrement,barcode TEXT, toolID integer ,result TEXT,testTime DATETIME)";
-            execStatement="CREATE TABLE IF NOT EXISTS history_USW_cycle_data(id integer primary key autoincrement,barcode TEXT, toolID integer ,result TEXT,testTime DATETIME)";
-
+            execStatement="CREATE TABLE IF NOT EXISTS pointHistoryCycleData"
+                          "(Barcode TEXT, pointNO integer ,pointName TEXT,pointWeldResult TEXT,amplitude integer,pressure integer,"
+                          "weldTime integer,peakPower integer,weldEnergy integer,holdTime integer,CreatedTime TimeStamp NOT NULL DEFAULT (datetime('now','localtime')),primary key(Barcode,pointNO))";
             if (!q1.exec(execStatement)) {
-                     qFatal("Failed to query database: %s", qPrintable(q1.lastError().text()));
+                     qFatal("Failed to create table of name pointHistoryCycleData: %s", qPrintable(q1.lastError().text()));
                  }
 
-            execStatement="CREATE TABLE IF NOT EXISTS detail_history_USW_cycle_data(id integer primary key autoincrement,barcode TEXT, pointNO integer ,weldEnergy integer,weldPeakPower integer,weldTime integer)";
+            execStatement="CREATE TABLE IF NOT EXISTS partHistoryCycleData(CreatedTime TimeStamp NOT NULL DEFAULT (datetime('now','localtime')),partBarcode TEXT primary key, partWeldResult TEXT,toolID integer,toolName TEXT,location TEXT)";
 
-            if (!q1.exec(execStatement)) {
-                     qFatal("Failed to query database: %s", qPrintable(q1.lastError().text()));
-                 }
-            execStatement="CREATE TABLE IF NOT EXISTS pointsNmaeMapping(id integer primary key autoincrement,toolID integer CHECK(toolID>0 AND toolID<32),pointNO integer CHECK(pointNO>0 AND pointNO<17),pointName TEXT, enableStatus integer)";
             if (!q1.exec(execStatement)) {
                      qFatal("Failed to query database: %s", qPrintable(q1.lastError().text()));
                  }
 
         }
         qDebug()<<"tableNO in dataBase:"<<database1.tables().size();
-//          QStringList tableList= database2.tables();
-//          for(int i=0;i<tableList.size();i++)
-//          {
-//              qDebug()<<QObject::tr("table[%1]:").arg(i)<<tableList.at(i);
-//          }
+          QStringList tableList= database1.tables();
+          for(int i=0;i<tableList.size();i++)
+          {
+              qDebug()<<QObject::tr("table[%1]:").arg(i)<<tableList.at(i);
+          }
 
 
     }

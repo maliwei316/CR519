@@ -384,18 +384,27 @@ typedef struct servoRealtimeData
     qint32 realTimePos;
 }servoRealTimeData;
 
-typedef struct _pointCylceData
+typedef struct _pointCycleData
 {
     quint8 pointNO;
     quint8 genNO;
     quint8 weldResult;//0=unwelded,1=good,2=suspect,3=bad
     quint8 channelCode;
+    quint8 amplitude;
     quint16 weldTime;
     quint16 peakPower;
     quint16 weldEnergy;
+    quint16 holdTime;
     quint16 thrusterDownPressure;
 }pointCycleData;
+typedef struct _partCycleData
+{
+    QString partDateTime;
+    QString partBarcode;
+    quint8  partWeldResult=0;//0=unwelded,1=good,2=suspect,3=bad
+    QMap<quint8,pointCycleData> pointsDataMap;
 
+}partCycleData;
 typedef struct _plcItem
 {
 
@@ -473,6 +482,7 @@ typedef struct _plcVarTable
     bool somePointWelded;
     bool systemReady;
     bool readyForNewCycle;
+    bool PLC_lockedByHMI;
     quint8 currentStepNO=0;
     quint8 currentPointNO_gen1=0;
     quint8 currentPointNO_gen2=0;

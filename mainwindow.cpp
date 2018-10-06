@@ -418,6 +418,23 @@ void MainWindow::getBarcode_right()
     this->ui->lineEdit_scannedBarcode_right->setText(this->barcode_to_use_right);
     this->ui->lineEdit_barcode_right->setText(this->barcode_to_use_right);
 }
+void MainWindow::lockUnlockPLCFromHMI(bool lockFlag)
+{
+    QByteArray dataToTcpCommObj;
+    dataToTcpCommObj[0]=0x00;//length high byte
+    dataToTcpCommObj[1]=0x0A;//length low byte
+    dataToTcpCommObj[2]=0x00;//commandNO high byte
+    dataToTcpCommObj[3]=0x81;//commandNO low byte,129
+    dataToTcpCommObj[4]=0x00;//reserve byte
+    dataToTcpCommObj[5]=0x00;//reserve byte
+    dataToTcpCommObj[6]=lockFlag?0x01:0x00;//00==unlock,01==lock
+    dataToTcpCommObj[7]=0x00;//reserve
+    dataToTcpCommObj[8]=0x00;//reserve
+    dataToTcpCommObj[9]=0x00;//reserve
+
+    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+}
 void MainWindow::handleBarcodeError(QSerialPort::SerialPortError error)
  {
      qDebug()<<tr("barcode error, error:%1")
@@ -426,6 +443,243 @@ void MainWindow::handleBarcodeError(QSerialPort::SerialPortError error)
  }
 void MainWindow::moveCycleDataToHistory()
 {
+
+    //handle cycle data of left part
+    if(this->cycleData_leftPart.pointsDataMap.size()>0)
+    {
+        QStringList lastCycleDataStrList_left,lastCycleDataStrList_header;
+        //construct cycle data using StringList
+        lastCycleDataStrList_left[0]=this->cycleData_leftPart.partDateTime;
+        lastCycleDataStrList_header[0]=tr("dateTime");
+        lastCycleDataStrList_left[1]=this->cycleData_leftPart.partBarcode;
+        lastCycleDataStrList_header[1]=tr("barcode");
+        QString weldResult_str;
+        if(this->cycleData_leftPart.partWeldResult==0)
+        {
+            weldResult_str="unWelded";
+
+        }
+        else if(this->cycleData_leftPart.partWeldResult==1)
+        {
+            weldResult_str="good";
+
+        }
+        else if(this->cycleData_leftPart.partWeldResult==2)
+        {
+             weldResult_str="suspect";
+
+        }
+        else if(this->cycleData_leftPart.partWeldResult==3)
+        {
+            weldResult_str="bad";
+
+        }
+        lastCycleDataStrList_left[2]=weldResult_str;
+        lastCycleDataStrList_header[2]=tr("partWeldResult");
+        lastCycleDataStrList_left[3]=this->plcVars.toolID_sensor_detected;
+        lastCycleDataStrList_header[3]=tr("toolID");
+        lastCycleDataStrList_left[4]=this->tempTooling_editting->toolingName;
+        lastCycleDataStrList_header[4]=tr("toolName");
+        lastCycleDataStrList_left[5]="LEFT";
+        lastCycleDataStrList_header[5]=tr("location");
+        QList<quint8> keys=this->cycleData_leftPart.pointsDataMap.keys();
+        quint8 key;
+        QString sqlquery;
+        QString pointNOAndName;
+        for(int j=0;j<keys.size();j++)
+        {
+            //prepare data fields to save to CSV
+            key=keys.at(j);
+            pointNOAndName=tr("(Point#%1-%2)")
+                    .arg(this->cycleData_leftPart.pointsDataMap.value(key).pointNO)
+                    .arg(this->tempTooling_editting->pointNameMapping.at(this->cycleData_leftPart.pointsDataMap.value(key).pointNO));
+            lastCycleDataStrList_left[(key-1)*7+6]=this->cycleData_leftPart.pointsDataMap.value(key).weldResult;
+            lastCycleDataStrList_header[(key-1)*7+6]="pointWeldResult"+pointNOAndName;
+            lastCycleDataStrList_left[(key-1)*7+7]=this->cycleData_leftPart.pointsDataMap.value(key).amplitude;
+            lastCycleDataStrList_header[(key-1)*7+7]="amplitude"+pointNOAndName;
+            lastCycleDataStrList_left[(key-1)*7+8]=this->cycleData_leftPart.pointsDataMap.value(key).thrusterDownPressure;
+            lastCycleDataStrList_header[(key-1)*7+8]="pressure"+pointNOAndName;
+            lastCycleDataStrList_left[(key-1)*7+9]=this->cycleData_leftPart.pointsDataMap.value(key).weldTime;
+            lastCycleDataStrList_header[(key-1)*7+9]="weldTime"+pointNOAndName;
+            lastCycleDataStrList_left[(key-1)*7+10]=this->cycleData_leftPart.pointsDataMap.value(key).peakPower;
+            lastCycleDataStrList_header[(key-1)*7+10]="peakPower"+pointNOAndName;
+            lastCycleDataStrList_left[(key-1)*7+11]=this->cycleData_leftPart.pointsDataMap.value(key).weldEnergy;
+            lastCycleDataStrList_header[(key-1)*7+11]="weldEnergy"+pointNOAndName;
+            lastCycleDataStrList_left[(key-1)*7+12]=this->cycleData_leftPart.pointsDataMap.value(key).holdTime;
+            lastCycleDataStrList_header[(key-1)*7+12]="holdTime"+pointNOAndName;
+            //save point cycle data to table "pointHistoryCycleData" in database
+            sqlquery=QObject::tr("insert or replace into %1(Barcode,pointNO,pointName,pointWeldResult,amplitude,pressure,weldTime,peakPower,weldEnergy,holdTime) "
+                                         "values(%2,%3,%4,%5,%6,%7,%8,%9,%10,%11)")
+                                .arg("pointHistoryCycleData").arg(this->cycleData_leftPart.partBarcode)
+                                .arg(this->cycleData_leftPart.pointsDataMap.value(key).pointNO)
+                                .arg(this->tempTooling_editting->pointNameMapping.at(this->cycleData_leftPart.pointsDataMap.value(key).pointNO))
+                                .arg(this->cycleData_leftPart.pointsDataMap.value(key).weldResult).arg(this->cycleData_leftPart.pointsDataMap.value(key).amplitude)
+                                .arg(this->cycleData_leftPart.pointsDataMap.value(key).thrusterDownPressure).arg(this->cycleData_leftPart.pointsDataMap.value(key).weldTime)
+                                .arg(this->cycleData_leftPart.pointsDataMap.value(key).peakPower).arg(this->cycleData_leftPart.pointsDataMap.value(key).weldEnergy)
+                                .arg(this->cycleData_leftPart.pointsDataMap.value(key).holdTime);
+            //emit signal to writeDB,operate table "pointHistoryCycleData" in database
+            emit writeDatabaseRequired(sqlquery);
+
+        }
+        //save part cycle data to table "partHistoryCycleData" in database
+        sqlquery=QObject::tr("insert or replace into %1(partBarcode,partWeldResult,toolID,toolName,location) "
+                                     "values(%2,%3,%4,%5,%6)")
+                            .arg("partHistoryCycleData").arg(this->cycleData_leftPart.partBarcode)
+                            .arg(weldResult_str).arg(this->plcVars.toolID_sensor_detected).arg(this->tempTooling_editting->toolingName)
+                            .arg("LEFT");
+        //emit signal to writeDB,operate table "partHistoryCycleData"
+        emit writeDatabaseRequired(sqlquery);
+        //save last cycle data to CSV file
+        if(true)
+        {
+           //copy cycle data from stringlist to string,split with charactar ";"
+            QString strLastCycleData,strLastCycleData_header;
+            for(int i=0;i<lastCycleDataStrList_left.size();i++)
+            {
+                strLastCycleData.append(lastCycleDataStrList_left.at(i));
+                strLastCycleData.append(';');
+            }
+           strLastCycleData.append('\n');
+           for(int j=0;j<lastCycleDataStrList_left.size();j++)
+           {
+               strLastCycleData_header.append(lastCycleDataStrList_left.at(j));
+               strLastCycleData_header.append(';');
+           }
+          strLastCycleData_header.append('\n');
+           QString fileName_CommonPart=tr("Left-%1-%2-%3").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz"))
+                   .arg(weldResult_str).arg(this->cycleData_leftPart.partBarcode);
+           QString fileName_temp=tr("%1%2.temp").arg("/cycleData/").arg(fileName_CommonPart);
+           QString fileName_csv=tr("%1%2.CSV").arg("/cycleData/lastCycle/").arg(fileName_CommonPart);
+           QFile tempFile(fileName_temp);
+           if(tempFile.open(QIODevice::WriteOnly|QIODevice::Text))
+           {
+               QTextStream out1(&tempFile);
+               out1<<strLastCycleData_header<<strLastCycleData;
+               tempFile.rename(fileName_csv);
+               tempFile.close();
+           }
+
+        }
+
+    }
+    // handle cycle data of right part
+    if(this->cycleData_rightPart.pointsDataMap.size()>0)
+    {
+        QStringList lastCycleDataStrList_right,lastCycleDataStrList_header;
+        //construct cycle data using StringList
+        lastCycleDataStrList_right[0]=this->cycleData_rightPart.partDateTime;
+        lastCycleDataStrList_header[0]=tr("dateTime");
+        lastCycleDataStrList_right[1]=this->cycleData_rightPart.partBarcode;
+        lastCycleDataStrList_header[1]=tr("barcode");
+        QString weldResult_str;
+        if(this->cycleData_rightPart.partWeldResult==0)
+        {
+            weldResult_str="unWelded";
+
+        }
+        else if(this->cycleData_rightPart.partWeldResult==1)
+        {
+            weldResult_str="good";
+
+        }
+        else if(this->cycleData_rightPart.partWeldResult==2)
+        {
+             weldResult_str="suspect";
+
+        }
+        else if(this->cycleData_rightPart.partWeldResult==3)
+        {
+            weldResult_str="bad";
+
+        }
+        lastCycleDataStrList_right[2]=weldResult_str;
+        lastCycleDataStrList_header[2]=tr("partWeldResult");
+        lastCycleDataStrList_right[3]=this->plcVars.toolID_sensor_detected;
+        lastCycleDataStrList_header[3]=tr("toolID");
+        lastCycleDataStrList_right[4]=this->tempTooling_editting->toolingName;
+        lastCycleDataStrList_header[4]=tr("toolName");
+        lastCycleDataStrList_right[5]="RIGHT";
+        lastCycleDataStrList_header[5]=tr("location");
+        QList<quint8> keys=this->cycleData_rightPart.pointsDataMap.keys();
+        quint8 key;
+        QString sqlquery;
+        QString pointNOAndName;
+        for(int j=0;j<keys.size();j++)
+        {
+            //prepare data fields to save to CSV
+            key=keys.at(j);
+            pointNOAndName=tr("(Point#%1-%2)")
+                    .arg(this->cycleData_rightPart.pointsDataMap.value(key).pointNO)
+                    .arg(this->tempTooling_editting->pointNameMapping.at(this->cycleData_rightPart.pointsDataMap.value(key).pointNO));
+            lastCycleDataStrList_right[(key-1)*7+6]=this->cycleData_rightPart.pointsDataMap.value(key).weldResult;
+            lastCycleDataStrList_header[(key-1)*7+6]="pointWeldResult"+pointNOAndName;
+            lastCycleDataStrList_right[(key-1)*7+7]=this->cycleData_rightPart.pointsDataMap.value(key).amplitude;
+            lastCycleDataStrList_header[(key-1)*7+7]="amplitude"+pointNOAndName;
+            lastCycleDataStrList_right[(key-1)*7+8]=this->cycleData_rightPart.pointsDataMap.value(key).thrusterDownPressure;
+            lastCycleDataStrList_header[(key-1)*7+8]="pressure"+pointNOAndName;
+            lastCycleDataStrList_right[(key-1)*7+9]=this->cycleData_rightPart.pointsDataMap.value(key).weldTime;
+            lastCycleDataStrList_header[(key-1)*7+9]="weldTime"+pointNOAndName;
+            lastCycleDataStrList_right[(key-1)*7+10]=this->cycleData_rightPart.pointsDataMap.value(key).peakPower;
+            lastCycleDataStrList_header[(key-1)*7+10]="peakPower"+pointNOAndName;
+            lastCycleDataStrList_right[(key-1)*7+11]=this->cycleData_rightPart.pointsDataMap.value(key).weldEnergy;
+            lastCycleDataStrList_header[(key-1)*7+11]="weldEnergy"+pointNOAndName;
+            lastCycleDataStrList_right[(key-1)*7+12]=this->cycleData_rightPart.pointsDataMap.value(key).holdTime;
+            lastCycleDataStrList_header[(key-1)*7+12]="holdTime"+pointNOAndName;
+            //save point cycle data to table "pointHistoryCycleData" in database
+            sqlquery=QObject::tr("insert or replace into %1(Barcode,pointNO,pointName,pointWeldResult,amplitude,pressure,weldTime,peakPower,weldEnergy,holdTime) "
+                                         "values(%2,%3,%4,%5,%6,%7,%8,%9,%10,%11)")
+                                .arg("pointHistoryCycleData").arg(this->cycleData_rightPart.partBarcode)
+                                .arg(this->cycleData_rightPart.pointsDataMap.value(key).pointNO)
+                                .arg(this->tempTooling_editting->pointNameMapping.at(this->cycleData_rightPart.pointsDataMap.value(key).pointNO))
+                                .arg(this->cycleData_rightPart.pointsDataMap.value(key).weldResult).arg(this->cycleData_rightPart.pointsDataMap.value(key).amplitude)
+                                .arg(this->cycleData_rightPart.pointsDataMap.value(key).thrusterDownPressure).arg(this->cycleData_rightPart.pointsDataMap.value(key).weldTime)
+                                .arg(this->cycleData_rightPart.pointsDataMap.value(key).peakPower).arg(this->cycleData_rightPart.pointsDataMap.value(key).weldEnergy)
+                                .arg(this->cycleData_rightPart.pointsDataMap.value(key).holdTime);
+            //emit signal to writeDB,operate table "pointHistoryCycleData" in database
+            emit writeDatabaseRequired(sqlquery);
+
+        }
+        //save part cycle data to table "partHistoryCycleData" in database
+        sqlquery=QObject::tr("insert or replace into %1(partBarcode,partWeldResult,toolID,toolName,location) "
+                                     "values(%2,%3,%4,%5,%6)")
+                            .arg("partHistoryCycleData").arg(this->cycleData_rightPart.partBarcode)
+                            .arg(weldResult_str).arg(this->plcVars.toolID_sensor_detected).arg(this->tempTooling_editting->toolingName)
+                            .arg("RIGHT");
+        //emit signal to writeDB,operate table "partHistoryCycleData"
+        emit writeDatabaseRequired(sqlquery);
+        //save last cycle data to CSV file
+        if(true)
+        {
+           //copy cycle data from stringlist to string,split with charactar ";"
+            QString strLastCycleData,strLastCycleData_header;
+            for(int i=0;i<lastCycleDataStrList_right.size();i++)
+            {
+                strLastCycleData.append(lastCycleDataStrList_right.at(i));
+                strLastCycleData.append(';');
+            }
+           strLastCycleData.append('\n');
+           for(int j=0;j<lastCycleDataStrList_right.size();j++)
+           {
+               strLastCycleData_header.append(lastCycleDataStrList_right.at(j));
+               strLastCycleData_header.append(';');
+           }
+          strLastCycleData_header.append('\n');
+           QString fileName_CommonPart=tr("Right-%1-%2-%3").arg(QDateTime::currentDateTime().toString("yyyyMMddhhmmsszzz"))
+                   .arg(weldResult_str).arg(this->cycleData_rightPart.partBarcode);
+           QString fileName_temp=tr("%1%2.temp").arg("/cycleData/").arg(fileName_CommonPart);
+           QString fileName_csv=tr("%1%2.CSV").arg("/cycleData/lastCycle/").arg(fileName_CommonPart);
+           QFile tempFile(fileName_temp);
+           if(tempFile.open(QIODevice::WriteOnly|QIODevice::Text))
+           {
+               QTextStream out1(&tempFile);
+               out1<<strLastCycleData_header<<strLastCycleData;
+               tempFile.rename(fileName_csv);
+               tempFile.close();
+           }
+
+        }
+
+    }
 
 }
 void MainWindow::OnPLCItemsChanged_Modbus(QVariantList changedItems)
@@ -1071,20 +1325,77 @@ void MainWindow::updatePLCItem(plcItem item)
     //MW24
     case 536576192://MW24,current stepNO
     {
+        //if not autoMode,break
+        if(this->plcVars.work_Mode!=3)
+            break;
         quint8 receivedStepNO=(quint8)(item.currentValue.wordVar/256);
+        //step 0, update barcode display if new barcode scanned,lock/unlock welder accordingly
+        if(receivedStepNO==0)
+        {
+            //step 0, update barcode as long as new barcode scanned
+            if(!this->barcode_to_use_left.isEmpty())
+            {
+                this->barcode_in_use_left=this->barcode_to_use_left;
+                this->barcode_to_use_left.clear();
+                this->ui->lineEdit_barcode_left->clear();
+                this->ui->lineEdit_barcode_left_inuse->setText(this->barcode_in_use_left);
+            }
+            if(!this->barcode_to_use_right.isEmpty())
+            {
+                this->barcode_in_use_right=this->barcode_to_use_right;
+                this->barcode_to_use_right.clear();
+                this->ui->lineEdit_barcode_right->clear();
+                this->ui->lineEdit_barcode_right_inuse->setText(this->barcode_in_use_right);
+            }
+            //step 0, barcode_In_use is empty,lock PLC if not locked
+
+            if((!this->plcVars.PLC_lockedByHMI)&&(this->barcode_in_use_left.isEmpty()||this->barcode_in_use_left.isEmpty()))
+            {
+                this->lockUnlockPLCFromHMI(true);
+            }
+            //step 0, barcode_in_use is not empty,unlock PLC if locked
+            if((this->plcVars.PLC_lockedByHMI)&&(!this->barcode_in_use_left.isEmpty())&&(!this->barcode_in_use_left.isEmpty()))
+            {
+                this->lockUnlockPLCFromHMI(false);
+            }
+
+        }
+        //step>0, barcode_to_use is empty,lock PLC if not locked
+        if(receivedStepNO>0)
+        {
+            if((!this->plcVars.PLC_lockedByHMI)&&(this->barcode_to_use_left.isEmpty()||this->barcode_to_use_right.isEmpty()))
+            {
+                this->lockUnlockPLCFromHMI(true);
+            }
+        }
+        //stepNO changed
         if(receivedStepNO!=this->plcVars.currentStepNO)
         {
+            //stepNO from 0 to non-zero, do the following things
+            if(receivedStepNO>0&&this->plcVars.currentStepNO==0)
+            {
 
-            this->plcVars.currentStepNO=receivedStepNO;
-            //the first/second step,move last cycle data to history.
-            if(this->plcVars.currentStepNO==1||
-                    (this->plcVars.currentStepNO==2&&(!this->plcVars.somePointWelded)))
-            {
-                this->moveCycleDataToHistory();
-                this->ui->tableWidget_lastCycleData->clearContents();
+                if(!this->plcVars.somePointWelded)
+                {
+                    this->ui->tableWidget_lastCycleData->clearContents();
+                }
+
             }
-            if(this->plcVars.currentStepNO==16)//the last step
+            //step NO from non-zero value to zero, do the following things
+            if(receivedStepNO==0)
             {
+                //moveCycleDataToHistory
+                this->moveCycleDataToHistory();
+                //if barcode not enabled, generate barcode automatically
+                if(!this->tempTooling_editting->leftBarcodeSettings.enable)
+                {
+                    this->barcode_to_use_left=this->clsBarcode_left->autoGenerateBarcode("AUTO_LEFT");
+
+                }
+                if(!this->tempTooling_editting->rightBarcodeSettings.enable)
+                {
+                    this->barcode_to_use_right=this->clsBarcode_right->autoGenerateBarcode("AUTO_RIGHT");
+                }
                 //update the point bypass status
                 QByteArray dataToTcpCommObj;
                 dataToTcpCommObj[0]=0x00;//length high byte
@@ -1102,6 +1413,8 @@ void MainWindow::updatePLCItem(plcItem item)
                 if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
                     emit this->sendDataToTCPCommObj(dataToTcpCommObj);
             }
+            //sync stepNO
+            this->plcVars.currentStepNO=receivedStepNO;
         }
 
         this->ui->spinBox_run_liveStepNO->setValue(this->plcVars.currentStepNO);
@@ -1125,7 +1438,7 @@ void MainWindow::updatePLCItem(plcItem item)
 
         break;
     }
-    case 536576240://MW30,work mode
+    case 536576240://MW30,work mode,locked flag
     {
 
         quint8 currentWorkMode;
@@ -1146,6 +1459,8 @@ void MainWindow::updatePLCItem(plcItem item)
         this->switchItemOnOff(this->ui->LED_ManualMode,item.currentValue.bitsVar.b2?true:false);
         //somePoint welded flag
         this->plcVars.somePointWelded=item.currentValue.bitsVar.b9;
+        //PLC_locked_byHMI flag
+        this->plcVars.PLC_lockedByHMI=item.currentValue.bitsVar.b11;
         break;
     }
     case 536576256://MW32,part counter-total
@@ -1600,6 +1915,8 @@ void MainWindow::onMoveAlarmToHistory(alarmItem alarm)
 void MainWindow::onReceivedPointCycleData(pointCycleData data1)
 {
     qDebug()<<"received point cycle data,wordmode:"<<this->plcVars.work_Mode;
+    if(data1.pointNO==0)
+        return;
     if(this->plcVars.work_Mode==2)//manual mode
     {
 
@@ -1608,32 +1925,70 @@ void MainWindow::onReceivedPointCycleData(pointCycleData data1)
     {
 
         QString pointName=this->tempTooling_editting->pointNameMapping[data1.pointNO];
-        QString barcode=this->tempTooling_editting->pointBarcodeMapping[data1.pointNO];
-        QString dataTime1=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz");
+        QString barcodeSide=this->tempTooling_editting->pointBarcodeMapping.value(data1.pointNO);
+        QString dateTime1=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss.zzz");
         QString weldResult_str;
+        QTableWidgetItem *weldResultItem= new QTableWidgetItem;
         if(data1.weldResult==0)
-            weldResult_str="unWelded";
-        else if(data1.weldResult==1)
-            weldResult_str="good";
-        else if(data1.weldResult==2)
-            weldResult_str="suspect";
-        else if(data1.weldResult==3)
-            weldResult_str="bad";
-        //tableWidget->setItem(0,1,new QTableWidgetItem(QIcon("images/IED.png"), "Jan's month"));
-        if(data1.pointNO>0)
         {
-            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,0,new QTableWidgetItem(pointName));
-            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,1,new QTableWidgetItem(weldResult_str));
-            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,2,new QTableWidgetItem(QString::number(data1.weldTime)));
-            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,3,new QTableWidgetItem(QString::number(data1.peakPower)));
-            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,4,new QTableWidgetItem(QString::number(data1.weldEnergy)));
-            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,5,new QTableWidgetItem(QString::number(data1.thrusterDownPressure)));
-            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,6,new QTableWidgetItem(dataTime1));
-            this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,7,new QTableWidgetItem(barcode.contains("left")?this->barcode_in_use_left:this->barcode_in_use_right));
-
+            weldResult_str="unWelded";
+            weldResultItem->setBackgroundColor(QColor("gray"));
+            weldResultItem->setText("unWelded");
         }
-
+        else if(data1.weldResult==1)
+        {
+            weldResult_str="good";
+            weldResultItem->setBackgroundColor(QColor("green"));
+            weldResultItem->setText("good");
+        }
+        else if(data1.weldResult==2)
+        {
+             weldResult_str="suspect";
+             weldResultItem->setBackgroundColor(QColor("yellow"));
+             weldResultItem->setText("suspect");
+        }
+        else if(data1.weldResult==3)
+        {
+            weldResult_str="bad";
+            weldResultItem->setBackgroundColor(QColor("red"));
+            weldResultItem->setText("bad");
+        }
+        //store point data to part data
+        if(barcodeSide.contains("left"))
+        {
+            this->cycleData_leftPart.partDateTime=dateTime1;
+            if(this->cycleData_leftPart.partBarcode.isEmpty())
+                this->cycleData_leftPart.partBarcode=this->barcode_in_use_left;
+            if(data1.weldResult>this->cycleData_leftPart.partWeldResult)
+                this->cycleData_leftPart.partWeldResult=data1.weldResult;
+            this->cycleData_leftPart.pointsDataMap[data1.pointNO]=data1;
+        }
+        else if(barcodeSide.contains("right"))
+        {
+            this->cycleData_rightPart.partDateTime=dateTime1;
+            if(this->cycleData_rightPart.partBarcode.isEmpty())
+                this->cycleData_rightPart.partBarcode=this->barcode_in_use_right;
+            if(data1.weldResult>this->cycleData_rightPart.partWeldResult)
+                this->cycleData_rightPart.partWeldResult=data1.weldResult;
+            this->cycleData_rightPart.pointsDataMap[data1.pointNO]=data1;
+        }
+        //update display(tableWidget) on RunScreen
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,0,new QTableWidgetItem(pointName));
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,1,weldResultItem);
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,2,new QTableWidgetItem(QString::number(data1.amplitude)));
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,3,new QTableWidgetItem(QString::number(data1.thrusterDownPressure)));
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,4,new QTableWidgetItem(QString::number(data1.weldTime)));
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,5,new QTableWidgetItem(QString::number(data1.peakPower)));
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,6,new QTableWidgetItem(QString::number(data1.weldEnergy)));
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,7,new QTableWidgetItem(QString::number(data1.holdTime)));
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,8,new QTableWidgetItem(dateTime1));
+        this->ui->tableWidget_lastCycleData->setItem(data1.pointNO-1,9,
+                  new QTableWidgetItem(barcodeSide.contains("left")?this->barcode_in_use_left:this->barcode_in_use_right));
+        weldResultItem=nullptr;
     }
+
+
+
 }
 void MainWindow::OnTimer_mainWindow_Timeout()
 {
@@ -2386,6 +2741,8 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         //(wp2.thrusterPressure_down-228)*500/(3868-228);
         data1.genNO=dataLoad[10];
         data1.channelCode=dataLoad[11];
+        data1.holdTime=(quint8)dataLoad[12]*256+(quint8)dataLoad[13];
+        data1.amplitude=dataLoad[14];
         qDebug()<<tr("received point cycle data,pointNO:%1,time:%2,power:%3,energy:%4").arg(data1.pointNO)
                   .arg(data1.weldTime).arg(data1.peakPower).arg(data1.weldEnergy);
         emit receivedPointCycleData(data1);
@@ -6160,3 +6517,8 @@ void MainWindow::on_tab_toolingConfig_currentChanged(int index)
     }
 }
 
+
+void MainWindow::on_btn_historyData_clicked()
+{
+    this->ui->stackedWidget_run->setCurrentIndex(2);
+}

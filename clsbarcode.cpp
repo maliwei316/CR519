@@ -12,6 +12,6 @@ clsBarcode::clsBarcode(QObject *parent) : QSerialPort(parent)
 
 QString clsBarcode::autoGenerateBarcode(QString L_R)
 {
-  QString datetime=QDateTime::currentDateTime().toString("yyyy-MM-dd,hh:mm:ss");
+  QString datetime=QDateTime::currentDateTime().toString("yyyyMMddhhmmss");
   return L_R.append(datetime);
 }

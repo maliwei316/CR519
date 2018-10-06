@@ -41,6 +41,7 @@ public:
     void handleBarcodeError(QSerialPort::SerialPortError error);
     void moveCycleDataToHistory();
     bool barcodeInit(clsBarcode* clsbarcode, const barcodeSetting& barcode_settings);
+    void lockUnlockPLCFromHMI(bool lockFlag);
     ~MainWindow();
 signals:
     void logRequest(QString logContents,quint16 logID,quint8 logLevel);
@@ -51,8 +52,11 @@ signals:
     void moveAlarmToHistory(alarmItem item_alarm);
     void receivedPointCycleData(pointCycleData);
     void parameterEditableStausChanged(bool editable);
+    void writeDatabaseRequired(QString sqlquery);
+    void readDatabaseRequired(QString sqlquery);
 public slots:
   void receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj);
+
   void OnUploadWholeSettingsTimeout();
   void OnLogInTimeout();
   void onMoveAlarmToHistory(alarmItem alarm);
@@ -506,6 +510,8 @@ private slots:
 
 
 
+    void on_btn_historyData_clicked();
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
@@ -548,6 +554,8 @@ public:
     QStringList recentRunningLogs;
     plcVarTable plcVars;
     quint8 LanguageFlag;
+    partCycleData cycleData_leftPart;
+    partCycleData cycleData_rightPart;
 
 };
 

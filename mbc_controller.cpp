@@ -14,8 +14,8 @@ mbc_controller::mbc_controller(QObject *parent) : QObject(parent)
     //connect(this, &Controller::operate, worker, &Worker::doWork);
     //connect(worker, &Worker::resultReady, this, &Controller::handleResults);
     //connect(worker,&worker_modbus::modbusConnected,this,&mbc_controller::onModbusConnected);
-    connect(worker,&worker_modbus::writeDatabaseRequired,this,&mbc_controller::needWriteDatabase);//signal transfer by mbc_controller
-    connect(worker,&worker_modbus::batchWriteDataBaseRequired,this,&mbc_controller::needbatchWriteDatabase);//signal transfer by mbc_controller
+    //connect(worker,&worker_modbus::writeDatabaseRequired,this,&mbc_controller::needWriteDatabase);//signal transfer by mbc_controller
+    //connect(worker,&worker_modbus::batchWriteDataBaseRequired,this,&mbc_controller::needbatchWriteDatabase);//signal transfer by mbc_controller
     connect(worker,&worker_modbus::modbusStateChanged,this,&mbc_controller::onModbusStateChanged);
     connect(worker,&worker_modbus::modbusErrorOccured,this,&mbc_controller::onModbusErrorOccurred);
     connect(worker,&worker_modbus::plcItemsChanged,this,&mbc_controller::plcItemsChanged_mbc);
