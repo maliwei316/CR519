@@ -17,24 +17,15 @@ public:
      explicit worker_modbus(QObject *parent = nullptr);
     ~worker_modbus();
     bool connectPLC();
-    //bool disconnectPLC();
     void setVarCounts(int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count);
-
-    //void streamBytesToFile(const QByteArray& data,QString filename="log.dat");
     void readPLCCommand(quint16 functionCode,quint16 startAddress, quint16 length);
-    void setPLCCoilsTest();
-    void resetPLCCoilsTest();
+    void setPLCCoilsTest();   
     void readPLCByInterval();
-    bool waitReadPLCAtAddress(quint16 functionCode,quint16 Address, quint16 &result);
-
     void parseDataFromPLC(quint8 area,QVariantList addressList,QVariantList valueList);
 
 signals:
-    //void resultReady(const QString tableName,const quint16 startAddress,const quint16 length);
-    //void modbusConnected();
-    //void inIdleStatus();
-    void writeDatabaseRequired(QString sqlquery);
-    void batchWriteDataBaseRequired(QString prepareStr,QVariantList addressList,QVariantList valueList);
+    //void writeDatabaseRequired(QString sqlquery);
+    //void batchWriteDataBaseRequired(QString prepareStr,QVariantList addressList,QVariantList valueList);
     void modbusStateChanged(QModbusDevice::State state);
     void modbusErrorOccured(QModbusDevice::Error error);
     void plcItemsChanged(QVariantList changedItems);
@@ -42,7 +33,6 @@ signals:
 public slots:
     void onInit(QString IPAddr,int port,int DI_Var_count,int DO_Var_count,int HoldRegister_Var_count);
     void readReady2();
-    void readReady();
     void onStateChanged(QModbusDevice::State state);
     void onErrorOccurred(QModbusDevice::Error error);
     void writePLCCommand(quint16 functionCode, quint16 Address, const quint16 data,bool bitOperation,quint8 bitPos);

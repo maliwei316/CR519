@@ -15,22 +15,22 @@ public:
     //DB_Handler(QString dbDriverName="QSQLITE", QString dbConnectionName="default",QString databaseName=":memory:",QObject *parent= nullptr);
     explicit DB_Handler(QObject *parent= nullptr);
     ~DB_Handler();
-    bool execsql(QString sqlQuery);
+    //bool execsql(QString sqlQuery);
     int writeDatabase(QString sqlQuery);
     int batchWriteDatabase(QString prepareStr, QVariantList addressList, QVariantList valueList);
     int writeDatabaseEventHandler(QEvent *e);
     int batchWriteDatabaseEventHandler(QEvent *e);
     int readDatabase(QString sqlquery);
     int readDatabaseEventHandler(QEvent *e);
-    //void readRealtimeDataFromDatabase(quint16 requesterObjID,QString tableName,quint16 address);
+
 signals:
-    dataReadyDB2GUI(quint16 reqesterID,quint16 address, quint16 value);
+    void cycleDataReady_Database2GUI(QSqlQuery sql_cycleData,quint8 cycleDataType);
     void logRequest(QString logContents,quint16 logID,quint8 logLevel);
 public slots:
     void onInit(QString dbDriverName, QString dbConnectionName,QString databaseName);
     void onAddTaskToEventQueue_writeDB(QString sqlquery);
     void onAddTaskToEventQueue_batchWriteDB(QString prepareStr,QVariantList addressList,QVariantList valueList);
-    void onAddtaskToEentQuene_readDB(quint16 requesterObjID,QString tableName,quint16 address);
+    void onAddtaskToEentQuene_readDB(QString sqlquery, quint8 queryType);
 
 public:
     QString dbDiverName;

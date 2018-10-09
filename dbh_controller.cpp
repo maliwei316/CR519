@@ -35,8 +35,8 @@ dbh_controller::dbh_controller(QObject *parent) : QObject(parent)
     //connect(worker, &Worker::resultReady, this, &Controller::handleResults);
     //connect(worker,&DB_Handler::dataReadyDB2GUI,this,&dbh_controller::dataReadyDBH2Controller2GUI);
 
-    connect(this,&dbh_controller::addTaskToEventQueue_readDB,worker,&DB_Handler::onAddtaskToEentQuene_readDB);
-    connect(this,&dbh_controller::addTaskToEventQueue_writeDB,worker,&DB_Handler::onAddTaskToEventQueue_writeDB);
+    //connect(this,&dbh_controller::addTaskToEventQueue_readDB,worker,&DB_Handler::onAddtaskToEentQuene_readDB);
+    //connect(this,&dbh_controller::addTaskToEventQueue_writeDB,worker,&DB_Handler::onAddTaskToEventQueue_writeDB);
     //connect(this,&dbh_controller::addTaskToEventQueue_batchWriteDB,worker,&DB_Handler::onAddTaskToEventQueue_batchWriteDB);
     connect(this,&dbh_controller::needInit,worker,&DB_Handler::onInit);
     //logging
@@ -51,20 +51,7 @@ dbh_controller::~dbh_controller()
     workerThread.wait();
 
 }
-void dbh_controller::readRealtimeDataFromDatabase(quint16 requesterObjID,QString tableName,quint16 address)
-{
-    //this->dbh1->readRealtimeDataFromDatabase(requesterObjID,tableName,address);
-}
-int dbh_controller::readDatabase(QString sqlquery)
-{
-    //this->dbh1->readDatabase(sqlquery);
-}
-int dbh_controller::writeDatabase(QString sqlQuery)
-{
-    //this->dbh1->writeDatabase(sqlQuery);
-}
-void dbh_controller::getValuefromDataBase(quint16 requesterObjID,QString tableName,quint16 address)
-{emit this->addTaskToEventQueue_readDB(requesterObjID,tableName,address);}
+
 bool dbh_controller::getBitsFromWord(quint16 wordVar,quint8 bitPos)
 {
     qDebug()<<"data from HMI(wordVar):"<<wordVar;

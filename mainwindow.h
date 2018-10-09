@@ -9,6 +9,8 @@
 #include <QTimer>
 #include <QLabel>
 #include "clsbarcode.h"
+#include "db_handler.h"
+
 typedef struct _pageInfo
 {
         quint16 previousPage_Index_mainStackWidget;
@@ -53,7 +55,7 @@ signals:
     void receivedPointCycleData(pointCycleData);
     void parameterEditableStausChanged(bool editable);
     void writeDatabaseRequired(QString sqlquery);
-    void readDatabaseRequired(QString sqlquery);
+    void readDatabaseRequired(QString sqlquery,quint8 sqlType);
 public slots:
   void receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj);
 
@@ -508,9 +510,11 @@ private slots:
 
     void on_tab_toolingConfig_currentChanged(int index);
 
-
-
     void on_btn_historyData_clicked();
+
+    void on_pushButton_chooseDatabase_clicked();
+
+    void on_pushButton_historyCycleData_search_clicked();
 
 private:
     Ui::MainWindow *ui;
@@ -556,6 +560,9 @@ public:
     quint8 LanguageFlag;
     partCycleData cycleData_leftPart;
     partCycleData cycleData_rightPart;
+
+    DB_Handler dbh_1;
+    QSqlQueryModel *model;
 
 };
 

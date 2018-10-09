@@ -22,6 +22,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     //welcome/startup page
     this->ui->stackedWidget_mainProgram->setCurrentIndex(9);
+    //
     this->clsBarcode_left=new clsBarcode(this);
     this->clsBarcode_right=new clsBarcode(this);
     this->wp1=nullptr;
@@ -30,6 +31,12 @@ MainWindow::MainWindow(QWidget *parent) :
     this->toolID_editing=1;
     this->tempTooling_editting->plcToolingInfo.toolingNO=1;
     this->machineInfoReady=false;
+    //QString filename="HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3";
+
+    dbh_1.onInit("QSQLITE","HistoryDataDB_run","HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3");
+
+    this->ui->lineEdit_selectedDataBase->setText("HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3");
+    this->model = new QSqlQueryModel(this);
     //barcode port combbox init
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
@@ -111,6 +118,8 @@ MainWindow::MainWindow(QWidget *parent) :
     this->timer_mainWindow.setInterval(10000);
     connect(&this->timer_mainWindow,&QTimer::timeout,this,&MainWindow::OnTimer_mainWindow_Timeout);
     this->timer_mainWindow.start();
+
+    connect(&dbh_1,&DB_Handler::logRequest,this,&MainWindow::execLogging);
 
     connect(this,&MainWindow::updateAlarmText,this,&MainWindow::onUpdateAlarmText);
     connect(this,&MainWindow::moveAlarmToHistory,this,&MainWindow::onMoveAlarmToHistory);
@@ -518,8 +527,8 @@ void MainWindow::moveCycleDataToHistory()
                                 .arg(this->cycleData_leftPart.pointsDataMap.value(key).peakPower).arg(this->cycleData_leftPart.pointsDataMap.value(key).weldEnergy)
                                 .arg(this->cycleData_leftPart.pointsDataMap.value(key).holdTime);
             //emit signal to writeDB,operate table "pointHistoryCycleData" in database
-            emit writeDatabaseRequired(sqlquery);
-
+            //emit writeDatabaseRequired(sqlquery);
+            dbh_1.writeDatabase(sqlquery);
         }
         //save part cycle data to table "partHistoryCycleData" in database
         sqlquery=QObject::tr("insert or replace into %1(partBarcode,partWeldResult,toolID,toolName,location) "
@@ -528,7 +537,8 @@ void MainWindow::moveCycleDataToHistory()
                             .arg(weldResult_str).arg(this->plcVars.toolID_sensor_detected).arg(this->tempTooling_editting->toolingName)
                             .arg("LEFT");
         //emit signal to writeDB,operate table "partHistoryCycleData"
-        emit writeDatabaseRequired(sqlquery);
+        //emit writeDatabaseRequired(sqlquery);
+        dbh_1.writeDatabase(sqlquery);
         //save last cycle data to CSV file
         if(true)
         {
@@ -636,8 +646,8 @@ void MainWindow::moveCycleDataToHistory()
                                 .arg(this->cycleData_rightPart.pointsDataMap.value(key).peakPower).arg(this->cycleData_rightPart.pointsDataMap.value(key).weldEnergy)
                                 .arg(this->cycleData_rightPart.pointsDataMap.value(key).holdTime);
             //emit signal to writeDB,operate table "pointHistoryCycleData" in database
-            emit writeDatabaseRequired(sqlquery);
-
+            //emit writeDatabaseRequired(sqlquery);
+            dbh_1.writeDatabase(sqlquery);
         }
         //save part cycle data to table "partHistoryCycleData" in database
         sqlquery=QObject::tr("insert or replace into %1(partBarcode,partWeldResult,toolID,toolName,location) "
@@ -646,7 +656,8 @@ void MainWindow::moveCycleDataToHistory()
                             .arg(weldResult_str).arg(this->plcVars.toolID_sensor_detected).arg(this->tempTooling_editting->toolingName)
                             .arg("RIGHT");
         //emit signal to writeDB,operate table "partHistoryCycleData"
-        emit writeDatabaseRequired(sqlquery);
+        //emit writeDatabaseRequired(sqlquery);
+        dbh_1.writeDatabase(sqlquery);
         //save last cycle data to CSV file
         if(true)
         {
@@ -1385,7 +1396,13 @@ void MainWindow::updatePLCItem(plcItem item)
             if(receivedStepNO==0)
             {
                 //moveCycleDataToHistory
-                this->moveCycleDataToHistory();
+                if(this->cycleData_leftPart.partWeldResult>0||this->cycleData_rightPart.partWeldResult>0)
+                {
+                  this->moveCycleDataToHistory();
+                }
+
+                this->cycleData_leftPart.partWeldResult=0;
+                this->cycleData_rightPart.partWeldResult=0;
                 //if barcode not enabled, generate barcode automatically
                 if(!this->tempTooling_editting->leftBarcodeSettings.enable)
                 {
@@ -6521,4 +6538,88 @@ void MainWindow::on_tab_toolingConfig_currentChanged(int index)
 void MainWindow::on_btn_historyData_clicked()
 {
     this->ui->stackedWidget_run->setCurrentIndex(2);
+}
+
+void MainWindow::on_pushButton_chooseDatabase_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"),
+                                                    "/home",
+                                                    tr("Sqlite3 (*.sqlite3)"));
+    if(!fileName.isEmpty())
+    {
+        //this->ui->toolImageUrl->setText(fileName);
+        this->ui->lineEdit_selectedDataBase->setText(fileName);
+    }
+
+}
+
+void MainWindow::on_pushButton_historyCycleData_search_clicked()
+{
+    if(this->ui->lineEdit_selectedDataBase->text().isEmpty())
+        return;
+    DB_Handler dbh_2;
+    dbh_2.onInit("QSQLITE","queryHistoryData",this->ui->lineEdit_selectedDataBase->text());
+    connect(&dbh_2,&DB_Handler::logRequest,this,&MainWindow::execLogging);
+    QString sql;
+    if(this->ui->tabWidget_getHistoryCycleData->currentIndex()==0)
+    {
+        //query by barcode
+        sql=tr("select partHistoryCycleData.CreatedTime, partHistoryCycleData.partBarcode,partHistoryCycleData.partWeldResult,partHistoryCycleData.toolID,partHistoryCycleData.toolName,partHistoryCycleData.location from partHistoryCycleData where partHistoryCycleData.partBarcode=\"%1\"")
+                .arg(this->ui->lineEdit_getHistoryCycleData_Barcode->text());
+        this->ui->textEdit_sql->setText(sql);
+    }
+    else if(this->ui->tabWidget_getHistoryCycleData->currentIndex()==1)
+    {
+        //query by time,"2000/1/1 0:00" to "2000-01-01 hh:mm:ss"
+        QDateTime dt1=QDateTime::fromString(this->ui->dateTimeEdit_startTime->text(),"yyyy/M/d h:mm");
+        QString startTime=dt1.toString("yyyy-MM-dd hh:mm:ss");
+        QDateTime dt2=QDateTime::fromString(this->ui->dateTimeEdit_endTime->text(),"yyyy/M/d h:mm");
+        QString endTime=dt2.toString("yyyy-MM-dd hh:mm:ss");
+        qDebug()<<"date format,startTime:"<<startTime;
+        qDebug()<<"date format,startTime:"<<endTime;
+        sql=tr("select partHistoryCycleData.CreatedTime, partHistoryCycleData.partBarcode,partHistoryCycleData.partWeldResult,partHistoryCycleData.toolID,partHistoryCycleData.toolName,partHistoryCycleData.location from partHistoryCycleData where CreatedTime between datetime(\'%1\') and datetime(\'%2\')")
+                .arg(startTime).arg(endTime);
+        this->ui->textEdit_sql->setText(sql);
+    }
+    else if(this->ui->tabWidget_getHistoryCycleData->currentIndex()==2)
+    {
+        sql=this->ui->textEdit_sql->toPlainText();
+    }
+    dbh_2.q1.exec(sql);
+    qDebug()<<tr("sql statement:%1,lastError:%2").arg(sql).arg(dbh_2.q1.lastError().text());
+    if(dbh_2.q1.isActive())
+    {
+             qDebug()<<"sql executed successfuly,q1 is active";
+             //
+             model->setQuery(dbh_2.q1);
+             model->setHeaderData(0, Qt::Horizontal, tr("dateTime"));
+             model->setHeaderData(1, Qt::Horizontal, tr("barcode"));
+             model->setHeaderData(2, Qt::Horizontal, tr("weldResult"));
+             model->setHeaderData(3, Qt::Horizontal, tr("toolID"));
+             model->setHeaderData(4, Qt::Horizontal, tr("toolName"));
+             model->setHeaderData(5, Qt::Horizontal, tr("location"));
+             //QTableView *view = new QTableView;
+             //view->setModel(model);
+             this->ui->tableView_partCycleData->setModel(model);
+             this->ui->tableView_partCycleData->show();
+
+//             while(dbh_2.q1.next())
+//             {
+//                 qDebug()<<tr("dateTime:%1,barcode:%2,weldResult:%3,toolID:%4,toolName:%5,location:%6")
+//                           .arg(dbh_2.q1.value(0).toString()).arg(dbh_2.q1.value(1).toString())
+//                           .arg(dbh_2.q1.value(2).toString()).arg(dbh_2.q1.value(3).toInt())
+//                           .arg(dbh_2.q1.value(4).toString()).arg(dbh_2.q1.value(5).toString());
+//             }
+    }
+    else
+    {
+        if(loggingEnable&&loggingLevel>0)
+        {
+            QString logcontents=tr("sql statement:%1,lastError:%2").arg(sql).arg(dbh_2.q1.lastError().text());
+            emit this->logRequest(logcontents,200,0);
+        }
+    }
+    //close database
+    dbh_2.database1.close();
+    disconnect(&dbh_2,&DB_Handler::logRequest,this,&MainWindow::execLogging);
 }
