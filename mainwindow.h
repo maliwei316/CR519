@@ -516,6 +516,8 @@ private slots:
 
     void on_pushButton_historyCycleData_search_clicked();
 
+    void on_tableView_partCycleData_clicked(const QModelIndex &index);
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
@@ -562,7 +564,8 @@ public:
     partCycleData cycleData_rightPart;
 
     DB_Handler dbh_1;
-    QSqlQueryModel *model;
+    QSqlQueryModel *model_partData;
+    QSqlQueryModel *model_pointsData;
 
 };
 

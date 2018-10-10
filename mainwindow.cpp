@@ -36,7 +36,8 @@ MainWindow::MainWindow(QWidget *parent) :
     dbh_1.onInit("QSQLITE","HistoryDataDB_run","HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3");
 
     this->ui->lineEdit_selectedDataBase->setText("HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3");
-    this->model = new QSqlQueryModel(this);
+    this->model_partData = new QSqlQueryModel(this);
+    this->model_pointsData=new QSqlQueryModel(this);
     //barcode port combbox init
     const auto serialPortInfos = QSerialPortInfo::availablePorts();
     for (const QSerialPortInfo &serialPortInfo : serialPortInfos)
@@ -6558,7 +6559,7 @@ void MainWindow::on_pushButton_historyCycleData_search_clicked()
     if(this->ui->lineEdit_selectedDataBase->text().isEmpty())
         return;
     DB_Handler dbh_2;
-    dbh_2.onInit("QSQLITE","queryHistoryData",this->ui->lineEdit_selectedDataBase->text());
+    dbh_2.onInit("QSQLITE","queryPartHistoryData",this->ui->lineEdit_selectedDataBase->text());
     connect(&dbh_2,&DB_Handler::logRequest,this,&MainWindow::execLogging);
     QString sql;
     if(this->ui->tabWidget_getHistoryCycleData->currentIndex()==0)
@@ -6591,16 +6592,16 @@ void MainWindow::on_pushButton_historyCycleData_search_clicked()
     {
              qDebug()<<"sql executed successfuly,q1 is active";
              //
-             model->setQuery(dbh_2.q1);
-             model->setHeaderData(0, Qt::Horizontal, tr("dateTime"));
-             model->setHeaderData(1, Qt::Horizontal, tr("barcode"));
-             model->setHeaderData(2, Qt::Horizontal, tr("weldResult"));
-             model->setHeaderData(3, Qt::Horizontal, tr("toolID"));
-             model->setHeaderData(4, Qt::Horizontal, tr("toolName"));
-             model->setHeaderData(5, Qt::Horizontal, tr("location"));
+             this->model_partData->setQuery(dbh_2.q1);
+             this->model_partData->setHeaderData(0, Qt::Horizontal, tr("dateTime"));
+             this->model_partData->setHeaderData(1, Qt::Horizontal, tr("barcode"));
+             this->model_partData->setHeaderData(2, Qt::Horizontal, tr("weldResult"));
+             this->model_partData->setHeaderData(3, Qt::Horizontal, tr("toolID"));
+             this->model_partData->setHeaderData(4, Qt::Horizontal, tr("toolName"));
+             this->model_partData->setHeaderData(5, Qt::Horizontal, tr("location"));
              //QTableView *view = new QTableView;
              //view->setModel(model);
-             this->ui->tableView_partCycleData->setModel(model);
+             this->ui->tableView_partCycleData->setModel(this->model_partData);
              this->ui->tableView_partCycleData->show();
 
 //             while(dbh_2.q1.next())
@@ -6622,4 +6623,64 @@ void MainWindow::on_pushButton_historyCycleData_search_clicked()
     //close database
     dbh_2.database1.close();
     disconnect(&dbh_2,&DB_Handler::logRequest,this,&MainWindow::execLogging);
+}
+
+void MainWindow::on_tableView_partCycleData_clicked(const QModelIndex &index)
+{
+    if(this->ui->lineEdit_selectedDataBase->text().isEmpty())
+        return;
+    QString selectedBarcode=this->model_partData->data(this->model_partData->index(index.row(),1)).toString();
+
+    DB_Handler dbh_3;
+    dbh_3.onInit("QSQLITE","queryPointsHistoryData",this->ui->lineEdit_selectedDataBase->text());
+    connect(&dbh_3,&DB_Handler::logRequest,this,&MainWindow::execLogging);
+    QString sql;
+    //query by barcode
+    sql=tr("select pointHistoryCycleData.pointNO,pointHistoryCycleData.pointName,pointHistoryCycleData.pointWeldResult,pointHistoryCycleData.amplitude, pointHistoryCycleData.pressure,pointHistoryCycleData.weldTime,pointHistoryCycleData.peakPower,pointHistoryCycleData.weldEnergy, pointHistoryCycleData.holdTime from pointHistoryCycleData where pointHistoryCycleData.Barcode=\"%1\"")
+            .arg(selectedBarcode);
+    this->ui->textEdit_sql->setText(sql);
+
+    dbh_3.q1.exec(sql);
+    qDebug()<<tr("sql statement:%1,lastError:%2").arg(sql).arg(dbh_3.q1.lastError().text());
+    if(dbh_3.q1.isActive())
+    {
+             qDebug()<<"sql executed successfuly,q1 is active";
+             //
+             this->model_pointsData->setQuery(dbh_3.q1);
+             this->model_pointsData->setHeaderData(0, Qt::Horizontal, tr("pointNO"));
+             this->model_pointsData->setHeaderData(1, Qt::Horizontal, tr("pointName"));
+             this->model_pointsData->setHeaderData(2, Qt::Horizontal, tr("weldResult"));
+             this->model_pointsData->setHeaderData(3, Qt::Horizontal, tr("amplitude"));
+             this->model_pointsData->setHeaderData(4, Qt::Horizontal, tr("pressure"));
+             this->model_pointsData->setHeaderData(5, Qt::Horizontal, tr("weldTime"));
+             this->model_pointsData->setHeaderData(6, Qt::Horizontal, tr("peakPower"));
+             this->model_pointsData->setHeaderData(7, Qt::Horizontal, tr("weldEnergy"));
+             this->model_pointsData->setHeaderData(8, Qt::Horizontal, tr("holdTime"));
+             //QTableView *view = new QTableView;
+             //view->setModel(model);
+             this->ui->tableView_pointCycleData->setModel(this->model_pointsData);
+             this->ui->tableView_pointCycleData->show();
+
+//             while(dbh_3.q1.next())
+//             {
+//                 qDebug()<<tr("pointNO:%1,pointName:%2,weldResult:%3,amplitude:%4,pressure:%5,weldTime:%6,peakPower:%7,energy:%8,holdTime:%9")
+//                           .arg(dbh_3.q1.value(0).toInt()).arg(dbh_3.q1.value(1).toString())
+//                           .arg(dbh_3.q1.value(2).toString()).arg(dbh_3.q1.value(3).toInt())
+//                           .arg(dbh_3.q1.value(4).toInt()).arg(dbh_3.q1.value(5).toInt())
+             //              .arg(dbh_3.q1.value(6).toInt()).arg(dbh_3.q1.value(7).toInt())
+             //              .arg(dbh_3.q1.value(8).toInt());
+//             }
+    }
+    else
+    {
+        if(loggingEnable&&loggingLevel>0)
+        {
+            QString logcontents=tr("sql statement:%1,lastError:%2").arg(sql).arg(dbh_3.q1.lastError().text());
+            emit this->logRequest(logcontents,200,0);
+        }
+    }
+    //close database
+    dbh_3.database1.close();
+    disconnect(&dbh_3,&DB_Handler::logRequest,this,&MainWindow::execLogging);
+
 }
