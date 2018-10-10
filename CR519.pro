@@ -19,16 +19,14 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    db_handler.cpp \
-    dbh_controller.cpp \
-    main.cpp \
     mbc_controller.cpp \
-    qmllanguage.cpp \
     worker_modbus.cpp \
     tcp_comm.cpp \
     mainwindow.cpp \
+    clsbarcode.cpp \
+    main.cpp \
     clstooling.cpp \
-    clsbarcode.cpp
+    db_handler.cpp
 
 
 RESOURCES += qml.qrc
@@ -44,55 +42,20 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-DISTFILES += \
-    en_US.qm \
-    zh_CN.qm \
-    en_US.ts \
-    zh_CN.ts \
-    img/breakpoint.png \
-    img/green-16x16.png \
-    img/green.png \
-    img/greenStone.png \
-    img/ledoff.png \
-    img/ledon.png \
-    img/menuitem-indicator-hovered.png \
-    img/playnormal.png \
-    img/record.png \
-    img/red.png \
-    img/roundbutton-background-checked.png \
-    img/roundbutton-background-pressed.png \
-    img/run_small.png \
-    img/screencap-switch-off.png \
-    img/screencap-switch-on.png \
-    img/square-green.png \
-    img/square-red.png \
-    img/square-yellow.png \
-    img/statusindicator-active.png \
-    img/statusindicator-green.png \
-    img/statusindicator-inactive.png \
-    img/switch-off.png \
-    img/switch-on.png \
-    img/togglebutton-checked.png \
-    img/togglebutton-unchecked.png \
-    img/wb-review-tip.png \
-    img/wheel.png \
-    img/yellow.png \
-    img/yellowStone.png
+DISTFILES +=
 
     Indicator2.qml
 
 HEADERS += \
-    bitsoperation.h \
-    db_handler.h \
-    dbh_controller.h \
     mbc_controller.h \
     myevent.h \
-    qmllanguage.h \
     worker_modbus.h \
     tcp_comm.h \
     mainwindow.h \
+    clsbarcode.h \
+    bitsoperation.h \
     clstooling.h \
-    clsbarcode.h
+    db_handler.h
 
 
 FORMS += \

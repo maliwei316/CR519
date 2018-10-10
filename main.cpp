@@ -1,13 +1,12 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include "QmlLanguage.h"
 #include <QDebug>
 #include <QList>
 #include <QtSql>
 #include <QDateTime>
 #include "mbc_controller.h"
-#include "dbh_controller.h"
+
 #include <QObject>
 #include "worker_modbus.h"
 #include "tcp_comm.h"

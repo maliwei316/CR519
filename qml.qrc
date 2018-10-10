@@ -1,17 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>main_100.qml</file>
-        <file>Page1_Test_101.qml</file>
-        <file>qtquickcontrols2.conf</file>
-        <file>Indicator2.qml</file>
-        <file>Page2_IO_Table_110.qml</file>
-        <file>Page3_PointConfig_120.qml</file>
-        <file>Page5_InitConfig_130.qml</file>
-        <file>P102_IO_Table.qml</file>
-        <file>P102_IO_TableForm.ui.qml</file>
-        <file>P130_InitConfig.qml</file>
-        <file>P130_InitConfigForm.ui.qml</file>
-        <file>MaTextInput.qml</file>
         <file>img/breakpoint.png</file>
         <file>img/green-16x16.png</file>
         <file>img/green.png</file>
@@ -39,27 +27,7 @@
         <file>img/togglebutton-unchecked.png</file>
         <file>img/wb-review-tip.png</file>
         <file>img/wheel.png</file>
-        <file>img/yellow.png</file>
         <file>img/yellowStone.png</file>
-        <file>bitsoperation.h</file>
-        <file>clstooling.cpp</file>
-        <file>clstooling.h</file>
-        <file>db_handler.cpp</file>
-        <file>db_handler.h</file>
-        <file>dbh_controller.cpp</file>
-        <file>dbh_controller.h</file>
-        <file>main.cpp</file>
-        <file>mainwindow.cpp</file>
-        <file>mainwindow.h</file>
-        <file>mbc_controller.cpp</file>
-        <file>mbc_controller.h</file>
-        <file>myevent.h</file>
-        <file>qmllanguage.cpp</file>
-        <file>qmllanguage.h</file>
-        <file>tcp_comm.cpp</file>
-        <file>tcp_comm.h</file>
-        <file>worker_modbus.cpp</file>
-        <file>worker_modbus.h</file>
     </qresource>
     <qresource prefix="/img" lang="en"/>
 </RCC>
