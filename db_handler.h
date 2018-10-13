@@ -4,8 +4,9 @@
 #include <QObject>
 #include <QtSql>
 #include <QThread>
-#include <QEvent>
-
+//#include <QEvent>
+#include <QVariant>
+#include <QList>
 
 class DB_Handler : public QObject
 {
@@ -14,19 +15,16 @@ public:
     //DB_Handler(QString dbDriverName="QSQLITE", QString dbConnectionName="default",QString databaseName=":memory:",QObject *parent= nullptr);
     explicit DB_Handler(QObject *parent= nullptr);
     ~DB_Handler();
-    bool execsql(QString sqlQuery);
+    //bool execsql(QString sqlQuery);
     int writeDatabase(QString sqlQuery);
-    int writeDatabaseEventHandler(QEvent *e);
-
+    int batchWriteDatabase(QString prepareStr, QVariantList addressList, QVariantList valueList);
     int readDatabase(QString sqlquery);
-    int readDatabaseEventHandler(QEvent *e);
-    //void readRealtimeDataFromDatabase(quint16 requesterObjID,QString tableName,quint16 address);
-signals:
-    dataReadyDB2GUI(quint16 reqesterID,quint16 address, quint16 value);
-public slots:
     void onInit(QString dbDriverName, QString dbConnectionName,QString databaseName);
-    void onAddTaskToEventQueue_writeDB(QString sqlquery);
-    void onAddtaskToEentQuene_readDB(quint16 requesterObjID,QString tableName,quint16 address);
+
+signals:
+    void logRequest(QString logContents,quint16 logID,quint8 logLevel);
+public slots:
+
 
 public:
     QString dbDiverName;
@@ -36,8 +34,6 @@ public:
     QSqlQuery q1;
 
 private:
-    void customEvent(QEvent *e); //该函数是父类QObject的虚函数
-
 
 };
 

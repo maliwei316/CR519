@@ -1,0 +1,34 @@
+<RCC>
+    <qresource prefix="/">
+        <file>img/breakpoint.png</file>
+        <file>img/green-16x16.png</file>
+        <file>img/green.png</file>
+        <file>img/greenStone.png</file>
+        <file>img/ledoff.png</file>
+        <file>img/ledon.png</file>
+        <file>img/menuitem-indicator-hovered.png</file>
+        <file>img/playnormal.png</file>
+        <file>img/record.png</file>
+        <file>img/red.png</file>
+        <file>img/roundbutton-background-checked.png</file>
+        <file>img/roundbutton-background-pressed.png</file>
+        <file>img/run_small.png</file>
+        <file>img/screencap-switch-off.png</file>
+        <file>img/screencap-switch-on.png</file>
+        <file>img/square-green.png</file>
+        <file>img/square-red.png</file>
+        <file>img/square-yellow.png</file>
+        <file>img/statusindicator-active.png</file>
+        <file>img/statusindicator-green.png</file>
+        <file>img/statusindicator-inactive.png</file>
+        <file>img/switch-off.png</file>
+        <file>img/switch-on.png</file>
+        <file>img/togglebutton-checked.png</file>
+        <file>img/togglebutton-unchecked.png</file>
+        <file>img/wb-review-tip.png</file>
+        <file>img/wheel.png</file>
+        <file>img/yellowStone.png</file>
+        <file>img/dukaneLogo.PNG</file>
+    </qresource>
+    <qresource lang="en" prefix="/img"/>
+</RCC>

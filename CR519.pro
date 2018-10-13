@@ -1,8 +1,12 @@
 QT += quick
 QT += serialbus
 QT += sql
+QT += network
 CONFIG += c++11
+QT += core gui
+QT += serialport
 
+greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which as been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -15,12 +19,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    db_handler.cpp \
-    dbh_controller.cpp \
-    main.cpp \
     mbc_controller.cpp \
-    qmllanguage.cpp \
-    worker_modbus.cpp
+    worker_modbus.cpp \
+    tcp_comm.cpp \
+    mainwindow.cpp \
+    clsbarcode.cpp \
+    main.cpp \
+    clstooling.cpp \
+    db_handler.cpp
+
 
 RESOURCES += qml.qrc
 
@@ -35,19 +42,23 @@ qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
-DISTFILES += \
-    en_US.qm \
-    zh_CN.qm \
-    en_US.ts \
-    zh_CN.ts \
-    backup.qml \
+DISTFILES +=
+
     Indicator2.qml
 
 HEADERS += \
-    bitsoperation.h \
-    db_handler.h \
-    dbh_controller.h \
     mbc_controller.h \
     myevent.h \
-    qmllanguage.h \
-    worker_modbus.h
+    worker_modbus.h \
+    tcp_comm.h \
+    mainwindow.h \
+    clsbarcode.h \
+    bitsoperation.h \
+    clstooling.h \
+    db_handler.h
+
+
+FORMS += \
+    mainwindow.ui
+TRANSLATIONS += CR519_CN.ts
+TRANSLATIONS += CR519_EN.ts

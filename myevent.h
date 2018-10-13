@@ -3,6 +3,9 @@
 #include <QEvent>
 //#include <QtCore>
 #include <QObject>
+#include <QSqlQuery>
+
+#include <bitsoperation.h>
 class myEvent_writeDB:public QEvent
 {
 
@@ -15,21 +18,59 @@ public:
 public:
     QString sqlquery;
 };
+class myEvent_batchWriteDB:public QEvent
+{
+
+public:
+    myEvent_batchWriteDB(QEvent::Type myEventType, QString prepareStr,QVariantList addressList,QVariantList valueList):QEvent(myEventType)
+    {
+      this->prepareStr=prepareStr;
+      this->addressList=addressList;
+        this->valueList=valueList;
+    }
+    //MyEvent(Type MyEventType):QEvent(MyEventType){}
+public:
+    QString prepareStr;
+    QVariantList addressList;
+    QVariantList valueList;
+};
 
 class myEvent_readDB:public QEvent
 {
 
 public:
-    myEvent_readDB(QEvent::Type myEventType, quint16 requestObjID,QString tableName,quint16 address):QEvent(myEventType)
+    myEvent_readDB(QEvent::Type myEventType, QString sqlQuery,quint8 type):QEvent(myEventType)
     {
-      this->tableName=tableName;
-      this->requestObjID=requestObjID;
-      this->address=address;
+      this->sqlquery=sqlQuery;
+      this->type=type;//1,search by barcode;2,search by time
     }
 public:
-    QString tableName;
-    quint16 requestObjID;
-    quint16 address;
+    QString sqlquery;
+    quint8  type;
+};
+class myEvent_updateDisplay:public QEvent
+{
+
+public:
+    myEvent_updateDisplay(QEvent::Type myEventType, plcItem item):QEvent(myEventType)
+    {
+      myItem=item;
+    }
+public:
+    plcItem myItem;
+};
+class myEvent_updateHistoryCycleData:public QEvent
+{
+
+public:
+    myEvent_updateHistoryCycleData(QEvent::Type myEventType, QSqlQuery sql_cycleData,quint8 sql_cycleDataType):QEvent(myEventType)
+    {
+      cycleData=sql_cycleData;
+      cycleDataType=sql_cycleDataType;
+    }
+public:
+    QSqlQuery cycleData;
+    quint8  cycleDataType;
 };
 //class Worker : public QObject
 //{
