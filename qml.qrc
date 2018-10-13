@@ -28,6 +28,7 @@
         <file>img/wb-review-tip.png</file>
         <file>img/wheel.png</file>
         <file>img/yellowStone.png</file>
+        <file>img/dukaneLogo.PNG</file>
     </qresource>
-    <qresource prefix="/img" lang="en"/>
+    <qresource lang="en" prefix="/img"/>
 </RCC>

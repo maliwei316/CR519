@@ -518,12 +518,23 @@ private slots:
 
     void on_tableView_partCycleData_clicked(const QModelIndex &index);
 
+    void on_pushButton_paraChecking_clicked();
+
+    void on_pushButton_removeImage_clicked();
+
+    void on_pushButton_MachineInfo_login_clicked();
+
+    void on_actionExit_triggered();
+
+    void on_pushButton_historyCycleData_export_clicked();
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
     void updatePlcItemDisplayEventHandler(QEvent *e);
     void updatePLCItem(plcItem item);
     void switchItemOnOff(QLabel *targetLabel, bool onOff);
+    void setPixmapForLabel(QLabel* label,QString imageSource);
 public:
     machineInfo machineInfo1;
     weldPoint* wp1;

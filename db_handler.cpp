@@ -144,5 +144,7 @@ DB_Handler::~DB_Handler()
     {
        this->database1.close();
     }
+    qDebug()<<"after closed,before remove database/connectionName";
+    //this->database1.removeDatabase(this->dbConnectionName);
 
 }
