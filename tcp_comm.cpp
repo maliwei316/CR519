@@ -152,7 +152,7 @@ void tcp_comm::onReadyRead()
            while(i<validDataLenth)
            {
              subDataLength=(quint8)receivedDataFromPLC[i]*256+(quint8)receivedDataFromPLC[i+1];
-             qDebug()<<tr("rceived data.size:%1,valid dataLength:%2,index:%3,subdataLength:%4").arg(receivedDataFromPLC.size()).arg(validDataLenth).arg(i).arg((quint8)receivedDataFromPLC[i]*256+(quint8)receivedDataFromPLC[i+1]);
+             //qDebug()<<tr("rceived data.size:%1,valid dataLength:%2,index:%3,subdataLength:%4").arg(receivedDataFromPLC.size()).arg(validDataLenth).arg(i).arg((quint8)receivedDataFromPLC[i]*256+(quint8)receivedDataFromPLC[i+1]);
              if(subDataLength<6)
              {
                  qWarning()<<"subdata lenth less than 6, someting is wrong";
@@ -163,7 +163,7 @@ void tcp_comm::onReadyRead()
            }
            for(int j=0;j<receivedByteArrayList.size();j++)
            {
-               qDebug()<<"parsing received data,sub data ID:"<<j;
+               //qDebug()<<"parsing received data,sub data ID:"<<j;
                this->parseDataFromPLC(receivedByteArrayList.at(j));
            }
            receivedDataFromPLC.clear();
@@ -193,7 +193,7 @@ void tcp_comm::parseDataFromPLC(const QByteArray& dataToParse)
     }
 
     quint16 command=(quint8)dataToParse.at(2)*256+dataToParse.at(3);
-    qDebug()<<"data to parse in tcpcommobg,command NO:"<<command;
+    //qDebug()<<"data to parse in tcpcommobg,command NO:"<<command;
     QByteArray dataLoad;
     if(dataToPase_size>6)
     {
@@ -251,10 +251,10 @@ void tcp_comm::parseDataFromPLC(const QByteArray& dataToParse)
     case 20:
     {
 
-        for(int i=0;i<dataToPase_size;i++)
-        {
-            qDebug()<<tr("tcpcomm,point cycle data from PLC,data at[%1]:%2").arg(i).arg(dataToParse.at(i));
-        }
+//        for(int i=0;i<dataToPase_size;i++)
+//        {
+//            qDebug()<<tr("tcpcomm,point cycle data from PLC,data at[%1]:%2").arg(i).arg(dataToParse.at(i));
+//        }
         emit sendDataToWindow(dataToParse);
         break;
     }
@@ -293,7 +293,7 @@ void tcp_comm::prepareDataToPLC(QByteArray newData)
     quint16 length=this->dataToSend.size();
     this->dataToSend[0]=length/256;
     this->dataToSend[1]=length%256;
-     qDebug()<<"length of sent bytes"<<length;
+     //qDebug()<<"length of sent bytes"<<length;
      //this->writeDataViaTCP(dataToSend);
       if(this->writeDataViaTCP(dataToSend))
          dataToSend.clear();
@@ -302,17 +302,16 @@ void tcp_comm::prepareDataToPLC(QByteArray newData)
 
 int tcp_comm::writeDataViaTCP(QByteArray dataToWrite)
 {
-    //qDebug()<<"writeDataViaTCP executed,data to write:"<<dataToWrite;
-    int wroteCount=0;
 
+    int wroteCount=0;
     //dataToWrite[dataToWrite.count()-1]=(dataToWrite.at(dataToWrite.count()-1))?0x00:0xff;
    dataToWrite[2]=0x00;
    //dataToWrite[1]=4;
-   qDebug()<<"writeDataViaTCP executed,data to write:"<<dataToWrite;
+   //qDebug()<<"writeDataViaTCP executed,data to write:"<<dataToWrite;
     wroteCount=this->clientConnection_send->write(dataToWrite);
     this->clientConnection_send->waitForBytesWritten();
     //dataToWrite.clear();
-    qDebug()<<"writeDataViaTCP executed,wrote count:"<<wroteCount<<"peer port:"<<this->clientConnection_send->peerPort();
+    //qDebug()<<"writeDataViaTCP executed,wrote count:"<<wroteCount<<"peer port:"<<this->clientConnection_send->peerPort();
 //    if(wroteCount)
 //    this->isHavingToken=false;
     return wroteCount;

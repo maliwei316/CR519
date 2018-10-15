@@ -44,6 +44,7 @@ public:
     void moveCycleDataToHistory();
     bool barcodeInit(clsBarcode* clsbarcode, const barcodeSetting& barcode_settings);
     void lockUnlockPLCFromHMI(bool lockFlag);
+    void requestPointCycleDataFromPLC(dWordBytes pointsBits_dword);
     ~MainWindow();
 signals:
     void logRequest(QString logContents,quint16 logID,quint8 logLevel);
@@ -577,6 +578,8 @@ public:
     DB_Handler dbh_1;
     QSqlQueryModel *model_partData;
     QSqlQueryModel *model_pointsData;
+
+    dWordBytes pointCycleDataStatus_p1_p32;
 
 };
 

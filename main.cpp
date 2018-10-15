@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     //QString filename="HistoryData"+QString::number(QDateTime::currentDateTime().date().year())+".sqlite3";
     //dbhc2.init("QSQLITE","HistoryDataDB",filename);
     mbc_controller mbcc1;
-    mbcc1.init(w.machineInfoReady?w.machineInfo1.PLC_IPAddress:"10.168.1.2",502,300,0,20);
+    mbcc1.init(w.machineInfoReady?w.machineInfo1.PLC_IPAddress:"10.168.1.2",502,300,0,25);
     mbc_controller mbcc2;
     mbcc2.init(w.machineInfoReady?w.machineInfo1.PLC_IPAddress:"10.168.1.2",503,0,0,30);
     tcp_comm tcpcomm1(w.machineInfoReady?w.machineInfo1.PLC_IPAddress:"10.168.1.2");

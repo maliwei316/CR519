@@ -59,7 +59,7 @@
        <widget class="QLabel" name="label_IndicatingMSG">
         <property name="font">
          <font>
-          <pointsize>16</pointsize>
+          <pointsize>12</pointsize>
          </font>
         </property>
         <property name="text">
@@ -14910,6 +14910,12 @@
                            <verstretch>0</verstretch>
                           </sizepolicy>
                          </property>
+                         <property name="minimumSize">
+                          <size>
+                           <width>200</width>
+                           <height>0</height>
+                          </size>
+                         </property>
                          <property name="font">
                           <font>
                            <pointsize>12</pointsize>
@@ -15175,6 +15181,9 @@
                     <property name="columnCount">
                      <number>10</number>
                     </property>
+                    <attribute name="horizontalHeaderStretchLastSection">
+                     <bool>false</bool>
+                    </attribute>
                     <row>
                      <property name="text">
                       <string>Point_1</string>
@@ -16106,7 +16115,7 @@
                      </font>
                     </property>
                     <property name="currentIndex">
-                     <number>0</number>
+                     <number>1</number>
                     </property>
                     <widget class="QWidget" name="searchByBarcode">
                      <attribute name="title">

@@ -191,6 +191,12 @@ typedef union
                     unsigned char B3;
 
                 }bytesVar;
+    struct
+                {
+                    quint16 W0;
+                    quint16 W1;
+
+                }wordsVar;
 
         quint32 DWordVar;
     } dWordBytes;
