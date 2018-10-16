@@ -248,6 +248,9 @@ void tcp_comm::parseDataFromPLC(const QByteArray& dataToParse)
     case 16:
         emit sendDataToWindow(dataToParse);
         break;
+    case 17:
+        emit sendDataToWindow(dataToParse);
+        break;
     case 20:
     {
 
@@ -307,13 +310,12 @@ int tcp_comm::writeDataViaTCP(QByteArray dataToWrite)
     //dataToWrite[dataToWrite.count()-1]=(dataToWrite.at(dataToWrite.count()-1))?0x00:0xff;
    dataToWrite[2]=0x00;
    //dataToWrite[1]=4;
-   //qDebug()<<"writeDataViaTCP executed,data to write:"<<dataToWrite;
+    //qDebug()<<"writeDataViaTCP executed,data to write:"<<dataToWrite;
     wroteCount=this->clientConnection_send->write(dataToWrite);
     this->clientConnection_send->waitForBytesWritten();
     //dataToWrite.clear();
     //qDebug()<<"writeDataViaTCP executed,wrote count:"<<wroteCount<<"peer port:"<<this->clientConnection_send->peerPort();
-//    if(wroteCount)
-//    this->isHavingToken=false;
+
     return wroteCount;
 }
 

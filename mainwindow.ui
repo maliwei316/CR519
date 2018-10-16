@@ -114,7 +114,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>4</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="toolingConfig">
        <layout class="QGridLayout" name="gridLayout_15" rowstretch="0" columnstretch="1,10" columnminimumwidth="1,4">
@@ -417,7 +417,7 @@
            </font>
           </property>
           <property name="currentIndex">
-           <number>9</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="Overview">
            <attribute name="title">
@@ -14404,7 +14404,7 @@
            </font>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>2</number>
           </property>
           <widget class="QWidget" name="Alarm_Current">
            <attribute name="title">

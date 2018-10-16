@@ -132,7 +132,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->toolID_PLC=0;
     this->setPLCValueVisible(false);
     this->uploadingWholeSettingFromPLCInProcess=false;
-    this->timer_mainWindow.setInterval(100000);
+    this->timer_mainWindow.setInterval(10000);
     connect(&this->timer_mainWindow,&QTimer::timeout,this,&MainWindow::OnTimer_mainWindow_Timeout);
     this->timer_mainWindow.start();
 

@@ -439,7 +439,6 @@ typedef struct _plcItem
     {
         if(this->addressType())
             return wordAddress%8;
-
         else
             return 0;
     }

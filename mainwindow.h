@@ -10,6 +10,7 @@
 #include <QLabel>
 #include "clsbarcode.h"
 #include "db_handler.h"
+#include <QProgressDialog>
 
 typedef struct _pageInfo
 {
@@ -45,6 +46,8 @@ public:
     bool barcodeInit(clsBarcode* clsbarcode, const barcodeSetting& barcode_settings);
     void lockUnlockPLCFromHMI(bool lockFlag);
     void requestPointCycleDataFromPLC(dWordBytes pointsBits_dword);
+    void startDownloadUploadWholeSettings(quint8 direction);
+    void execDownloadUploadWholeSettings(quint8 cmdIndex,quint8 direction);
     ~MainWindow();
 signals:
     void logRequest(QString logContents,quint16 logID,quint8 logLevel);
@@ -536,6 +539,7 @@ private:
     void updatePLCItem(plcItem item);
     void switchItemOnOff(QLabel *targetLabel, bool onOff);
     void setPixmapForLabel(QLabel* label,QString imageSource);
+
 public:
     machineInfo machineInfo1;
     weldPoint* wp1;
@@ -574,7 +578,9 @@ public:
     quint8 LanguageFlag;
     partCycleData cycleData_leftPart;
     partCycleData cycleData_rightPart;
-
+    QByteArrayList downloadWholeSettingArrayList;
+    QByteArrayList uploadWholeSettingArrayList;
+    QProgressDialog* ptrprogressDialog;
     DB_Handler dbh_1;
     QSqlQueryModel *model_partData;
     QSqlQueryModel *model_pointsData;

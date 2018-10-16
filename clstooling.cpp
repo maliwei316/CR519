@@ -890,9 +890,9 @@ QByteArray clsTooling::prepareCommand_getFilmFeederParaFromPLC()
     dataToTcpCommObj[5]=0x00;//reserve byte
     return dataToTcpCommObj;
 }
-QByteArray clsTooling::prepareCommand_uploadWholeSettingFromPLC()
+QByteArrayList clsTooling::prepareCommand_uploadWholeSettingFromPLC()
 {
-    QByteArray ar1;
+    QByteArrayList ar1;
     ar1.append(this->prepareCommand_getGenEnableStatusFromPLC());
     qDebug()<<"ar1.size, after exec prepareCommand_getGenEnableStatusFromPLC"<<ar1.size();
     ar1.append(this->prepareCommand_getPointUSParaFromPLC(1,16));
@@ -915,7 +915,21 @@ QByteArray clsTooling::prepareCommand_uploadWholeSettingFromPLC()
     qDebug()<<"after exec prepareCommand_getSensorBypassStatusFromPLC(0x01),get part sensor bypass info,ar1.size:"<<ar1.size();
     ar1.append(this->prepareCommand_getSensorBypassStatusFromPLC(0x02));
     qDebug()<<"after exec prepareCommand_getSensorBypassStatusFromPLC(0x02),get valve sensor bypass info,ar1.size:"<<ar1.size();
-
+    //append the cmdCount msg to each item
+    QByteArray cmdCountArray;
+    cmdCountArray[0]=0x00;
+    cmdCountArray[1]=0x08;//length
+    cmdCountArray[2]=0x00;
+    cmdCountArray[3]=0x83;//cmd NO,131
+    cmdCountArray[4]=0x00;//reserve
+    cmdCountArray[5]=0x00;//reserve
+    cmdCountArray[6]=0x00;//count
+    cmdCountArray[7]=0x02;//1=download,2=upload
+    for(int i=0;i<ar1.size();i++)
+    {
+        cmdCountArray[6]=i;
+        ar1[i].append(cmdCountArray);
+    }
     return ar1;
 }
 QByteArray clsTooling::prepareCommand_set_get_toolID(bool set_get_flag)
@@ -979,11 +993,11 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
 {
     QByteArrayList ar1;
     QByteArray ar2;
-    //preparation for gen status downloading
+    //preparation for gen status downloading,item0
     if(true)
     {
         ar2[0]=0x00;//length high byte
-        ar2[1]=0x0A;//length low byte
+        ar2[1]=0x08;//length low byte
         ar2[2]=0x00;//commandNO high byte
         ar2[3]=0x6F;//commandNO low byte,111
         ar2[4]=0x00;//reserve byte
@@ -1006,7 +1020,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
         ar2[7]=0x00;//reserve
         ar1.append(ar2);
     }
-    //preparation for thruster config dowloading
+    //preparation for thruster config dowloading,item1~16
     if(true)
     {
         ar2.clear();
@@ -1034,7 +1048,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
 
     }
     qDebug()<<"ar1.size after add thruster config ,before add weld point config para:"<<ar1.size();
-    //preparation for weld point config&&US Para
+    //preparation for weld point config&&US Para,item17~32
     if(true)
     {
         ar2.clear();
@@ -1103,7 +1117,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
     }
     qDebug()<<"ar1.size after add weld point para ,before add servo speed para:"<<ar1.size();
     //preparation for Station setting downloading
-    //servo para--speed setting
+    //servo para--speed setting,item33
     if(true)
     {
         ar2.clear();
@@ -1142,7 +1156,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
         qDebug()<<"ar1.size after add servo speed para ,before add station info:"<<ar1.size();
     }
 
-    // stations info
+    // stations info,item34~49
 
     if(true)
     {
@@ -1203,10 +1217,11 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
 
     }
    qDebug()<<"ar1.size after add station info ,before add valve info:"<<ar1.size();
-   //step station connection
+   //step station connection,item50~65
    if(true)
    {
 
+       ar2.clear();
        ar2[0]=0x00;//length high byte
        ar2[1]=0x0A;//length low byte
        ar2[2]=0x00;//commandNO high byte
@@ -1224,7 +1239,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
            ar1.append(ar2);
        }
    }
-   //preparation for Valve setting downloading
+   //preparation for Valve setting downloading,item66~70
     if(true)
     {
         ar2.clear();
@@ -1253,7 +1268,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
 
     }
 
-    //preparation for film feeder setting downloading
+    //preparation for film feeder setting downloading,item71
     if(true)
     {
       ar2.clear();
@@ -1287,7 +1302,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
       ar2[23]=0;//reserve
       ar1.append(ar2);
     }
-    //preparation for part sensor bypass
+    //preparation for part sensor bypass,item72
     if(true)
     {
         ar2.clear();
@@ -1307,7 +1322,7 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
         ar2[11]=0x00;//reserve
         ar1.append(ar2);
     }
-    //preparation for valve sensor bypass
+    //preparation for valve sensor bypass,item73~77
     if(true)
     {
         ar2.clear();
@@ -1334,11 +1349,26 @@ QByteArrayList clsTooling::prepareCommand_downloadWholeSettingToPLC()
             ar1.append(ar2);
         }
     }
-    //set toolID;
+    //set toolID,item78;
     if(true)
     {
         ar1.append(this->prepareCommand_set_get_toolID(true));
     }
     qDebug()<<"whole settings.size:"<<ar1.size();
+    //append the cmdCount msg to each item
+    QByteArray cmdCountArray;
+    cmdCountArray[0]=0x00;
+    cmdCountArray[1]=0x08;//length
+    cmdCountArray[2]=0x00;
+    cmdCountArray[3]=0x83;//cmd NO,131
+    cmdCountArray[4]=0x00;//reserve
+    cmdCountArray[5]=0x00;//reserve
+    cmdCountArray[6]=0x00;//count
+    cmdCountArray[7]=0x01;//1=download,2=upload
+    for(int i=0;i<ar1.size();i++)
+    {
+        cmdCountArray[6]=i;
+        ar1[i].append(cmdCountArray);
+    }
     return ar1;
 }
