@@ -10,6 +10,7 @@
 #include <QLabel>
 #include "clsbarcode.h"
 #include "db_handler.h"
+#include <QProgressDialog>
 
 typedef struct _pageInfo
 {
@@ -44,6 +45,9 @@ public:
     void moveCycleDataToHistory();
     bool barcodeInit(clsBarcode* clsbarcode, const barcodeSetting& barcode_settings);
     void lockUnlockPLCFromHMI(bool lockFlag);
+    void requestPointCycleDataFromPLC(dWordBytes pointsBits_dword);
+    void startDownloadUploadWholeSettings(quint8 direction);
+    void execDownloadUploadWholeSettings(quint8 cmdIndex,quint8 direction);
     ~MainWindow();
 signals:
     void logRequest(QString logContents,quint16 logID,quint8 logLevel);
@@ -528,13 +532,22 @@ private slots:
 
     void on_pushButton_historyCycleData_export_clicked();
 
+    void on_btn_IO_Table_Previos_clicked();
+
+    void on_btn_IO_Table_Next_clicked();
+
+    void on_btn_realTimeData_clicked();
+
+    void on_WeldByManual_valveNO_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
     void updatePlcItemDisplayEventHandler(QEvent *e);
     void updatePLCItem(plcItem item);
-    void switchItemOnOff(QLabel *targetLabel, bool onOff);
+    void switchItemOnOff(QLabel *targetLabel, bool onOff,bool alarmFlag=false);
     void setPixmapForLabel(QLabel* label,QString imageSource);
+
 public:
     machineInfo machineInfo1;
     weldPoint* wp1;
@@ -543,6 +556,8 @@ public:
 
     clsTooling* tempTooling_editting;
     clsTooling* tooling_current;
+    bool ignoreToolIDConflict=false;
+    bool isShowing_toolIDConflictPopUpDialog;
     bool tcpConnectionStatus_send;
     bool tcpConnectionStatus_receive;
     bool modbusConnectionStatus_502;
@@ -573,10 +588,14 @@ public:
     quint8 LanguageFlag;
     partCycleData cycleData_leftPart;
     partCycleData cycleData_rightPart;
-
+    QByteArrayList downloadWholeSettingArrayList;
+    QByteArrayList uploadWholeSettingArrayList;
+    QProgressDialog* ptrprogressDialog;
     DB_Handler dbh_1;
     QSqlQueryModel *model_partData;
     QSqlQueryModel *model_pointsData;
+
+    dWordBytes pointCycleDataStatus_p1_p32;
 
 };
 

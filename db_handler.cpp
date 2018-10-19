@@ -76,7 +76,8 @@ int DB_Handler::writeDatabase(QString sqlQuery)
         qDebug()<<"failed to exec writeData statement";
         if(loggingEnable&&loggingLevel>0)
         {
-            QString logcontents=tr("failed to exec writeData statement,error:%1").arg(q1.lastError().text());
+            QString logcontents=tr("failed to exec writeData statement,error:%1,SQL:%2")
+                    .arg(q1.lastError().text()).arg(sqlQuery);
             emit this->logRequest(logcontents,200,0);
         }
         return 0;

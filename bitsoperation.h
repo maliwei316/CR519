@@ -191,6 +191,12 @@ typedef union
                     unsigned char B3;
 
                 }bytesVar;
+    struct
+                {
+                    quint16 W0;
+                    quint16 W1;
+
+                }wordsVar;
 
         quint32 DWordVar;
     } dWordBytes;
@@ -433,7 +439,6 @@ typedef struct _plcItem
     {
         if(this->addressType())
             return wordAddress%8;
-
         else
             return 0;
     }
@@ -477,7 +482,7 @@ typedef struct _plcVarTable
 {
     quint8 work_Mode;//2==manual mode,3==auto mode
     quint8 toolID_sensor_detected=0;
-    quint8 toolID_current_inPLC=0;
+    quint8 toolID_active_inPLC=0;
     bool anyFault=false;
     bool somePointWelded;
     bool systemReady;

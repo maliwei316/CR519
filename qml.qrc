@@ -4,8 +4,6 @@
         <file>img/green-16x16.png</file>
         <file>img/green.png</file>
         <file>img/greenStone.png</file>
-        <file>img/ledoff.png</file>
-        <file>img/ledon.png</file>
         <file>img/menuitem-indicator-hovered.png</file>
         <file>img/playnormal.png</file>
         <file>img/record.png</file>
@@ -29,6 +27,12 @@
         <file>img/wheel.png</file>
         <file>img/yellowStone.png</file>
         <file>img/dukaneLogo.PNG</file>
+        <file>img/button_error.png</file>
+        <file>img/button_ready.png</file>
+        <file>img/ledoff1010.png</file>
+        <file>img/ledon1010.png</file>
+        <file>img/ledoff.png</file>
+        <file>img/ledon.png</file>
     </qresource>
-    <qresource lang="en" prefix="/img"/>
+    <qresource prefix="/img" lang="en"/>
 </RCC>
