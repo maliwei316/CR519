@@ -532,12 +532,20 @@ private slots:
 
     void on_pushButton_historyCycleData_export_clicked();
 
+    void on_btn_IO_Table_Previos_clicked();
+
+    void on_btn_IO_Table_Next_clicked();
+
+    void on_btn_realTimeData_clicked();
+
+    void on_WeldByManual_valveNO_valueChanged(int arg1);
+
 private:
     Ui::MainWindow *ui;
     void customEvent(QEvent *e); //该函数是父类QObject的虚函数
     void updatePlcItemDisplayEventHandler(QEvent *e);
     void updatePLCItem(plcItem item);
-    void switchItemOnOff(QLabel *targetLabel, bool onOff);
+    void switchItemOnOff(QLabel *targetLabel, bool onOff,bool alarmFlag=false);
     void setPixmapForLabel(QLabel* label,QString imageSource);
 
 public:
@@ -548,6 +556,8 @@ public:
 
     clsTooling* tempTooling_editting;
     clsTooling* tooling_current;
+    bool ignoreToolIDConflict=false;
+    bool isShowing_toolIDConflictPopUpDialog;
     bool tcpConnectionStatus_send;
     bool tcpConnectionStatus_receive;
     bool modbusConnectionStatus_502;

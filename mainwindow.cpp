@@ -21,9 +21,9 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     this->ui->tableWidget_lastCycleData->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);    //x先自适应宽度
-    this->ui->tableWidget_lastCycleData->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);     //然后设置要根据内容使用宽度的列
-    this->ui->tableWidget_lastCycleData->horizontalHeader()->setSectionResizeMode(8, QHeaderView::ResizeToContents);     //然后设置要根据内容使用宽度的列
-    this->ui->tableWidget_lastCycleData->horizontalHeader()->setSectionResizeMode(9, QHeaderView::ResizeToContents);     //然后设置要根据内容使用宽度的列
+    this->ui->tableWidget_lastCycleData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);     //然后设置要根据内容使用宽度的列,不指定则所有列自适应
+    //this->ui->tableWidget_lastCycleData->horizontalHeader()->setSectionResizeMode(8, QHeaderView::ResizeToContents);     //然后设置要根据内容使用宽度的列
+    //this->ui->tableWidget_lastCycleData->horizontalHeader()->setSectionResizeMode(9, QHeaderView::ResizeToContents);     //然后设置要根据内容使用宽度的列
 
     this->ui->tableView_partCycleData->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);//所有列都扩展自适应宽度，填充充满整个屏幕宽度
     this->ui->tableView_partCycleData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents );//根据列内容来定列宽
@@ -132,7 +132,7 @@ MainWindow::MainWindow(QWidget *parent) :
     this->toolID_PLC=0;
     this->setPLCValueVisible(false);
     this->uploadingWholeSettingFromPLCInProcess=false;
-    this->timer_mainWindow.setInterval(100000);
+    this->timer_mainWindow.setInterval(10000);
     connect(&this->timer_mainWindow,&QTimer::timeout,this,&MainWindow::OnTimer_mainWindow_Timeout);
     this->timer_mainWindow.start();
 
@@ -473,20 +473,20 @@ void MainWindow::moveCycleDataToHistory()
     //contruct CSV headers
     qDebug()<<"movecycleData to history executed";
     QStringList cycleDataStrList_header;
-    cycleDataStrList_header<<"dateTime"<<"barcode"<<"partWeldResult"<<"toolID"<<"toolName"<<"location";
+    cycleDataStrList_header<<tr("dateTime")<<tr("barcode")<<tr("partWeldResult")<<tr("toolID")<<tr("toolName")<<tr("location");
     QString pointNOAndName;
     for(int i=1;i<=16;i++)
     {
-        pointNOAndName=tr("(Point#%1-%2)")
+        pointNOAndName=tr("-Point#%1-%2")
                 .arg(i)
                 .arg(this->tempTooling_editting->pointNameMapping.at(i));
-        cycleDataStrList_header<<"pointWeldResult"+pointNOAndName
-                               <<"amplitude"+pointNOAndName
-                               <<"pressure"+pointNOAndName
-                               <<"weldTime"+pointNOAndName
-                               <<"peakPower"+pointNOAndName
-                               <<"weldEnergy"+pointNOAndName
-                               <<"holdTime"+pointNOAndName;
+        cycleDataStrList_header<<tr("pointWeldResult%1").arg(pointNOAndName)
+                               <<tr("amplitude(\%)%1").arg(pointNOAndName)
+                               <<tr("pressure(Kpa)%1").arg(pointNOAndName)
+                               <<tr("weldTime(ms)%1").arg(pointNOAndName)
+                               <<tr("peakPower%1").arg(pointNOAndName)
+                               <<tr("weldEnergy%1").arg(pointNOAndName)
+                               <<tr("holdTime%1").arg(pointNOAndName);
     }
 
     //It's important to init stringList before access it by "[]"
@@ -812,844 +812,1590 @@ void MainWindow::updatePlcItemDisplayEventHandler(QEvent *e)
 }
 void MainWindow::updatePLCItem(plcItem item)
 {
+
     enum plcAera {DI=0x81, DO=0x82, M=0x83, DB=0x84};
     QString tableName;
-    switch (item.itemGroup_area) {
-    case 0x81:
-        tableName="PLC_DI";
-        this->modbusConnectionStatus_502=true;
-
-        break;
-    case 0x82:
-        tableName="PLC_DO";
-        this->modbusConnectionStatus_502=true;
-
-        break;
-    case 0x83:
-        tableName="PLC_M";
-        this->modbusConnectionStatus_502=true;
-
-        break;
-    case 0x84:
-        tableName="PLC_DB";
-        this->modbusConnectionStatus_503=true;
-
-        break;
-    default:
-        break;
-    }
-//    qDebug()<<QTime::currentTime()<<tr("updating item,itemID:%1,value:%2,area:%3,"
-//              "wordAdress:%4,byteAddr:%5,bitPosInbyte:%6")
-//              .arg(item.itemID())
-//              .arg((qint16)item.currentValue.wordVar)
-//              .arg(tableName)
-//              .arg(item.wordAddress)
-//              .arg(item.byteAddress())
-//              .arg(item.bitPosInByte());
     quint32 itemID=item.itemID();
 
-    switch (itemID) {
+if(item.itemGroup_area==plcAera::DI)
+{
+    tableName="PLC_DI";
+    this->modbusConnectionStatus_502=true;
 
-    //IB0~IB3
-    //IB0
-    case 528384000://I0.0
+    switch (itemID)
     {
-        this->switchItemOnOff(this->ui->LED_I00,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384001://I0.1
-    {
-        this->switchItemOnOff(this->ui->LED_I01,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384002://I0.2
-    {
-        this->switchItemOnOff(this->ui->LED_I02,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384003://I0.3
-    {
-        this->switchItemOnOff(this->ui->LED_I03,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384004://I0.4
-    {
-        this->switchItemOnOff(this->ui->LED_I04,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384005://I0.5
-    {
-        this->switchItemOnOff(this->ui->LED_I05,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384006://I0.6
-    {
-        this->switchItemOnOff(this->ui->LED_I06,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384007://I0.7
-    {
-        this->switchItemOnOff(this->ui->LED_I07,item.currentValue.wordVar?true:false);
-        break;
-    }
-    //IB1
-    case 528384008://I1.0
-    {
-        this->switchItemOnOff(this->ui->LED_I10,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384009://I1.1
-    {
-        this->switchItemOnOff(this->ui->LED_I11,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384010://I1.2
-    {
-        this->switchItemOnOff(this->ui->LED_I12,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384011://I1.3
-    {
-        this->switchItemOnOff(this->ui->LED_I13,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384012://I1.4
-    {
-        this->switchItemOnOff(this->ui->LED_I14,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384013://I1.5
-    {
-        this->switchItemOnOff(this->ui->LED_I15,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384014://I1.6
-    {
-        this->switchItemOnOff(this->ui->LED_I16,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384015://I1.7
-    {
-        this->switchItemOnOff(this->ui->LED_I17,item.currentValue.wordVar?true:false);
-        break;
-    }
-    //IB2
-    case 528384016://I2.0
-    {
-        this->switchItemOnOff(this->ui->LED_I20,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384017://I2.1
-    {
-        this->switchItemOnOff(this->ui->LED_I21,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384018://I2.2
-    {
-        this->switchItemOnOff(this->ui->LED_I22,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384019://I2.3
-    {
-        this->switchItemOnOff(this->ui->LED_I23,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384020://I2.4
-    {
-        this->switchItemOnOff(this->ui->LED_I24,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384021://I2.5
-    {
-        this->switchItemOnOff(this->ui->LED_I25,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384022://I2.6
-    {
-        this->switchItemOnOff(this->ui->LED_I26,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384023://I2.7
-    {
-        this->switchItemOnOff(this->ui->LED_I27,item.currentValue.wordVar?true:false);
-        break;
-    }
-    //IB3
-    case 528384024://I3.0
-    {
-        this->switchItemOnOff(this->ui->LED_I30,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384025://I3.1
-    {
-        this->switchItemOnOff(this->ui->LED_I31,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384026://I3.2
-    {
-        this->switchItemOnOff(this->ui->LED_I32,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384027://I3.3
-    {
-        this->switchItemOnOff(this->ui->LED_I33,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384028://I3.4
-    {
-        this->switchItemOnOff(this->ui->LED_I34,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384029://I3.5
-    {
-        this->switchItemOnOff(this->ui->LED_I35,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384030://I3.6
-    {
-        this->switchItemOnOff(this->ui->LED_I36,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384031://I3.7
-    {
-        this->switchItemOnOff(this->ui->LED_I37,item.currentValue.wordVar?true:false);
-        break;
-    }
-    //IB11~IB13
-    case 528384088://I11.0
-    {
-        this->switchItemOnOff(this->ui->LED_I110_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384089://I11.1
-    {
-        this->switchItemOnOff(this->ui->LED_I111_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384090://I11.2
-    {
-        this->switchItemOnOff(this->ui->LED_I112_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384091://I11.3
-    {
-        this->switchItemOnOff(this->ui->LED_I113_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384092://I11.4
-    {
-        this->switchItemOnOff(this->ui->LED_I114_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384093://I11.5
-    {
-        this->switchItemOnOff(this->ui->LED_I115_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384094://I11.6
-    {
-        this->switchItemOnOff(this->ui->LED_I116_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384095://I11.7
-    {
-        this->switchItemOnOff(this->ui->LED_I117_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384096://I12.0
-    {
-        this->switchItemOnOff(this->ui->LED_I120_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384097://I12.1
-    {
-        this->switchItemOnOff(this->ui->LED_I121_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384098://I12.2
-    {
-        this->switchItemOnOff(this->ui->LED_I122_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384099://I12.3
-    {
-        this->switchItemOnOff(this->ui->LED_I123_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384100://I12.4
-    {
-        this->switchItemOnOff(this->ui->LED_I124_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384101://I12.5
-    {
-        this->switchItemOnOff(this->ui->LED_I125_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384102://I12.6
-    {
-        this->switchItemOnOff(this->ui->LED_I126_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384103://I12.7
-    {
-        this->switchItemOnOff(this->ui->LED_I127_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384104://I13.0
-    {
-        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384105://I13.1
-    {
-        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384106://I13.2
-    {
-        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384107://I13.3
-    {
-        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384108://I13.4
-    {
-        //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384109://I13.5
-    {
-        this->switchItemOnOff(this->ui->LED_I135_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 528384110://I13.6
-    {
-        this->switchItemOnOff(this->ui->LED_I136_2,item.currentValue.wordVar?true:false);
-        break;
-    }
-    //QB0~QB3
-    case 532480000://Q0.0
-    {
-        this->switchItemOnOff(this->ui->LED_Q00,item.currentValue.wordVar?true:false);
-        break;
-    }
-
-    case 532480001://Q0.1
-    {
-        this->switchItemOnOff(this->ui->LED_Q01,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480002://Q0.2
-    {
-        this->switchItemOnOff(this->ui->LED_Q02,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480003://Q0.3
-    {
-        this->switchItemOnOff(this->ui->LED_Q03,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480004://Q0.4
-    {
-        this->switchItemOnOff(this->ui->LED_Q04,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480005://Q0.5
-    {
-        this->switchItemOnOff(this->ui->LED_Q05,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480006://Q0.6
-    {
-        this->switchItemOnOff(this->ui->LED_Q06,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480007://Q0.7
-    {
-        this->switchItemOnOff(this->ui->LED_Q07,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480008://Q1.0
-    {
-        this->switchItemOnOff(this->ui->LED_Q10,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480009://Q1.1
-    {
-        this->switchItemOnOff(this->ui->LED_Q11,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480010://Q1.2
-    {
-        this->switchItemOnOff(this->ui->LED_Q12,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480011://Q1.3
-    {
-        this->switchItemOnOff(this->ui->LED_Q13,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480012://Q1.4
-    {
-        this->switchItemOnOff(this->ui->LED_Q14,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480013://Q1.5
-    {
-        this->switchItemOnOff(this->ui->LED_Q15,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480014://Q1.6
-    {
-        this->switchItemOnOff(this->ui->LED_Q16,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480015://Q1.7
-    {
-        this->switchItemOnOff(this->ui->LED_Q17,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480016://Q2.0
-    {
-        this->switchItemOnOff(this->ui->LED_Q20,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480017://Q2.1
-    {
-        this->switchItemOnOff(this->ui->LED_Q21,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480018://Q2.2
-    {
-        this->switchItemOnOff(this->ui->LED_Q22,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480019://Q2.3
-    {
-        this->switchItemOnOff(this->ui->LED_Q23,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480020://Q2.4
-    {
-        this->switchItemOnOff(this->ui->LED_Q24,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480021://Q2.5
-    {
-        this->switchItemOnOff(this->ui->LED_Q25,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480022://Q2.6
-    {
-        this->switchItemOnOff(this->ui->LED_Q26,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480023://Q2.7
-    {
-        this->switchItemOnOff(this->ui->LED_Q27,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480024://Q3.0
-    {
-        this->switchItemOnOff(this->ui->LED_Q30,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480025://Q3.1
-    {
-        this->switchItemOnOff(this->ui->LED_Q31,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480026://Q3.2
-    {
-        this->switchItemOnOff(this->ui->LED_Q32,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480027://Q3.3
-    {
-        this->switchItemOnOff(this->ui->LED_Q33,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480028://Q3.4
-    {
-        this->switchItemOnOff(this->ui->LED_Q34,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480029://Q3.5
-    {
-        this->switchItemOnOff(this->ui->LED_Q35,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480030://Q3.6
-    {
-        this->switchItemOnOff(this->ui->LED_Q36,item.currentValue.wordVar?true:false);
-        break;
-    }
-    case 532480031://Q3.7
-    {
-        this->switchItemOnOff(this->ui->LED_Q37,item.currentValue.wordVar?true:false);
-        break;
-    }
-    //MW0
-    case 536576000://MW0
-    {
-
-        this->switchItemOnOff(this->ui->LED_M00,item.currentValue.bitsVar.b0?true:false);
-        this->switchItemOnOff(this->ui->LED_M01,item.currentValue.bitsVar.b1?true:false);
-        this->switchItemOnOff(this->ui->LED_M02,item.currentValue.bitsVar.b2?true:false);
-        this->switchItemOnOff(this->ui->LED_M03,item.currentValue.bitsVar.b3?true:false);
-        this->switchItemOnOff(this->ui->LED_M04,item.currentValue.bitsVar.b4?true:false);
-        this->switchItemOnOff(this->ui->LED_M05,item.currentValue.bitsVar.b5?true:false);
-        this->switchItemOnOff(this->ui->LED_M06,item.currentValue.bitsVar.b6?true:false);
-        this->switchItemOnOff(this->ui->LED_M07,item.currentValue.bitsVar.b7?true:false);
-        this->switchItemOnOff(this->ui->LED_M10,item.currentValue.bitsVar.b8?true:false);
-        this->switchItemOnOff(this->ui->LED_M11,item.currentValue.bitsVar.b9?true:false);
-        this->switchItemOnOff(this->ui->LED_M12,item.currentValue.bitsVar.b10?true:false);
-        this->switchItemOnOff(this->ui->LED_M13,item.currentValue.bitsVar.b11?true:false);
-        this->switchItemOnOff(this->ui->LED_M14,item.currentValue.bitsVar.b12?true:false);
-        this->switchItemOnOff(this->ui->LED_M15,item.currentValue.bitsVar.b13?true:false);
-        this->switchItemOnOff(this->ui->LED_M16,item.currentValue.bitsVar.b14?true:false);
-        this->switchItemOnOff(this->ui->LED_M17,item.currentValue.bitsVar.b15?true:false);
-        break;
-    }
-    //MW2
-    case 536576016://MW2
-    {
-
-        this->switchItemOnOff(this->ui->LED_M20,item.currentValue.bitsVar.b0?true:false);
-        this->switchItemOnOff(this->ui->LED_M21,item.currentValue.bitsVar.b1?true:false);
-        this->switchItemOnOff(this->ui->LED_M22,item.currentValue.bitsVar.b2?true:false);
-        this->switchItemOnOff(this->ui->LED_M23,item.currentValue.bitsVar.b3?true:false);
-        this->switchItemOnOff(this->ui->LED_M24,item.currentValue.bitsVar.b4?true:false);
-        this->switchItemOnOff(this->ui->LED_M25,item.currentValue.bitsVar.b5?true:false);
-        this->switchItemOnOff(this->ui->LED_M26,item.currentValue.bitsVar.b6?true:false);
-        this->switchItemOnOff(this->ui->LED_M27,item.currentValue.bitsVar.b7?true:false);
-        this->switchItemOnOff(this->ui->LED_M30,item.currentValue.bitsVar.b8?true:false);
-        this->switchItemOnOff(this->ui->LED_M31,item.currentValue.bitsVar.b9?true:false);
-        this->switchItemOnOff(this->ui->LED_M32,item.currentValue.bitsVar.b10?true:false);
-        this->switchItemOnOff(this->ui->LED_M33,item.currentValue.bitsVar.b11?true:false);
-        this->switchItemOnOff(this->ui->LED_M34,item.currentValue.bitsVar.b12?true:false);
-        this->switchItemOnOff(this->ui->LED_M35,item.currentValue.bitsVar.b13?true:false);
-        this->switchItemOnOff(this->ui->LED_M36,item.currentValue.bitsVar.b14?true:false);
-        this->switchItemOnOff(this->ui->LED_M37,item.currentValue.bitsVar.b15?true:false);
-        break;
-    }
-    //MW10
-    case 536576080://MW10
-    {
-        this->plcVars.currentPointNO_gen1=item.currentValue.wordVar/256;
-        this->plcVars.currentPointNO_gen2=item.currentValue.wordVar%256;
-        this->ui->spinBox_currentPoint_Gen2->setValue(this->plcVars.currentPointNO_gen2);
-        this->ui->spinBox_currentPoint_Gen1->setValue(this->plcVars.currentPointNO_gen1);
-        break;
-    }
-    //MW12
-    case 536576096://MW12
-    {
-        this->plcVars.currentPointNO_gen3=item.currentValue.wordVar/256;
-        this->plcVars.currentPointNO_gen4=item.currentValue.wordVar%256;
-        this->ui->spinBox_currentPoint_Gen3->setValue(this->plcVars.currentPointNO_gen3);
-        this->ui->spinBox_currentPoint_Gen4->setValue(this->plcVars.currentPointNO_gen4);
-        break;
-    }
-
-    //MW16
-    case 536576128://MW16,toolID
-    {
-
-        this->plcVars.toolID_sensor_detected=(quint8)(item.currentValue.wordVar%256);
-        this->ui->spinBox_toolID_fromPLC_runscreen->setValue(this->plcVars.toolID_sensor_detected);
-        this->ui->lineEdit_toolName_runScreen->setText(this->tempTooling_editting->toolingName);
-        if(this->toolID_PLC!=this->plcVars.toolID_sensor_detected)
+        //IB0
+        case 528384000://I0.0
         {
-            this->toolID_PLC=this->plcVars.toolID_sensor_detected;
-            this->ui->toolID_fromPLC->setValue(this->toolID_PLC);
-        }
-        //qDebug()<<"got PLC tooling_ID:"<<toolID_PLC_2;
-        break;
-    }
-    //MW18,indicating MSG
-    case 536576144://MW18
-    {
-        quint16 indicatingMsg;
-        indicatingMsg=(quint16)item.currentValue.wordVar;
-        //qDebug()<<"got indicating MSG:"<<indicatingMsg;
-
-        //qDebug()<<"got indicating MSG:"<<this->systemRegisteredTextList.value(1000+indicatingMsg);
-        this->ui->label_IndicatingMSG->setText(QString::number(indicatingMsg)+":"+this->systemRegisteredTextList.value(1000+indicatingMsg));
-        //this->ui->label_IndicatingMSG_2->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
-
-        if(this->ui->LED_indicatingMsg->isVisible())
-        {
-            this->ui->LED_indicatingMsg->setVisible(false);
-        }
-        else
-        {
-          this->ui->LED_indicatingMsg->setVisible(true);
-        }
-        break;
-    }
-    //MW20
-    case 536576160://MW20,ultrasonic status
-    {
-        if(item.currentValue.bitsVar.b2)
-        {
-            if(item.currentValue.bitsVar.b2!=this->plcVars.systemReady)
-            {
-                //the up edge of system ready
-                this->plcVars.systemReady=true;
-            }
-        }
-        else
-        {
-            if(item.currentValue.bitsVar.b2!=this->plcVars.systemReady)
-            {
-                //the down edge of system ready
-                this->plcVars.systemReady=false;
-            }
-        }
-        this->switchItemOnOff(this->ui->LED_RDY_NEW_CYCLE,item.currentValue.bitsVar.b6?true:false);
-        this->switchItemOnOff(this->ui->LED_US_Gen1,item.currentValue.bitsVar.b8?true:false);
-        this->switchItemOnOff(this->ui->LED_US_Gen2,item.currentValue.bitsVar.b9?true:false);
-        this->switchItemOnOff(this->ui->LED_US_Gen3,item.currentValue.bitsVar.b10?true:false);
-        this->switchItemOnOff(this->ui->LED_US_Gen4,item.currentValue.bitsVar.b11?true:false);
-        break;
-    }
-    //MW24
-    case 536576192://MW24,current stepNO
-    {
-        //if not autoMode,break
-        if(this->plcVars.work_Mode!=3)
+            this->switchItemOnOff(this->ui->LED_I00,item.currentValue.wordVar?true:false);
+            this->switchItemOnOff(this->ui->LED_I00_0_LightCurtainOK,item.currentValue.wordVar?true:false);
             break;
-        quint8 receivedStepNO=(quint8)(item.currentValue.wordVar/256);
-        //step 0, update barcode display if new barcode scanned,lock/unlock welder accordingly
-        if(receivedStepNO==0)
-        {
-            //step 0, if barcodes are empty and barcode scan not enable,auto generate barcodes
-            if((!this->tempTooling_editting->leftBarcodeSettings.enable)&&this->barcode_to_use_left.isEmpty()&&this->barcode_in_use_left.isEmpty())
-            {
-                this->barcode_to_use_left=this->clsBarcode_left->autoGenerateBarcode("AUTOLEFT");
-                this->ui->lineEdit_barcode_left->setText(this->barcode_to_use_left);
-            }
-            if((!this->tempTooling_editting->rightBarcodeSettings.enable)&&this->barcode_to_use_right.isEmpty()&&this->barcode_in_use_right.isEmpty())
-            {
-                this->barcode_to_use_right=this->clsBarcode_left->autoGenerateBarcode("AUTORIGHT");
-                this->ui->lineEdit_barcode_right->setText(this->barcode_to_use_right);
-            }
-            //step 0, update barcode as long as new barcode scanned/generated
-            if(!this->barcode_to_use_left.isEmpty())
-            {
-                this->barcode_in_use_left=this->barcode_to_use_left;
-                this->barcode_to_use_left.clear();
-                this->ui->lineEdit_barcode_left->clear();
-                this->ui->lineEdit_barcode_left_inuse->setText(this->barcode_in_use_left);
-            }
-            if(!this->barcode_to_use_right.isEmpty())
-            {
-                this->barcode_in_use_right=this->barcode_to_use_right;
-                this->barcode_to_use_right.clear();
-                this->ui->lineEdit_barcode_right->clear();
-                this->ui->lineEdit_barcode_right_inuse->setText(this->barcode_in_use_right);
-            }
-            //step 0, barcode_In_use is empty,lock PLC if not locked
-
-            if((!this->plcVars.PLC_lockedByHMI)&&(this->barcode_in_use_left.isEmpty()||this->barcode_in_use_left.isEmpty()))
-            {
-                this->lockUnlockPLCFromHMI(true);
-            }
-            //step 0, barcode_in_use is not empty,unlock PLC if locked
-            if((this->plcVars.PLC_lockedByHMI)&&(!this->barcode_in_use_left.isEmpty())&&(!this->barcode_in_use_left.isEmpty()))
-            {
-                this->lockUnlockPLCFromHMI(false);
-            }
-
         }
-        //step>0, barcode_to_use is empty,lock PLC if not locked
-        if(receivedStepNO>0)
+        case 528384001://I0.1
         {
-            if((!this->plcVars.PLC_lockedByHMI)&&(this->barcode_to_use_left.isEmpty()||this->barcode_to_use_right.isEmpty()))
-            {
-                this->lockUnlockPLCFromHMI(true);
-            }
+            this->switchItemOnOff(this->ui->LED_I01,item.currentValue.wordVar?true:false);
+            break;
         }
-        //stepNO changed
-        if(receivedStepNO!=this->plcVars.currentStepNO)
+        case 528384002://I0.2
         {
-            //stepNO from 0 to non-zero, do the following things
-            if(receivedStepNO>0&&this->plcVars.currentStepNO==0)
-            {
+            this->switchItemOnOff(this->ui->LED_I02,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384003://I0.3
+        {
+            this->switchItemOnOff(this->ui->LED_I03,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384004://I0.4
+        {
+            this->switchItemOnOff(this->ui->LED_I04,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384005://I0.5
+        {
+            this->switchItemOnOff(this->ui->LED_I05,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384006://I0.6
+        {
+            this->switchItemOnOff(this->ui->LED_I06,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384007://I0.7
+        {
+            this->switchItemOnOff(this->ui->LED_I07,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB1
+        case 528384008://I1.0
+        {
+            this->switchItemOnOff(this->ui->LED_I10,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384009://I1.1
+        {
+            this->switchItemOnOff(this->ui->LED_I11,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384010://I1.2
+        {
+            this->switchItemOnOff(this->ui->LED_I12,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384011://I1.3
+        {
+            this->switchItemOnOff(this->ui->LED_I13,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384012://I1.4
+        {
+            this->switchItemOnOff(this->ui->LED_I14,item.currentValue.wordVar?true:false);
+            this->switchItemOnOff(this->ui->LED_I1_4ESTOP_DoorsOK,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384013://I1.5
+        {
+            this->switchItemOnOff(this->ui->LED_I15,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384014://I1.6
+        {
+            this->switchItemOnOff(this->ui->LED_I16,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384015://I1.7
+        {
+            this->switchItemOnOff(this->ui->LED_I17,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB2
+        case 528384016://I2.0
+        {
+            this->switchItemOnOff(this->ui->LED_I20,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384017://I2.1
+        {
+            this->switchItemOnOff(this->ui->LED_I21,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384018://I2.2
+        {
+            this->switchItemOnOff(this->ui->LED_I22,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384019://I2.3
+        {
+            this->switchItemOnOff(this->ui->LED_I23,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384020://I2.4
+        {
+            this->switchItemOnOff(this->ui->LED_I24,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384021://I2.5
+        {
+            this->switchItemOnOff(this->ui->LED_I25,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384022://I2.6
+        {
+            this->switchItemOnOff(this->ui->LED_I26,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384023://I2.7
+        {
+            this->switchItemOnOff(this->ui->LED_I27,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB3
+        case 528384024://I3.0
+        {
+            this->switchItemOnOff(this->ui->LED_I30,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384025://I3.1
+        {
+            this->switchItemOnOff(this->ui->LED_I31,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384026://I3.2
+        {
+            this->switchItemOnOff(this->ui->LED_I32,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384027://I3.3
+        {
+            this->switchItemOnOff(this->ui->LED_I33,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384028://I3.4
+        {
+            this->switchItemOnOff(this->ui->LED_I34,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384029://I3.5
+        {
+            this->switchItemOnOff(this->ui->LED_I35,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384030://I3.6
+        {
+            this->switchItemOnOff(this->ui->LED_I36,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384031://I3.7
+        {
+            this->switchItemOnOff(this->ui->LED_I37,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB4
+        case 528384032://I4.0
+        {
+            this->switchItemOnOff(this->ui->LED_I40,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384033://I4.1
+        {
+            this->switchItemOnOff(this->ui->LED_I41,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384034://I4.2
+        {
+            this->switchItemOnOff(this->ui->LED_I42,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384035://I4.3
+        {
+            this->switchItemOnOff(this->ui->LED_I43,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384036://I4.4
+        {
+            this->switchItemOnOff(this->ui->LED_I44,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384037://I4.5
+        {
+            this->switchItemOnOff(this->ui->LED_I45,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384038://I4.6
+        {
+            this->switchItemOnOff(this->ui->LED_I46,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384039://I4.7
+        {
+            this->switchItemOnOff(this->ui->LED_I47,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB5
+        case 528384040://I5.0
+        {
+            this->switchItemOnOff(this->ui->LED_I50,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384041://I5.1
+        {
+            this->switchItemOnOff(this->ui->LED_I51,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384042://I5.2
+        {
+            this->switchItemOnOff(this->ui->LED_I52,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384043://I5.3
+        {
+            this->switchItemOnOff(this->ui->LED_I53,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384044://I5.4
+        {
+            this->switchItemOnOff(this->ui->LED_I54,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384045://I5.5
+        {
+            this->switchItemOnOff(this->ui->LED_I55,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384046://I5.6
+        {
+            this->switchItemOnOff(this->ui->LED_I56,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384047://I5.7
+        {
+            this->switchItemOnOff(this->ui->LED_I57,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB6
+        case 528384048://I6.0
+        {
+            this->switchItemOnOff(this->ui->LED_I60,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384049://I6.1
+        {
+            this->switchItemOnOff(this->ui->LED_I61,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384050://I6.2
+        {
+            this->switchItemOnOff(this->ui->LED_I62,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384051://I6.3
+        {
+            this->switchItemOnOff(this->ui->LED_I63,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384052://I6.4
+        {
+            this->switchItemOnOff(this->ui->LED_I64,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384053://I6.5
+        {
+            this->switchItemOnOff(this->ui->LED_I65,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384054://I6.6
+        {
+            this->switchItemOnOff(this->ui->LED_I66,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384055://I6.7
+        {
+            this->switchItemOnOff(this->ui->LED_I67,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB7
+        case 528384056://I7.0
+        {
+            this->switchItemOnOff(this->ui->LED_I70,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384057://I7.1
+        {
+            this->switchItemOnOff(this->ui->LED_I71,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384058://I7.2
+        {
+            this->switchItemOnOff(this->ui->LED_I72,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384059://I7.3
+        {
+            this->switchItemOnOff(this->ui->LED_I73,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384060://I7.4
+        {
+            this->switchItemOnOff(this->ui->LED_I74,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384061://I7.5
+        {
+            this->switchItemOnOff(this->ui->LED_I75,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384062://I7.6
+        {
+            this->switchItemOnOff(this->ui->LED_I76,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384063://I7.7
+        {
+            this->switchItemOnOff(this->ui->LED_I77,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB8
+        case 528384064://I8.0
+        {
+            this->switchItemOnOff(this->ui->LED_I80,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384065://I8.1
+        {
+            this->switchItemOnOff(this->ui->LED_I81,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384066://I8.2
+        {
+            this->switchItemOnOff(this->ui->LED_I82,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384067://I8.3
+        {
+            this->switchItemOnOff(this->ui->LED_I83,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384068://I8.4
+        {
+            this->switchItemOnOff(this->ui->LED_I84,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384069://I8.5
+        {
+            this->switchItemOnOff(this->ui->LED_I85,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384070://I8.6
+        {
+            this->switchItemOnOff(this->ui->LED_I86,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384071://I8.7
+        {
+            this->switchItemOnOff(this->ui->LED_I87,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB9
+        case 528384072://I9.0
+        {
+            this->switchItemOnOff(this->ui->LED_I90,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384073://I9.1
+        {
+            this->switchItemOnOff(this->ui->LED_I91,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384074://I9.2
+        {
+            this->switchItemOnOff(this->ui->LED_I92,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384075://I9.3
+        {
+            this->switchItemOnOff(this->ui->LED_I93,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384076://I9.4
+        {
+            this->switchItemOnOff(this->ui->LED_I94,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384077://I9.5
+        {
+            this->switchItemOnOff(this->ui->LED_I95,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384078://I9.6
+        {
+            this->switchItemOnOff(this->ui->LED_I96,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384079://I9.7
+        {
+            this->switchItemOnOff(this->ui->LED_I97,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB10
+        case 528384080://I10.0
+        {
+            this->switchItemOnOff(this->ui->LED_I90,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384081://I10.1
+        {
+            this->switchItemOnOff(this->ui->LED_I91,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384082://I10.2
+        {
+            this->switchItemOnOff(this->ui->LED_I92,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384083://I10.3
+        {
+            this->switchItemOnOff(this->ui->LED_I93,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384084://I10.4
+        {
+            this->switchItemOnOff(this->ui->LED_I94,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384085://I10.5
+        {
+            this->switchItemOnOff(this->ui->LED_I95,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384086://I10.6
+        {
+            this->switchItemOnOff(this->ui->LED_I96,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384087://I10.7
+        {
+            this->switchItemOnOff(this->ui->LED_I97,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //IB11~IB13
+        case 528384088://I11.0
+        {
+            this->switchItemOnOff(this->ui->LED_I110_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384089://I11.1
+        {
+            this->switchItemOnOff(this->ui->LED_I111_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384090://I11.2
+        {
+            this->switchItemOnOff(this->ui->LED_I112_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384091://I11.3
+        {
+            this->switchItemOnOff(this->ui->LED_I113_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384092://I11.4
+        {
+            this->switchItemOnOff(this->ui->LED_I114_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384093://I11.5
+        {
+            this->switchItemOnOff(this->ui->LED_I115_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384094://I11.6
+        {
+            this->switchItemOnOff(this->ui->LED_I116_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384095://I11.7
+        {
+            this->switchItemOnOff(this->ui->LED_I117_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384096://I12.0
+        {
+            this->switchItemOnOff(this->ui->LED_I120_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384097://I12.1
+        {
+            this->switchItemOnOff(this->ui->LED_I121_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384098://I12.2
+        {
+            this->switchItemOnOff(this->ui->LED_I122_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384099://I12.3
+        {
+            this->switchItemOnOff(this->ui->LED_I123_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384100://I12.4
+        {
+            this->switchItemOnOff(this->ui->LED_I124_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384101://I12.5
+        {
+            this->switchItemOnOff(this->ui->LED_I125_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384102://I12.6
+        {
+            this->switchItemOnOff(this->ui->LED_I126_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384103://I12.7
+        {
+            this->switchItemOnOff(this->ui->LED_I127_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384104://I13.0
+        {
+            //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384105://I13.1
+        {
+            //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384106://I13.2
+        {
+            //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384107://I13.3
+        {
+            //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384108://I13.4
+        {
+            //this->switchItemOnOff(this->ui->LED_I130,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384109://I13.5
+        {
+            this->switchItemOnOff(this->ui->LED_I135_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384110://I13.6
+        {
+            this->switchItemOnOff(this->ui->LED_I136_2,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384111://I13.7
+        {
+            this->switchItemOnOff(this->ui->LED_I137,item.currentValue.wordVar?true:false);
+            break;
+        }
 
-                if(!this->plcVars.somePointWelded)
-                {
-                    this->ui->tableWidget_lastCycleData->clearContents();
-                }
-                //reset point cycle data status
-                this->pointCycleDataStatus_p1_p32.DWordVar=0;
+        //IB14
+        case 528384112://I14.0
+        {
+            this->switchItemOnOff(this->ui->LED_I140,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384113://I14.1
+        {
+            this->switchItemOnOff(this->ui->LED_I141,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384114://I14.2
+        {
+            this->switchItemOnOff(this->ui->LED_I142,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384115://I14.3
+        {
+            this->switchItemOnOff(this->ui->LED_I143,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384116://I14.4
+        {
+            this->switchItemOnOff(this->ui->LED_I144,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384117://I14.5
+        {
+            this->switchItemOnOff(this->ui->LED_I45,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384118://I14.6
+        {
+            this->switchItemOnOff(this->ui->LED_I146,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 528384119://I14.7
+        {
+            this->switchItemOnOff(this->ui->LED_I147,item.currentValue.wordVar?true:false);
+            break;
+        }
+        default:
+                break;
+    }
+}
+else if(item.itemGroup_area==plcAera::DO)
+{
+    tableName="PLC_DO";
+    this->modbusConnectionStatus_502=true;
+    switch (itemID)
+    {
+        //QB0~QB3
+        case 532480000://Q0.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q00,item.currentValue.wordVar?true:false);
+            break;
+        }
+
+        case 532480001://Q0.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q01,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480002://Q0.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q02,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480003://Q0.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q03,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480004://Q0.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q04,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480005://Q0.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q05,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480006://Q0.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q06,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480007://Q0.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q07,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480008://Q1.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q10,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480009://Q1.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q11,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480010://Q1.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q12,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480011://Q1.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q13,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480012://Q1.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q14,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480013://Q1.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q15,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480014://Q1.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q16,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480015://Q1.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q17,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480016://Q2.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q20,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480017://Q2.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q21,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480018://Q2.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q22,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480019://Q2.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q23,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480020://Q2.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q24,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480021://Q2.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q25,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480022://Q2.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q26,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480023://Q2.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q27,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480024://Q3.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q30,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480025://Q3.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q31,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480026://Q3.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q32,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480027://Q3.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q33,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480028://Q3.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q34,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480029://Q3.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q35,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480030://Q3.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q36,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480031://Q3.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q37,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //QB4
+        case 532480032://Q4.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q40,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480033://Q4.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q41,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480034://Q4.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q42,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480035://Q4.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q43,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480036://Q4.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q44,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480037://Q4.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q45,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480038://Q4.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q46,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480039://Q4.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q47,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //QB5
+        case 532480040://Q5.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q50,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480041://Q5.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q51,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480042://Q5.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q52,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480043://Q5.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q53,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480044://Q5.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q54,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480045://Q5.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q55,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480046://Q5.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q56,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480047://Q5.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q57,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //QB6
+        case 532480048://Q6.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q60,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480049://Q6.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q61,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480050://Q6.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q62,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480051://Q6.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q63,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480052://Q6.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q64,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480053://Q6.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q65,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480054://Q6.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q66,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480055://Q6.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q67,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //QB7
+        case 532480056://Q7.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q70,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480057://Q7.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q71,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480058://Q7.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q72,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480059://Q7.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q73,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480060://Q7.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q74,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480061://Q7.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q75,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480062://Q7.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q76,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480063://Q7.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q77,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //QB8
+        case 532480064://Q8.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q80,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480065://Q8.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q81,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480066://Q8.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q82,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480067://Q8.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q83,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480068://Q8.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q84,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480069://Q8.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q85,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480070://Q8.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q86,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480071://Q8.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q87,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //QB9
+        case 532480072://Q9.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q90,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480073://Q9.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q91,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480074://Q9.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q92,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480075://Q9.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q93,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480076://Q9.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q94,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480077://Q9.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q95,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480078://Q9.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q96,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480079://Q9.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q97,item.currentValue.wordVar?true:false);
+            break;
+        }
+        //QB10
+        case 532480080://Q10.0
+        {
+            this->switchItemOnOff(this->ui->LED_Q100,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480081://Q10.1
+        {
+            this->switchItemOnOff(this->ui->LED_Q101,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480082://Q10.2
+        {
+            this->switchItemOnOff(this->ui->LED_Q102,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480083://Q10.3
+        {
+            this->switchItemOnOff(this->ui->LED_Q103,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480084://Q10.4
+        {
+            this->switchItemOnOff(this->ui->LED_Q104,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480085://Q10.5
+        {
+            this->switchItemOnOff(this->ui->LED_Q105,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480086://Q10.6
+        {
+            this->switchItemOnOff(this->ui->LED_Q106,item.currentValue.wordVar?true:false);
+            break;
+        }
+        case 532480087://Q10.7
+        {
+            this->switchItemOnOff(this->ui->LED_Q107,item.currentValue.wordVar?true:false);
+            break;
+        }
+
+        default:
+            break;
+    }
+}
+else if(item.itemGroup_area==plcAera::M)
+{
+    tableName="PLC_M";
+    this->modbusConnectionStatus_502=true;
+    switch (itemID)
+    {
+        //MW10
+        case 536576080://MW10
+        {
+            this->plcVars.currentPointNO_gen1=item.currentValue.wordVar/256;
+            this->plcVars.currentPointNO_gen2=item.currentValue.wordVar%256;
+            this->ui->spinBox_currentPoint_Gen2->setValue(this->plcVars.currentPointNO_gen2);
+            this->ui->spinBox_currentPoint_Gen1->setValue(this->plcVars.currentPointNO_gen1);
+            break;
+        }
+        //MW12
+        case 536576096://MW12
+        {
+            this->plcVars.currentPointNO_gen3=item.currentValue.wordVar/256;
+            this->plcVars.currentPointNO_gen4=item.currentValue.wordVar%256;
+            this->ui->spinBox_currentPoint_Gen3->setValue(this->plcVars.currentPointNO_gen3);
+            this->ui->spinBox_currentPoint_Gen4->setValue(this->plcVars.currentPointNO_gen4);
+            break;
+        }
+
+        //MW16
+        case 536576128://MW16,toolID
+        {
+
+            this->plcVars.toolID_sensor_detected=(quint8)(item.currentValue.wordVar%256);
+            this->ui->spinBox_toolID_fromPLC_runscreen->setValue(this->plcVars.toolID_sensor_detected);
+            this->ui->lineEdit_toolName_runScreen->setText(this->tempTooling_editting->toolingName);
+            if(this->toolID_PLC!=this->plcVars.toolID_sensor_detected)
+            {
+                this->toolID_PLC=this->plcVars.toolID_sensor_detected;
+                this->ui->toolID_fromPLC->setValue(this->toolID_PLC);
             }
-            //step NO from non-zero value to zero, do the following things
+            this->plcVars.toolID_active_inPLC=(quint8)(item.currentValue.wordVar/256);
+            break;
+        }
+        //MW18,indicating MSG
+        case 536576144://MW18
+        {
+            quint16 indicatingMsg;
+            indicatingMsg=(quint16)item.currentValue.wordVar;
+            //qDebug()<<"got indicating MSG:"<<indicatingMsg;
+
+            //qDebug()<<"got indicating MSG:"<<this->systemRegisteredTextList.value(1000+indicatingMsg);
+            this->ui->label_IndicatingMSG->setText(QString::number(indicatingMsg)+":"+this->systemRegisteredTextList.value(1000+indicatingMsg));
+            //this->ui->label_IndicatingMSG_2->setText(this->systemRegisteredTextList.value(1000+indicatingMsg));
+
+            if(this->ui->LED_indicatingMsg->isVisible())
+            {
+                this->ui->LED_indicatingMsg->setVisible(false);
+            }
+            else
+            {
+              this->ui->LED_indicatingMsg->setVisible(true);
+            }
+            break;
+        }
+        //MW20
+        case 536576160://MW20,ultrasonic status
+        {
+
+            this->plcVars.systemReady=item.currentValue.bitsVar.b2;
+            this->switchItemOnOff(this->ui->LED_RDY_NEW_CYCLE,item.currentValue.bitsVar.b6?true:false);
+            this->switchItemOnOff(this->ui->LED_US_Gen1,item.currentValue.bitsVar.b8?true:false);
+            this->switchItemOnOff(this->ui->LED_US_Gen2,item.currentValue.bitsVar.b9?true:false);
+            this->switchItemOnOff(this->ui->LED_US_Gen3,item.currentValue.bitsVar.b10?true:false);
+            this->switchItemOnOff(this->ui->LED_US_Gen4,item.currentValue.bitsVar.b11?true:false);
+            //update IO table,M20.0,2,4,6
+            this->switchItemOnOff(this->ui->LED_M200,item.currentValue.bitsVar.b0?true:false);
+            this->switchItemOnOff(this->ui->LED_M202,item.currentValue.bitsVar.b2?true:false);
+            this->switchItemOnOff(this->ui->LED_M204,item.currentValue.bitsVar.b4?true:false);
+            this->switchItemOnOff(this->ui->LED_M206,item.currentValue.bitsVar.b6?true:false);
+
+            break;
+        }
+        //MW22
+        case 536576176://MW22,important flags
+        {
+
+            //update IO table
+            this->switchItemOnOff(this->ui->LED_M220,item.currentValue.bitsVar.b0?true:false);
+            this->switchItemOnOff(this->ui->LED_M221,item.currentValue.bitsVar.b1?true:false);
+            this->switchItemOnOff(this->ui->LED_M222,item.currentValue.bitsVar.b2?true:false);
+            this->switchItemOnOff(this->ui->LED_M223,item.currentValue.bitsVar.b3?true:false);
+            this->switchItemOnOff(this->ui->LED_M224,item.currentValue.bitsVar.b4?true:false);
+            this->switchItemOnOff(this->ui->LED_M226,item.currentValue.bitsVar.b6?true:false);
+            this->switchItemOnOff(this->ui->LED_M227,item.currentValue.bitsVar.b7?true:false);
+            this->switchItemOnOff(this->ui->LED_M231,item.currentValue.bitsVar.b9?true:false);
+
+            this->switchItemOnOff(this->ui->LED_M232,item.currentValue.bitsVar.b10?true:false);
+            this->switchItemOnOff(this->ui->LED_M233,item.currentValue.bitsVar.b11?true:false);
+            this->switchItemOnOff(this->ui->LED_M234,item.currentValue.bitsVar.b12?true:false);
+            this->switchItemOnOff(this->ui->LED_M235,item.currentValue.bitsVar.b13?true:false);
+            this->switchItemOnOff(this->ui->LED_M23_5_allThrusterRetracted,item.currentValue.bitsVar.b13?true:false);
+            this->switchItemOnOff(this->ui->LED_M236,item.currentValue.bitsVar.b14?true:false);
+            this->switchItemOnOff(this->ui->LED_M23_6_allPartHolderSafe,item.currentValue.bitsVar.b14?true:false);
+            this->switchItemOnOff(this->ui->LED_M237,item.currentValue.bitsVar.b15?true:false);
+
+            break;
+        }
+        //MW24
+        case 536576192://MW24,current stepNO
+        {
+            //if not autoMode,break
+            if(this->plcVars.work_Mode!=3)
+                break;
+            quint8 receivedStepNO=(quint8)(item.currentValue.wordVar/256);
+            //step 0, update barcode display if new barcode scanned,lock/unlock welder accordingly
             if(receivedStepNO==0)
             {
-                //moveCycleDataToHistory
-                if(this->cycleData_leftPart.partWeldResult>0||this->cycleData_rightPart.partWeldResult>0)
-                {
-                  this->moveCycleDataToHistory();
-                }
-
-                //barcodes clear
-                this->barcode_in_use_left.clear();
-                this->barcode_in_use_right.clear();
-                this->ui->lineEdit_barcode_left_inuse->clear();
-                this->ui->lineEdit_barcode_right_inuse->clear();
-                this->cycleData_leftPart.partWeldResult=0;
-                this->cycleData_rightPart.partWeldResult=0;
-                //if barcode not enabled, generate barcode automatically
-                if(!this->tempTooling_editting->leftBarcodeSettings.enable)
+                //step 0, if barcodes are empty and barcode scan not enable,auto generate barcodes
+                if((!this->tempTooling_editting->leftBarcodeSettings.enable)&&this->barcode_to_use_left.isEmpty()&&this->barcode_in_use_left.isEmpty())
                 {
                     this->barcode_to_use_left=this->clsBarcode_left->autoGenerateBarcode("AUTOLEFT");
-
+                    this->ui->lineEdit_barcode_left->setText(this->barcode_to_use_left);
                 }
-                if(!this->tempTooling_editting->rightBarcodeSettings.enable)
+                if((!this->tempTooling_editting->rightBarcodeSettings.enable)&&this->barcode_to_use_right.isEmpty()&&this->barcode_in_use_right.isEmpty())
                 {
-                    this->barcode_to_use_right=this->clsBarcode_right->autoGenerateBarcode("AUTORIGHT");
+                    this->barcode_to_use_right=this->clsBarcode_left->autoGenerateBarcode("AUTORIGHT");
+                    this->ui->lineEdit_barcode_right->setText(this->barcode_to_use_right);
                 }
-                //update the point bypass status
-                QByteArray dataToTcpCommObj;
-                dataToTcpCommObj[0]=0x00;//length high byte
-                dataToTcpCommObj[1]=0x0C;//length low byte
-                dataToTcpCommObj[2]=0x00;//commandNO high byte
-                dataToTcpCommObj[3]=0x7F;//commandNO low byte,127
-                dataToTcpCommObj[4]=0x00;//reserve byte
-                dataToTcpCommObj[5]=0x00;//reserve byte
-                dataToTcpCommObj[6]=0x02;//01==set,02==get
-                dataToTcpCommObj[7]=0x00;//retain flag
-                dataToTcpCommObj[8]=0x00;//point 1~8
-                dataToTcpCommObj[9]=0x00;//point 9~16
-                dataToTcpCommObj[10]=0x00;//reserve
-                dataToTcpCommObj[11]=0x00;//reserve
-                if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
-                    emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+                //step 0, update barcode as long as new barcode scanned/generated
+                if(!this->barcode_to_use_left.isEmpty())
+                {
+                    this->barcode_in_use_left=this->barcode_to_use_left;
+                    this->barcode_to_use_left.clear();
+                    this->ui->lineEdit_barcode_left->clear();
+                    this->ui->lineEdit_barcode_left_inuse->setText(this->barcode_in_use_left);
+                }
+                if(!this->barcode_to_use_right.isEmpty())
+                {
+                    this->barcode_in_use_right=this->barcode_to_use_right;
+                    this->barcode_to_use_right.clear();
+                    this->ui->lineEdit_barcode_right->clear();
+                    this->ui->lineEdit_barcode_right_inuse->setText(this->barcode_in_use_right);
+                }
+                //step 0, barcode_In_use is empty,lock PLC if not locked
+
+                if((!this->plcVars.PLC_lockedByHMI)&&(this->barcode_in_use_left.isEmpty()||this->barcode_in_use_left.isEmpty()))
+                {
+                    this->lockUnlockPLCFromHMI(true);
+                }
+                //step 0, barcode_in_use is not empty,unlock PLC if locked
+                if((this->plcVars.PLC_lockedByHMI)&&(!this->barcode_in_use_left.isEmpty())&&(!this->barcode_in_use_left.isEmpty()))
+                {
+                    this->lockUnlockPLCFromHMI(false);
+                }
+
             }
-            //sync stepNO
-            this->plcVars.currentStepNO=receivedStepNO;
+            //step>0, barcode_to_use is empty,lock PLC if not locked
+            if(receivedStepNO>0)
+            {
+                if((!this->plcVars.PLC_lockedByHMI)&&(this->barcode_to_use_left.isEmpty()||this->barcode_to_use_right.isEmpty()))
+                {
+                    this->lockUnlockPLCFromHMI(true);
+                }
+            }
+            //stepNO changed
+            if(receivedStepNO!=this->plcVars.currentStepNO)
+            {
+                //stepNO from 0 to non-zero, do the following things
+                if(receivedStepNO>0&&this->plcVars.currentStepNO==0)
+                {
+
+                    if(!this->plcVars.somePointWelded)
+                    {
+                        this->ui->tableWidget_lastCycleData->clearContents();
+                    }
+                    //reset point cycle data status
+                    this->pointCycleDataStatus_p1_p32.DWordVar=0;
+                }
+                //step NO from non-zero value to zero, do the following things
+                if(receivedStepNO==0)
+                {
+                    //moveCycleDataToHistory
+                    if(this->cycleData_leftPart.partWeldResult>0||this->cycleData_rightPart.partWeldResult>0)
+                    {
+                      this->moveCycleDataToHistory();
+                    }
+
+                    //barcodes clear
+                    this->barcode_in_use_left.clear();
+                    this->barcode_in_use_right.clear();
+                    this->ui->lineEdit_barcode_left_inuse->clear();
+                    this->ui->lineEdit_barcode_right_inuse->clear();
+                    this->cycleData_leftPart.partWeldResult=0;
+                    this->cycleData_rightPart.partWeldResult=0;
+                    //if barcode not enabled, generate barcode automatically
+                    if(!this->tempTooling_editting->leftBarcodeSettings.enable)
+                    {
+                        this->barcode_to_use_left=this->clsBarcode_left->autoGenerateBarcode("AUTOLEFT");
+
+                    }
+                    if(!this->tempTooling_editting->rightBarcodeSettings.enable)
+                    {
+                        this->barcode_to_use_right=this->clsBarcode_right->autoGenerateBarcode("AUTORIGHT");
+                    }
+                    //update the point bypass status
+                    QByteArray dataToTcpCommObj;
+                    dataToTcpCommObj[0]=0x00;//length high byte
+                    dataToTcpCommObj[1]=0x0C;//length low byte
+                    dataToTcpCommObj[2]=0x00;//commandNO high byte
+                    dataToTcpCommObj[3]=0x7F;//commandNO low byte,127
+                    dataToTcpCommObj[4]=0x00;//reserve byte
+                    dataToTcpCommObj[5]=0x00;//reserve byte
+                    dataToTcpCommObj[6]=0x02;//01==set,02==get
+                    dataToTcpCommObj[7]=0x00;//retain flag
+                    dataToTcpCommObj[8]=0x00;//point 1~8
+                    dataToTcpCommObj[9]=0x00;//point 9~16
+                    dataToTcpCommObj[10]=0x00;//reserve
+                    dataToTcpCommObj[11]=0x00;//reserve
+                    if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
+                        emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+                }
+                //sync stepNO
+                this->plcVars.currentStepNO=receivedStepNO;
+            }
+
+            this->ui->spinBox_run_liveStepNO->setValue(this->plcVars.currentStepNO);
+
+
+            break;
         }
 
-        this->ui->spinBox_run_liveStepNO->setValue(this->plcVars.currentStepNO);
-
-
-        break;
-    }
-
-    //MW26, tRCV_MSG_count
-    case 536576208://MW26,count of PLC received Msg
-    {
-        quint16 Msg_count;
-        Msg_count=(quint16)item.currentValue.wordVar;
-        //qDebug()<<"TRCV_MSG_Count:"<<Msg_count;
-
-        if(this->plcVars.work_Mode==2)
+        //MW26, tRCV_MSG_count
+        case 536576208://MW26,count of PLC received Msg
         {
-            QString msg_str=tr("%1").arg((quint16)Msg_count);
-            this->ui->lineEdit_MSG_Count->setText(msg_str);
+            quint16 Msg_count;
+            Msg_count=(quint16)item.currentValue.wordVar;
+            //qDebug()<<"TRCV_MSG_Count:"<<Msg_count;
+
+            if(this->plcVars.work_Mode==2)
+            {
+                QString msg_str=tr("%1").arg((quint16)Msg_count);
+                this->ui->lineEdit_MSG_Count->setText(msg_str);
+            }
+
+            break;
         }
-
-        break;
-    }
-    case 536576240://MW30,work mode,locked flag
-    {
-
-        quint8 currentWorkMode;
-        if(item.currentValue.bitsVar.b2)
-            currentWorkMode=2;
-        else if(item.currentValue.bitsVar.b3)
-            currentWorkMode=3;
-        if(this->plcVars.work_Mode!=currentWorkMode||this->ui->stackedWidget_mainProgram->currentIndex()==9)
+        case 536576240://MW30,work mode,locked flag
         {
-            qDebug()<<tr("received PLC workMode:%1,PC stored workMode:%2,current Page Index:%3")
-                      .arg(currentWorkMode).arg((this->plcVars.work_Mode)).arg(this->ui->stackedWidget_mainProgram->currentIndex());
-            this->changePage(currentWorkMode==2?1:4);
-            this->plcVars.work_Mode=currentWorkMode;
-            this->logInStatus=false;
-            this->parameterEditable=false;
-            emit parameterEditableStausChanged(false);
+
+            quint8 currentWorkMode;
+            if(item.currentValue.bitsVar.b2)
+                currentWorkMode=2;
+            else if(item.currentValue.bitsVar.b3)
+                currentWorkMode=3;
+            if(this->plcVars.work_Mode!=currentWorkMode||this->ui->stackedWidget_mainProgram->currentIndex()==9)
+            {
+                qDebug()<<tr("received PLC workMode:%1,PC stored workMode:%2,current Page Index:%3")
+                          .arg(currentWorkMode).arg((this->plcVars.work_Mode)).arg(this->ui->stackedWidget_mainProgram->currentIndex());
+                this->changePage(currentWorkMode==2?1:4);
+                this->plcVars.work_Mode=currentWorkMode;
+                this->logInStatus=false;
+                this->parameterEditable=false;
+                emit parameterEditableStausChanged(false);
+            }
+            this->switchItemOnOff(this->ui->LED_ManualMode,item.currentValue.bitsVar.b2?true:false);
+            //work mode-pause,btn_start pressed,U/S in process
+            this->switchItemOnOff(this->ui->LED_M304,item.currentValue.bitsVar.b4?true:false);
+            this->switchItemOnOff(this->ui->LED_M305,item.currentValue.bitsVar.b5?true:false);
+            this->switchItemOnOff(this->ui->LED_M307,item.currentValue.bitsVar.b7?true:false);
+            //somePoint welded flag
+            this->plcVars.somePointWelded=item.currentValue.bitsVar.b9;
+            this->switchItemOnOff(this->ui->LED_M311,item.currentValue.bitsVar.b9?true:false);
+            //PLC_locked_byHMI flag
+            this->plcVars.PLC_lockedByHMI=item.currentValue.bitsVar.b11;
+            this->switchItemOnOff(this->ui->LED_M313,item.currentValue.bitsVar.b11?true:false);
+            break;
         }
-        this->switchItemOnOff(this->ui->LED_ManualMode,item.currentValue.bitsVar.b2?true:false);
-        //somePoint welded flag
-        this->plcVars.somePointWelded=item.currentValue.bitsVar.b9;
-        //PLC_locked_byHMI flag
-        this->plcVars.PLC_lockedByHMI=item.currentValue.bitsVar.b11;
-        break;
-    }
-    case 536576256://MW32,part counter-total
-    {
+        case 536576256://MW32,part counter-total
+        {
 
-        this->ui->spinBox_partCounter_total->setValue(item.currentValue.wordVar);
-        break;
-    }
-    case 536576272://MW34,part counter-good
-    {
+            this->ui->spinBox_partCounter_total->setValue(item.currentValue.wordVar);
+            break;
+        }
+        case 536576272://MW34,part counter-good
+        {
 
-        this->ui->spinBox_partCounter_good->setValue(item.currentValue.wordVar);
-        break;
-    }
-    case 536576288://MW36,part counter-bad
-    {
+            this->ui->spinBox_partCounter_good->setValue(item.currentValue.wordVar);
+            break;
+        }
+        case 536576288://MW36,part counter-bad
+        {
 
-        this->ui->spinBox_partCounter_bad->setValue(item.currentValue.wordVar);
-        break;
-    }
-    case 536576304://MW38,part counter-suspect
-    {
+            this->ui->spinBox_partCounter_bad->setValue(item.currentValue.wordVar);
+            break;
+        }
+        case 536576304://MW38,part counter-suspect
+        {
 
-        this->ui->spinBox_partCounter_suspect->setValue(item.currentValue.wordVar);
-        break;
-    }
-    case 536576336://MW42,pointDataReadyForHMI,point17~point32
-    {
-        //after received the point data ready bits in dwords, compare with that in local
-        //request the corresponding point cycle data if they are different
-        //everytime new point data comes,pointCycleDataStatus_p1_p32 will be updated
-        dWordBytes requestPointData_dword;
-        requestPointData_dword.wordsVar.W1=pointCycleDataStatus_p1_p32.wordsVar.W0^BigLittleSwap16(item.currentValue.wordVar);
-        requestPointData_dword.wordsVar.W0=0;
-        this->requestPointCycleDataFromPLC(requestPointData_dword);
+            this->ui->spinBox_partCounter_suspect->setValue(item.currentValue.wordVar);
+            break;
+        }
+        case 536576336://MW42,pointDataReadyForHMI,point17~point32
+        {
+            //after received the point data ready bits in dwords, compare with that in local
+            //request the corresponding point cycle data if they are different
+            //everytime new point data comes,pointCycleDataStatus_p1_p32 will be updated
+            dWordBytes requestPointData_dword;
+            requestPointData_dword.wordsVar.W1=pointCycleDataStatus_p1_p32.wordsVar.W0^BigLittleSwap16(item.currentValue.wordVar);
+            requestPointData_dword.wordsVar.W0=0;
+            this->requestPointCycleDataFromPLC(requestPointData_dword);
+            this->ui->spinBox_DataSync->setValue(requestPointData_dword.DWordVar);
 
-//        qDebug()<<tr("local stored point data ready status,W0:%1,W1:%2")
-//                .arg(this->pointCycleDataStatus_p1_p32.wordsVar.W0)
-//                .arg(this->pointCycleDataStatus_p1_p32.wordsVar.W1);
-//        qDebug()<<tr("PLC side  point data ready status,W1:%1").arg(item.currentValue.wordVar);
-        break;
-    }
-    case 536576352://MW44,pointDataReadyForHMI,point1~point16
-    {
-        //after received the point data ready bits in dwords, compare with that in local
-        //request the corresponding point cycle data if they are different
-        //everytime new point data comes,pointCycleDataStatus_p1_p32 will be updated
-        dWordBytes requestPointData_dword;
-        requestPointData_dword.wordsVar.W0=pointCycleDataStatus_p1_p32.wordsVar.W0^BigLittleSwap16(item.currentValue.wordVar);
-        requestPointData_dword.wordsVar.W1=0;
-        this->requestPointCycleDataFromPLC(requestPointData_dword);
-//        qDebug()<<tr("local stored point data ready status,W0:%1,W1:%2")
-//                .arg(this->pointCycleDataStatus_p1_p32.wordsVar.W0)
-//                .arg(this->pointCycleDataStatus_p1_p32.wordsVar.W1);
-//        qDebug()<<tr("PLC side  point data ready status,W0:%1").arg(item.currentValue.wordVar);
-        break;
-    }
-    case 536576368://MW46,pointDataRequsetFromHMI,point1~point16
-    {
+    //        qDebug()<<tr("local stored point data ready status,W0:%1,W1:%2")
+    //                .arg(this->pointCycleDataStatus_p1_p32.wordsVar.W0)
+    //                .arg(this->pointCycleDataStatus_p1_p32.wordsVar.W1);
+    //        qDebug()<<tr("PLC side  point data ready status,W1:%1").arg(item.currentValue.wordVar);
+            break;
+        }
+        case 536576352://MW44,pointDataReadyForHMI,point1~point16
+        {
+            //after received the point data ready bits in dwords, compare with that in local
+            //request the corresponding point cycle data if they are different
+            //everytime new point data comes,pointCycleDataStatus_p1_p32 will be updated
+            dWordBytes requestPointData_dword;
+            requestPointData_dword.wordsVar.W0=pointCycleDataStatus_p1_p32.wordsVar.W0^BigLittleSwap16(item.currentValue.wordVar);
+            requestPointData_dword.wordsVar.W1=0;
+            this->requestPointCycleDataFromPLC(requestPointData_dword);
+    //        qDebug()<<tr("local stored point data ready status,W0:%1,W1:%2")
+    //                .arg(this->pointCycleDataStatus_p1_p32.wordsVar.W0)
+    //                .arg(this->pointCycleDataStatus_p1_p32.wordsVar.W1);
+    //        qDebug()<<tr("PLC side  point data ready status,W0:%1").arg(item.currentValue.wordVar);
+            break;
+        }
+        case 536576368://MW46,pointDataRequsetFromHMI,point1~point16
+        {
 
-        ;
-        break;
-    }
-    case 536576384://MW48,pointDataRequsetFromHMI,point17~point32
-    {
+            ;
+            break;
+        }
+        case 536576384://MW48,pointDataRequsetFromHMI,point17~point32
+        {
 
-        ;
-        break;
+            ;
+            break;
+        }
+        case 536576400://MW50,servo status
+        {
+
+            this->switchItemOnOff(this->ui->LED_M50_0_servoReady,item.getBitFromWord(8));
+            this->switchItemOnOff(this->ui->LED_M50_1_servoPositioningDone,item.getBitFromWord(9));
+            this->switchItemOnOff(this->ui->LED_M50_2_servoHomed,item.getBitFromWord(10));
+            this->switchItemOnOff(this->ui->LED_M50_3_InLoadingAera,item.getBitFromWord(11));
+            this->switchItemOnOff(this->ui->LED_M50_4_servoMDIMode,item.getBitFromWord(12));
+            this->switchItemOnOff(this->ui->LED_M50_7_servoAnyFault,item.getBitFromWord(15),true);
+            break;
+        }
+        case 536576416://MW52,gen_1&&gen_2 status
+        {
+
+            ;
+            this->switchItemOnOff(this->ui->LED_M52_0_InCycleGen1,item.getBitFromWord(8));
+            this->switchItemOnOff(this->ui->LED_M52_1_LinkGoodGen_1,item.getBitFromWord(9));
+            this->switchItemOnOff(this->ui->LED_M52_2_OnlineGen_1,item.getBitFromWord(10));
+            this->switchItemOnOff(this->ui->LED_M52_4_RDYGen_1,item.getBitFromWord(12));
+            this->switchItemOnOff(this->ui->LED_M52_5_USActive_Gen_1,item.getBitFromWord(13));
+            this->switchItemOnOff(this->ui->LED_M52_7_AnyFault_Gen_1,item.getBitFromWord(15),true);
+
+            this->switchItemOnOff(this->ui->LED_M53_0_InCycleGen_2,item.getBitFromWord(0));
+            this->switchItemOnOff(this->ui->LED_M53_1_LinkGoodGen_2,item.getBitFromWord(1));
+            this->switchItemOnOff(this->ui->LED_M53_2_OnlineGen_2,item.getBitFromWord(2));
+            this->switchItemOnOff(this->ui->LED_M53_4_RDYGen_2,item.getBitFromWord(4));
+            this->switchItemOnOff(this->ui->LED_M53_5_USActive_Gen_2,item.getBitFromWord(5));
+            this->switchItemOnOff(this->ui->LED_M53_7_AnyFault_Gen_2,item.getBitFromWord(7),true);
+            break;
+        }
+        case 536576432://MW54,gen_3&&gen_4 status
+        {
+
+            ;
+            this->switchItemOnOff(this->ui->LED_M54_0_InCycleGen_3,item.getBitFromWord(8));
+            this->switchItemOnOff(this->ui->LED_M54_1_LinkGoodGen_3,item.getBitFromWord(9));
+            this->switchItemOnOff(this->ui->LED_M54_2_OnlineGen_3,item.getBitFromWord(10));
+            this->switchItemOnOff(this->ui->LED_M54_4_RDYGen_3,item.getBitFromWord(12));
+            this->switchItemOnOff(this->ui->LED_M54_5_USActive_Gen_3,item.getBitFromWord(13));
+            this->switchItemOnOff(this->ui->LED_M54_7_AnyFault_Gen_3,item.getBitFromWord(15),true);
+
+            this->switchItemOnOff(this->ui->LED_M55_0_InCycleGen_4,item.getBitFromWord(0));
+            this->switchItemOnOff(this->ui->LED_M55_1_LinkGoodGen_4,item.getBitFromWord(1));
+            this->switchItemOnOff(this->ui->LED_M55_2_OnlineGen_4,item.getBitFromWord(2));
+            this->switchItemOnOff(this->ui->LED_M55_4_RDYGen_4,item.getBitFromWord(4));
+            this->switchItemOnOff(this->ui->LED_M55_5_USActive_Gen_4,item.getBitFromWord(5));
+            this->switchItemOnOff(this->ui->LED_M55_7_AnyFault_Gen_4,item.getBitFromWord(7),true);
+            break;
+            break;
+        }
+        case 536576448://MW56
+        {
+            break;
+        }
+        case 536576464://MW58
+        {
+            break;
+        }
+        case 536576480://MW60，iTV1
+        {
+            //(data1.thrusterDownPressure-228)*500/(3868-228)
+            this->ui->spinBox_QW94_iTV01->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576496://MW62，iTV2
+        {
+            //this->ui->spinBox_QW92_iTV02->setValue(BigLittleSwap16(item.currentValue.wordVar));
+            this->ui->spinBox_QW92_iTV02->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576512://MW64，iTV3
+        {
+            this->ui->spinBox_QW90_iTV03->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576528://MW66，iTV4
+        {
+            this->ui->spinBox_QW88_iTV04->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576544://MW68，iTV5
+        {
+            this->ui->spinBox_QW86_iTV05->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576560://MW70，iTV6
+        {
+            this->ui->spinBox_QW84_iTV06->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576576://MW72，iTV7
+        {
+            this->ui->spinBox_QW82_iTV07->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576592://MW74，iTV8
+        {
+            this->ui->spinBox_QW80_iTV08->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576608://MW76，iTV9
+        {
+            this->ui->spinBox_QW78_iTV09->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576624://MW78，iTV10
+        {
+            this->ui->spinBox_QW76_iTV10->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576640://MW80，iTV11
+        {
+            this->ui->spinBox_QW74_iTV11->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576656://MW82，iTV12
+        {
+            this->ui->spinBox_QW72_iTV12->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576672://MW84，iTV13
+        {
+            this->ui->spinBox_QW70_iTV13->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576688://MW86，iTV14
+        {
+            this->ui->spinBox_QW68_iTV14->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576704://MW88，iTV15
+        {
+            this->ui->spinBox_QW66_iTV15->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        case 536576720://MW90，iTV16
+        {
+            this->ui->spinBox_QW64_iTV16->setValue((BigLittleSwap16(item.currentValue.wordVar)-228)*500/(3868-228));
+            break;
+        }
+        default:
+            break;
     }
+}
+else if(item.itemGroup_area==plcAera::DB)
+{
+    tableName="PLC_DB";
+    this->modbusConnectionStatus_503=true;
     //DW0,alarm word,
+    switch (itemID) {
     case 540672000://dw0,gen_1 alarm
     {
         if(currentAlarms.isEmpty()&&item.currentValue.wordVar==0)
@@ -1955,16 +2701,26 @@ void MainWindow::updatePLCItem(plcItem item)
     }
 
 }
-void MainWindow::switchItemOnOff(QLabel* targetLabel,bool onOff)
+
+}
+void MainWindow::switchItemOnOff(QLabel* targetLabel, bool onOff, bool alarmFlag)
 {
 
     if(onOff)
     {
-        targetLabel->setPixmap(QPixmap(":/img/ledon.png"));
+        if(!alarmFlag)
+        {
+           targetLabel->setPixmap(QPixmap(":/img/ledon1010.png"));
+        }
+        else
+        {
+            targetLabel->setPixmap(QPixmap(":/img/breakpoint.png"));
+        }
+
     }
     else
     {
-        targetLabel->setPixmap(QPixmap(":/img/ledoff.png"));
+        targetLabel->setPixmap(QPixmap(":/img/ledoff1010.png"));
     }
 
 }
@@ -2272,8 +3028,54 @@ void MainWindow::OnTimer_mainWindow_Timeout()
     else
     {
       this->checking_modbusConnectionStatus=true;
+
     }
     emit this->checkModbusConnectionStatus();
+    //toolID conflict popUp MsgBox control
+    if(this->plcVars.toolID_active_inPLC!=this->plcVars.toolID_sensor_detected&&this->plcVars.toolID_active_inPLC>0)
+    if(!this->isShowing_toolIDConflictPopUpDialog&&!this->ignoreToolIDConflict)
+    {
+        this->isShowing_toolIDConflictPopUpDialog=true;
+        QCheckBox *cb=new QCheckBox(tr("No longer prompt"));
+        cb->setChecked(false);
+        QMessageBox msgBox;
+        QString fileName=tr("toolingConfig/toolingConfig_%1.dc").arg(this->plcVars.toolID_sensor_detected);
+        QString infoText=tr("sensored ID:%1,Active ID:%2,do you want to load the parameter set stored in %3")
+                .arg(this->plcVars.toolID_sensor_detected).arg(this->plcVars.toolID_active_inPLC).arg(fileName);
+         msgBox.setText("toolID conflict.");
+         msgBox.setInformativeText(infoText);
+         msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+         msgBox.setDefaultButton(QMessageBox::Yes);
+         msgBox.setCheckBox(cb);
+         int ret = msgBox.exec();
+         switch (ret) {
+             case QMessageBox::Yes:
+             {
+                //Yes was clicked
+               if(this->tempTooling_editting->loadFromDisk(fileName))
+               {
+                  this->startDownloadUploadWholeSettings(1);
+               }
+               else
+               {
+                   QMessageBox::information(this,tr("failed to load setup"),tr("can not load desired setup,it may not exist"),QMessageBox::Ok);
+               }
+               break;
+             }
+             case QMessageBox::No:
+             {
+                // No was clicked
+                if(cb->isChecked())
+                    this->ignoreToolIDConflict=true;
+                break;
+             }
+              default:
+                 // should never be reached
+                 break;
+           }
+         this->isShowing_toolIDConflictPopUpDialog=false;
+    }
+
 }
 void MainWindow::OnTcpCommConnectionStateChanged(QAbstractSocket::SocketState state,quint8 ConnectionID)
 {
@@ -2393,19 +3195,48 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
     {
         quint8 receivedPointNO=dataLoad[1];
         quint8 receivedGenNO=dataLoad[0];
+        dWordBytes dw1;
+        dw1.bytesVar.B0=dataLoad[2];
+        dw1.bytesVar.B1=dataLoad[3];
+        dw1.bytesVar.B2=dataLoad[4];
+        dw1.bytesVar.B3=dataLoad[5];
+        quint32 realTimeFreqency=dw1.DWordVar;
+        quint8 realTimeAmp=dataLoad[8];
+        quint16 realTimePower=((quint8)dataLoad[6])*256+((quint8)dataLoad[7]);
+        quint8 channelNO=(quint8)dataLoad[9]+1;
         switch (receivedGenNO)
         {
         case 1:
             this->plcVars.currentPointNO_gen1=receivedPointNO;
+            this->ui->spbox_realTimePage_channel->setValue(channelNO);
+            this->ui->spbox_realTimePage_currentPointNO->setValue(receivedPointNO);
+            this->ui->spbox_realTimePage_liveAmplitude->setValue(realTimeAmp);
+            this->ui->spbox_realTimePage_liveFrequency->setValue(realTimeFreqency);
+            this->ui->spbox_realTimePage_livePower->setValue(realTimePower);
             break;
         case 2:
             this->plcVars.currentPointNO_gen2=receivedPointNO;
+            this->ui->spbox_realTimePage_channel_2->setValue(channelNO);
+            this->ui->spbox_realTimePage_currentPointNO_2->setValue(receivedPointNO);
+            this->ui->spbox_realTimePage_liveAmplitude_2->setValue(realTimeAmp);
+            this->ui->spbox_realTimePage_liveFrequency_2->setValue(realTimeFreqency);
+            this->ui->spbox_realTimePage_livePower_2->setValue(realTimePower);
             break;
         case 3:
             this->plcVars.currentPointNO_gen3=receivedPointNO;
+            this->ui->spbox_realTimePage_channel_3->setValue(channelNO);
+            this->ui->spbox_realTimePage_currentPointNO_3->setValue(receivedPointNO);
+            this->ui->spbox_realTimePage_liveAmplitude_3->setValue(realTimeAmp);
+            this->ui->spbox_realTimePage_liveFrequency_3->setValue(realTimeFreqency);
+            this->ui->spbox_realTimePage_livePower_3->setValue(realTimePower);
             break;
         case 4:
             this->plcVars.currentPointNO_gen4=receivedPointNO;
+            this->ui->spbox_realTimePage_channel_4->setValue(channelNO);
+            this->ui->spbox_realTimePage_currentPointNO_4->setValue(receivedPointNO);
+            this->ui->spbox_realTimePage_liveAmplitude_4->setValue(realTimeAmp);
+            this->ui->spbox_realTimePage_liveFrequency_4->setValue(realTimeFreqency);
+            this->ui->spbox_realTimePage_livePower_4->setValue(realTimePower);
             break;
         default:
             break;
@@ -2413,15 +3244,10 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         if(receivedPointNO==this->ui->spinBox_PointNO_pointPara->value())
         {
             this->ui->UStest_genNO->setValue(receivedGenNO);
-            dWordBytes dw1;
-            dw1.bytesVar.B0=dataLoad[2];
-            dw1.bytesVar.B1=dataLoad[3];
-            dw1.bytesVar.B2=dataLoad[4];
-            dw1.bytesVar.B3=dataLoad[5];
-            this->ui->CV_pointPara_realTime_Freq->setValue((quint32)dw1.DWordVar);
-            this->ui->CV_pointPara_realTime_Amp->setValue(dataLoad[8]);
-            this->ui->CV_pointPara_realTime_Power->setValue((quint8)dataLoad[6]*256+dataLoad[7]);
-            this->ui->usTest_Channel->setValue((quint8)dataLoad[9]+1);
+            this->ui->CV_pointPara_realTime_Freq->setValue(realTimeFreqency);
+            this->ui->CV_pointPara_realTime_Amp->setValue(realTimeAmp);
+            this->ui->CV_pointPara_realTime_Power->setValue(realTimePower);
+            this->ui->usTest_Channel->setValue(channelNO);
         }
 
     }
@@ -2443,6 +3269,7 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         this->ui->weldByManual_realtimeSpeed->setText(realtimeSpeed);
         this->ui->servo_realTimeSpeed->setText(realtimeSpeed);
         this->ui->servo_realTimeSpeed_runScreen->setText(realtimeSpeed);
+        this->ui->realTimePage_realtimeSpeed->setText(realtimeSpeed);
         dw1.bytesVar.B0=dataLoad[10];
         dw1.bytesVar.B1=dataLoad[11];
         dw1.bytesVar.B2=dataLoad[12];
@@ -2451,6 +3278,7 @@ void MainWindow::receiveDataFromTCPCommObj(QByteArray dataFromTcpCommObj)
         this->ui->weldByManual_realtimePos->setText(realtimePOS);
         this->ui->servo_realTimePos->setText(realtimePOS);
         this->ui->servo_realTimePos_runScreen->setText(realtimePOS);
+        this->ui->realTimePage_realtimePos->setText(realtimePOS);
         this->ui->weldByManual_currentStationNO->setValue(dataLoad[0]);
         this->ui->weldByManual_targetStationNO->setValue(dataLoad[1]);
 
@@ -5020,6 +5848,7 @@ void MainWindow::startDownloadUploadWholeSettings(quint8 direction)
 {
     //direction==1,download direction==2,upload
     this->ptrprogressDialog=new QProgressDialog;
+    this->ptrprogressDialog->setModal(Qt::WindowModal);
     qDebug()<<"dialog initialized";
     if(direction==1)
     {
@@ -5553,8 +6382,9 @@ void MainWindow::on_btn_PLC2Edit_FilmFeeder_clicked()
 
 void MainWindow::on_ToolingChange_valveNO_valueChanged(int arg1)
 {
-    this->ui->comboBox_ValveType_toolingChange->setCurrentIndex
-            (this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType);
+    //this->ui->comboBox_ValveType_toolingChange->setCurrentIndex
+            //(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType);
+    this->ui->ToolingChange_ValveName->setText(this->tempTooling_editting->valveNameMapping.at(arg1));
 }
 
 void MainWindow::on_Clamper_Extend_toolingChange_clicked()
@@ -5714,6 +6544,7 @@ void MainWindow::on_sensorBypass_valveNO_valueChanged(int arg1)
 {
     //this->ui->comboBox_ValveType_sensorBypass->setCurrentIndex
             //(this->tempTooling_editting->plcToolingInfo.pneumaticValvelist[arg1].valveType);
+    this->ui->valveBypass_valveName->setText(this->tempTooling_editting->valveNameMapping.at(arg1));
     this->ui->checkBox_ValveExtendSensorBypass_1->setChecked
             (this->tempTooling_editting->plcToolingInfo.valveSensorBypass[arg1].extendBypass.bits.b1);
     this->ui->checkBox_ValveExtendSensorBypass_2->setChecked
@@ -5912,7 +6743,7 @@ void MainWindow::on_pushButton_logIN_GO_clicked()
         }
         emit parameterEditableStausChanged(this->parameterEditable);
         this->ui->stackedWidget_mainProgram->setCurrentIndex(this->pageInfo1.targetPage_Index_mainStackWidget);
-        quint8 loginDuration;
+        quint8 loginDuration=0;
         bool needLogOff=true;
         switch (this->ui->comboBox_LogOffTime->currentIndex()) {
         case 0:
@@ -5965,6 +6796,16 @@ void MainWindow::on_pushButton_paraChecking_clicked()
 
 void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
 {
+    //arg1==0,toolConfig
+    //arg1==1,weldBymanual
+    //arg1==2,IO Table
+    //arg1==3,Alarm
+    //arg1==4,run screen
+    //arg1==5,log on
+    //arg1==6,discard,text reg
+    //arg1==7,tool change
+    //arg1==8,machine info
+    //arg1==9,welcome page
     this->pageInfo1.previousPage_Index_mainStackWidget=this->pageInfo1.currentPage_Index_mainStackWidget;
     this->pageInfo1.currentPage_Index_mainStackWidget=arg1;
     qDebug()<<"page changed,previous page:"<<this->pageInfo1.previousPage_Index_mainStackWidget;
@@ -5994,6 +6835,7 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
     case 0://tooling config page
     {
 
+        //toolImage presetting
         if(!this->tempTooling_editting->toolingImageSource.isEmpty())
         {
             this->setPixmapForLabel(this->ui->toolingPicLabel,this->tempTooling_editting->toolingImageSource);
@@ -6004,6 +6846,11 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
             this->setPixmapForLabel(this->ui->toolingPicLabel,":/img/dukaneLogo.PNG");
 
         }
+        //valve NO&&Name preset to 1
+        this->ui->spinBox_valveNO->setValue(1);
+        this->ui->valveName_lineEdit->setText(this->tempTooling_editting->valveNameMapping.at(1));
+        this->ui->sensorBypass_valveNO->setValue(1);
+        this->ui->valveBypass_valveName->setText(this->tempTooling_editting->valveNameMapping.at(1));
         break;
 
     }
@@ -6023,6 +6870,9 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
         dataToTcpCommObj[7]=0x00;//reserved
         if(this->tcpConnectionStatus_send&&this->tcpConnectionStatus_receive)
             emit this->sendDataToTCPCommObj(dataToTcpCommObj);
+        //valve NO&&Name preset to 4
+        this->ui->WeldByManual_valveNO->setValue(4);//left clamper selected
+        this->ui->WeldByManual_valveName->setText(this->tempTooling_editting->valveNameMapping.at(4));
         break;
     }
     case 4://run monitor page
@@ -6038,6 +6888,13 @@ void MainWindow::on_stackedWidget_mainProgram_currentChanged(int arg1)
             this->setPixmapForLabel(this->ui->label_ToolingPicture_run,":/img/dukaneLogo.PNG");
         }
 
+        break;
+    }
+    case 7://tool change
+    {
+        //valve NO&&Name preset to 1
+        this->ui->ToolingChange_valveNO->setValue(1);
+        this->ui->ToolingChange_ValveName->setText(this->tempTooling_editting->valveNameMapping.at(1));
         break;
     }
     case 8:
@@ -7049,16 +7906,16 @@ void MainWindow::on_pushButton_historyCycleData_export_clicked()
     QString pointNOAndName;
     for(int i=1;i<=16;i++)
     {
-        pointNOAndName=tr("(Point#%1-%2)")
+        pointNOAndName=tr("-Point#%1-%2")
                 .arg(i)
                 .arg(this->tempTooling_editting->pointNameMapping.at(i));
-        cycleDataStrList_header<<"pointWeldResult"+pointNOAndName
-                               <<"amplitude"+pointNOAndName
-                               <<"pressure"+pointNOAndName
-                               <<"weldTime"+pointNOAndName
-                               <<"peakPower"+pointNOAndName
-                               <<"weldEnergy"+pointNOAndName
-                               <<"holdTime"+pointNOAndName;
+        cycleDataStrList_header<<tr("pointWeldResult%1").arg(pointNOAndName)
+                               <<tr("amplitude(\%)%1").arg(pointNOAndName)
+                               <<tr("pressure(Kpa)%1").arg(pointNOAndName)
+                               <<tr("weldTime(ms)%1").arg(pointNOAndName)
+                               <<tr("peakPower(W)%1").arg(pointNOAndName)
+                               <<tr("weldEnergy(J)%1").arg(pointNOAndName)
+                               <<tr("holdTime(ms)%1").arg(pointNOAndName);
     }
     qDebug()<<"csv header ready,going to write them into CSV";
     QFile CSVFile(fileName);
@@ -7195,12 +8052,12 @@ void MainWindow::on_tableView_partCycleData_clicked(const QModelIndex &index)
              this->model_pointsData->setHeaderData(0, Qt::Horizontal, tr("pointNO"));
              this->model_pointsData->setHeaderData(1, Qt::Horizontal, tr("pointName"));
              this->model_pointsData->setHeaderData(2, Qt::Horizontal, tr("weldResult"));
-             this->model_pointsData->setHeaderData(3, Qt::Horizontal, tr("amplitude"));
-             this->model_pointsData->setHeaderData(4, Qt::Horizontal, tr("pressure"));
-             this->model_pointsData->setHeaderData(5, Qt::Horizontal, tr("weldTime"));
-             this->model_pointsData->setHeaderData(6, Qt::Horizontal, tr("peakPower"));
-             this->model_pointsData->setHeaderData(7, Qt::Horizontal, tr("weldEnergy"));
-             this->model_pointsData->setHeaderData(8, Qt::Horizontal, tr("holdTime"));
+             this->model_pointsData->setHeaderData(3, Qt::Horizontal, tr("amplitude(%)"));
+             this->model_pointsData->setHeaderData(4, Qt::Horizontal, tr("pressure(Kpa)"));
+             this->model_pointsData->setHeaderData(5, Qt::Horizontal, tr("weldTime(ms)"));
+             this->model_pointsData->setHeaderData(6, Qt::Horizontal, tr("peakPower(W)"));
+             this->model_pointsData->setHeaderData(7, Qt::Horizontal, tr("weldEnergy(J)"));
+             this->model_pointsData->setHeaderData(8, Qt::Horizontal, tr("holdTime(ms)"));
              //QTableView *view = new QTableView;
              //view->setModel(model);
              this->ui->tableView_pointCycleData->setModel(this->model_pointsData);
@@ -7247,3 +8104,70 @@ void MainWindow::on_actionExit_triggered()
     qApp->exit();
 }
 
+
+void MainWindow::on_btn_IO_Table_Previos_clicked()
+{
+    quint8 index_IO_Table=this->ui->tabWidget_IO_Table->currentIndex();
+    if(index_IO_Table==0)
+    {
+        //DO
+        quint8 currentIndex=this->ui->stackedWidget_DO->currentIndex();
+        if(currentIndex>0)
+        {
+            this->ui->stackedWidget_DO->setCurrentIndex(currentIndex-1);
+        }
+    }
+    else if(index_IO_Table==1)
+    {
+        //DI
+        quint8 currentIndex=this->ui->stackedWidget_DI->currentIndex();
+        if(currentIndex>0)
+        {
+            this->ui->stackedWidget_DI->setCurrentIndex(currentIndex-1);
+        }
+    }
+    else if(index_IO_Table==2)
+    {
+        //other
+
+    }
+}
+
+void MainWindow::on_btn_IO_Table_Next_clicked()
+{
+    quint8 index_IO_Table=this->ui->tabWidget_IO_Table->currentIndex();
+    if(index_IO_Table==0)
+    {
+        //DO
+        quint8 currentIndex=this->ui->stackedWidget_DO->currentIndex();
+        if(currentIndex<2)
+        {
+            this->ui->stackedWidget_DO->setCurrentIndex(currentIndex+1);
+        }
+    }
+    else if(index_IO_Table==1)
+    {
+        //DI
+        quint8 currentIndex=this->ui->stackedWidget_DI->currentIndex();
+        if(currentIndex<3)
+        {
+            this->ui->stackedWidget_DI->setCurrentIndex(currentIndex+1);
+        }
+    }
+    else if(index_IO_Table==2)
+    {
+        //other
+
+    }
+
+}
+
+void MainWindow::on_btn_realTimeData_clicked()
+{
+    this->ui->stackedWidget_run->setCurrentIndex(3);
+}
+
+void MainWindow::on_WeldByManual_valveNO_valueChanged(int arg1)
+{
+    this->ui->WeldByManual_valveName->setText(this->tempTooling_editting->valveNameMapping.at(arg1));
+}

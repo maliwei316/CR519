@@ -482,7 +482,7 @@ typedef struct _plcVarTable
 {
     quint8 work_Mode;//2==manual mode,3==auto mode
     quint8 toolID_sensor_detected=0;
-    quint8 toolID_current_inPLC=0;
+    quint8 toolID_active_inPLC=0;
     bool anyFault=false;
     bool somePointWelded;
     bool systemReady;
